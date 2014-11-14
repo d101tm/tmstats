@@ -1,0 +1,13 @@
+%YAML 1.2
+---
+Notes:  This file contains URLs for the resources used in the code.
+
+Resources:
+    Clubs in District 4: "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s"
+    Current Performance: "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s"
+    Historical Performance: "http://dashboards.toastmasters.org/%(tmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(tmyear)s"
+  
+Packages:
+	YAML: http://pyyaml.org
+	
+ 
