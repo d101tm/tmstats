@@ -64,18 +64,27 @@ class Geography:
         self.membercount = 0
         self.colors = {'R':0, 'Y':0, 'G':0}
         self.dcp = {'P':0, 'S':0, 'D':0, ' ':0}
+        self.advanced = 0
+        self.open = 0
+        self.restricted = 0
         
     def assign(self, parent):
         if parent:
             self.parents.append(parent)
         
-    def addclub(self, members, color, dcp):
+    def addclub(self, club):
         self.clubcount += 1
-        self.membercount += int(members)
-        self.colors[color[0].upper()] += 1
-        self.dcp[dcp[0].upper()] += 1
+        self.membercount += int(club.activemembers)
+        self.colors[club.color[0].upper()] += 1
+        self.dcp[(club.dcplastyear + ' ')[0].upper()] += 1
+        if club.advanced:
+            self.advanced += 1
+        if club.clubstatus.startswith('Open'):
+            self.open += 1
+        else:
+            self.restricted += 1
         for p in self.parents:
-            p.addclub(members, color, dcp)
+            p.addclub(club)
      
     def __repr__(self):
         return '%s %d %s %s' % (self.name, self.clubcount, self.colors, self.dcp)
@@ -145,7 +154,7 @@ class Club:
             self.county = "Unknown"
             
     def addtogeo(self):
-        self.citygeo.addclub(self.activemembers, self.color, self.dcplastyear + ' ')
+        self.citygeo.addclub(self)
         
     def cleanup(self):
         if self.clubstatus.strip() == 'Open to all':
@@ -303,7 +312,7 @@ worksheet.write(1, 1, "D4 today", bold)
 
     
 row = 1
-for t in ['', 'Clubs', 'Members', 'Distinguished', 'Green', 'Yellow', 'Red']:
+for t in ['', 'Clubs', 'Members', 'Distinguished', 'Green', 'Yellow', 'Red', 'Open', 'Restricted', 'Advanced']:
     worksheet.write(row, 0, t, bold)
     row += 1
     
@@ -313,6 +322,9 @@ worksheet.write_number(4, 1, d4.dcpsum())
 worksheet.write_number(5, 1, d4.colors['G'])
 worksheet.write_number(6, 1, d4.colors['Y'])
 worksheet.write_number(7, 1, d4.colors['R'])
+worksheet.write_number(8, 1, d4.open)
+worksheet.write_number(9, 1, d4.restricted)
+worksheet.write_number(10, 1, d4.advanced)
     
 pct_format = workbook.add_format()
 pct_format.set_num_format(10)
@@ -324,12 +336,18 @@ for v in [npa, spa, nmv, smv]:
     worksheet.write(5, col, v.colors['G'])
     worksheet.write(6, col, v.colors['Y'])
     worksheet.write(7, col, v.colors['R'])
+    worksheet.write(8, col, v.open)
+    worksheet.write(9, col, v.restricted)
+    worksheet.write(10, col, v.advanced)
     worksheet.write(2, col + 1, float(v.clubcount) / d4.clubcount, pct_format)
     worksheet.write(3, col + 1, float(v.membercount) / d4.membercount, pct_format)
     worksheet.write(4, col + 1, float(v.dcpsum())/d4.dcpsum(), pct_format)
     worksheet.write(5, col + 1, float(v.colors['G']) / d4.colors['G'], pct_format)
     worksheet.write(6, col + 1, float(v.colors['Y']) / d4.colors['Y'], pct_format)
     worksheet.write(7, col + 1, float(v.colors['R']) / d4.colors['R'], pct_format)
+    worksheet.write(8, col + 1, float(v.open) / d4.open, pct_format)
+    worksheet.write(9, col + 1, float(v.restricted) / d4.restricted, pct_format)
+    worksheet.write(10, col + 1, float(v.advanced) / d4.advanced, pct_format)
     col += 2
 
 
