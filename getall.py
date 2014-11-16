@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import re, urllib, csv
+import re, urllib, csv, xlsxwriter, codecs
 
 resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
      'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
@@ -47,7 +47,42 @@ cities =   {'Aptos':'Santa Cruz',
             'Seaside':'Monterey',
             'Soledad':'Monterey'}
             
-            
+class Geography:
+    """ This class tracks information about a geographical area (city, county, or proposed division)"""
+    all = {}
+    @classmethod
+    def find(self, name):
+        nname = normalize(name)
+        if nname not in self.all:
+            self.all[nname] = Geography(name)
+        return self.all[nname]
+    
+    def __init__(self, name):
+        self.name = name
+        self.parents = []
+        self.clubcount = 0
+        self.membercount = 0
+        self.colors = {'R':0, 'Y':0, 'G':0}
+        self.dcp = {'P':0, 'S':0, 'D':0, ' ':0}
+        
+    def assign(self, parent):
+        if parent:
+            self.parents.append(parent)
+        
+    def addclub(self, members, color, dcp):
+        self.clubcount += 1
+        self.membercount += int(members)
+        self.colors[color[0].upper()] += 1
+        self.dcp[dcp[0].upper()] += 1
+        for p in self.parents:
+            p.addclub(members, color, dcp)
+     
+    def __repr__(self):
+        return '%s %d %s %s' % (self.name, self.clubcount, self.colors, self.dcp)
+        
+    def dcpsum(self):
+        return self.dcp['P'] + self.dcp['S'] + self.dcp['D']
+        
 
 
 def normalize(s):
@@ -77,6 +112,8 @@ class Club:
             except IndexError:
                 self.__dict__[h] = ''
         self.clubnumber = fixcn(self.clubnumber)
+        self.citygeo = Geography.find(self.city)
+        self.dcplastyear = ' '
  
             
     def __repr__(self):
@@ -106,8 +143,48 @@ class Club:
             self.county = cities[self.city.strip()]
         except KeyError:
             self.county = "Unknown"
+            
+    def addtogeo(self):
+        self.citygeo.addclub(self.activemembers, self.color, self.dcplastyear + ' ')
+        
+    def cleanup(self):
+        if self.clubstatus.strip() == 'Open to all':
+            self.clubstatus = 'Open'
+        else:
+            self.clubstatus = 'Restricted'
 
-import urllib, csv
+
+
+
+# Create geographies for the current D4 and two proposed splits
+d4 = Geography('D4')
+npa = Geography('North to Palo Alto')
+nmv = Geography('North to Mountain View')
+spa = Geography('South of Palo Alto')
+smv = Geography('South of Mountain View')
+
+# And now, assign cities to the geographies (and to the counties)
+for city in cities:
+    county = cities[city]
+    citygeo = Geography.find(city)
+    cgeo = Geography.find(county + ' County')
+    citygeo.assign(cgeo)
+    citygeo.assign(d4)
+    if county in ['San Francisco', 'San Mateo']:
+        citygeo.assign(npa)
+        citygeo.assign(nmv)
+    elif city in ['Palo Alto', 'Stanford']:
+        citygeo.assign(npa)
+        citygeo.assign(nmv)
+    elif city in ['Mountain View', 'Moffett Field']:
+        citygeo.assign(spa)
+        citygeo.assign(nmv)
+    else:
+        citygeo.assign(spa)
+        citygeo.assign(smv)
+        
+print 'geographies assigned'
+        
 
 # First, get the current information about clubs
 
@@ -115,6 +192,7 @@ csvfile = urllib.urlopen(resources['clubs'] % parms)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
 Club.setHeaders(headers)
+
 
 clubcol = headers.index('clubnumber')    
 for row in r:
@@ -152,10 +230,10 @@ csvfile.close()
 csvfile = urllib.urlopen(resources['historical'] % parms)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
-headers[headers.index('goalsmet')] = 'hgoalsmet'
-headers[headers.index('clubdistinguishedstatus')] ='hdcp'
+headers[headers.index('goalsmet')] = 'goalsmetlastyear'
+headers[headers.index('clubdistinguishedstatus')] ='dcplastyear'
 clubcol = headers.index('clubnumber')
-only = ['hgoalsmet', 'hdcp']
+only = ['goalsmetlastyear', 'dcplastyear']
 for row in r:
     try:
         row[clubcol] = fixcn(row[clubcol])
@@ -173,25 +251,135 @@ csvfile.close()
 
 
 
-# Finally, set the county and set the club's color based on membership
+# Finally, set the county, set the club's color based on membership, and add it to geographies:
 for c in clubs.values():
+    c.cleanup()  # Shorten items which are too long
     c.setcolor()
     c.setcounty()
+    c.addtogeo()
+
+
 
 # For tonight, let's just create a CSV because we know how to do so
 
 outfile = open('output.csv', 'wb')
 w = csv.writer(outfile, delimiter=',')
-fields = ['Club Number', 'Club Name', 'Status', 'Color', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?', 'Mem Base', 'Active Members', 'Goals Met', 'H Goals Met', 'HDCP']
+fields = ['Club Number', 'Club Name', 'Status', 'Color', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?', 'Mem Base', 'Active Members', 'Goals Met', 'Goals Last Year', 'DCP Last Year']
 members = [normalize(f) for f in fields]
 w.writerow(fields)
-for c in sorted(clubs.keys(), key=int):
-    print clubs[c]
+allclubs = sorted(clubs.keys(), key=int)
+for c in allclubs:
     w.writerow([clubs[c].__dict__.get(m,'') for m in members])
 outfile.close()
 
+print "ready to create excel"
+# Now, let's actually create an interesting Excel file.
+# The file will have several tabs:
+#   Clubinfo - basic info on clubs (as from the Find A Club page)
+#   Clubperf - performance data on each club, including DCP status, membership, current goals...
+#   Analysis - how the districts would split under several conditions
+
+workbook = xlsxwriter.Workbook('clubinfo.xlsx')
+
+bold = workbook.add_format({'bold':1})
+formats = {'R': workbook.add_format(), 'G': workbook.add_format(), 'Y': workbook.add_format()}
+formats['R'].set_bg_color('#FF4040')
+formats['Y'].set_bg_color('yellow')
+formats['G'].set_bg_color('#40FF40')
+
+worksheet = workbook.add_worksheet('Analysis')
+worksheet.set_column(0, 0, 15)
 
 
+merge_format = workbook.add_format({'align': 'center', 'valign': 'center', 'bold': True, 'fg_color' : '#D7E4BC'})
+    
+worksheet.merge_range(0, 2, 0, 5, "Option 1: Mountain View in the South", merge_format)
+worksheet.merge_range(0, 6, 0, 9, "Option 2: Mountain View in the North", merge_format)
+worksheet.merge_range(1, 2, 1, 3, "North", merge_format)
+worksheet.merge_range(1, 4, 1, 5, "South", merge_format)
+worksheet.merge_range(1, 6, 1, 7, "North", merge_format)
+worksheet.merge_range(1, 8, 1, 9, "South", merge_format)
+worksheet.write(1, 1, "D4 today", bold)
+
+    
+row = 1
+for t in ['', 'Clubs', 'Members', 'Distinguished', 'Green', 'Yellow', 'Red']:
+    worksheet.write(row, 0, t, bold)
+    row += 1
+    
+worksheet.write_number(2, 1, d4.clubcount)
+worksheet.write_number(3, 1, d4.membercount)
+worksheet.write_number(4, 1, d4.dcpsum())
+worksheet.write_number(5, 1, d4.colors['G'])
+worksheet.write_number(6, 1, d4.colors['Y'])
+worksheet.write_number(7, 1, d4.colors['R'])
+    
+pct_format = workbook.add_format()
+pct_format.set_num_format(10)
+col = 2
+for v in [npa, spa, nmv, smv]:
+    worksheet.write(2, col, v.clubcount)
+    worksheet.write(3, col, v.membercount)
+    worksheet.write(4, col, v.dcpsum())/d4.dcpsum()
+    worksheet.write(5, col, v.colors['G'])
+    worksheet.write(6, col, v.colors['Y'])
+    worksheet.write(7, col, v.colors['R'])
+    worksheet.write(2, col + 1, float(v.clubcount) / d4.clubcount, pct_format)
+    worksheet.write(3, col + 1, float(v.membercount) / d4.membercount, pct_format)
+    worksheet.write(4, col + 1, float(v.dcpsum())/d4.dcpsum(), pct_format)
+    worksheet.write(5, col + 1, float(v.colors['G']) / d4.colors['G'], pct_format)
+    worksheet.write(6, col + 1, float(v.colors['Y']) / d4.colors['Y'], pct_format)
+    worksheet.write(7, col + 1, float(v.colors['R']) / d4.colors['R'], pct_format)
+    col += 2
+
+
+
+def fillsheet(worksheet, infofields, numbers=[]):
+    infomembers = [normalize(f) for f in infofields]
+    nummembers = [normalize(f) for f in numbers]
+    clubnamecol = infofields.index('Club Name')
+    worksheet.set_column(clubnamecol, clubnamecol, 40)
+
+    for col in xrange(len(infofields)):
+        worksheet.write(0, col, infofields[col], bold)
+    
+    row = 1
+    for c in allclubs:
+        for col in xrange(len(infomembers)):
+            member = infomembers[col]
+            what = clubs[c].__dict__.get(member, '')
+            if member in nummembers:
+                if what:
+                  worksheet.write_number(row, col, int(what))
+            else:
+                what = codecs.decode(what,'cp1252').strip()
+                try:
+                    if col <> clubnamecol:
+                        worksheet.write_string(row, col, what)
+                    else:
+                        worksheet.write_string(row, col, what, formats[clubs[c].color[0]])
+                except UnicodeDecodeError:
+                    print 'oops'
+                    print unicode(what)
+                    worksheet.write_string(row, col, 'unprintable')
+        row += 1
+
+clubinfofields = ['Club Number', 'Club Name', 'Status', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?']
+fillsheet(workbook.add_worksheet('Club Information'), clubinfofields)
+
+clubperffields = ['Club Number', 'Club Name', 'Mem Base', 'Active Members', 'Goals Met', 'Goals Met Last Year', 'DCP Last Year']
+clubperfnums = ['Mem Base', 'Active Members', 'Goals Met', 'Goals Met Last Year']
+perfsheet = workbook.add_worksheet('Club Performance')
+perfsheet.set_column(2, 2, 9)
+perfsheet.set_column(3, 3, 13)
+perfsheet.set_column(5, 5, 16)
+perfsheet.set_column(6, 6, 15)
+fillsheet(perfsheet, clubperffields, clubperfnums)
+
+
+
+ 
+workbook.close()
     
 
 
