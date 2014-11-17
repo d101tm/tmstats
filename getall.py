@@ -325,9 +325,9 @@ worksheet.set_column(0, 0, 15)
 # Item, d4 current (extends over two vertical columns), and then a column for each option, with
 #  north and south stacked.  Each time has a total AND a percentage.
 
-doublerow_format = workbook.add_format('valign':'center')
-doublerowb_format = workbook.add_format('valign': 'center', 'bold':true)
-header_format = workbook.add_format('align':'center', 'bold':true)
+doublerow_format = workbook.add_format({'valign':'center'})
+doublerowb_format = workbook.add_format({'valign': 'center', 'bold':true})
+header_format = workbook.add_format({'align':'center', 'bold':true})
 pct_format = workbook.add_format()
 pct_format.set_num_format(10)
 
