@@ -4,9 +4,9 @@ import re, urllib, csv, xlsxwriter, codecs
 
 resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
      'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
-     'historical': "http://dashboards.toastmasters.org/%(tmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(tmyear)s"}
+     'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
      
-parms = {'district': "04", 'tmyear' : "2013-2014"}
+parms = {'district': "04", 'lasttmyear' : "2013-2014"}
 
 cities =   {'Aptos':'Santa Cruz',
             'Santa Cruz':'Santa Cruz',
@@ -162,15 +162,54 @@ class Club:
         else:
             self.clubstatus = 'Restricted'
 
+# Create the Geography for the whole district
+d4 = Geography('d4')
+
+class Option:
+    """This holds the information about a geographical option.
+       Specify the counties and cities in the North part; the others go to the South."""
+    def __init__(self, name, northcounties, northcities):
+        self.name = name
+        self.northcounties = northcounties
+        self.northcities = northcities
+        self.northgeo = Geography('North ' + name)
+        self.southgeo = Geography('South ' + name)
+        for city in cities:
+            county = cities[city]
+            citygeo = Geography.find(city)
+            cgeo = Geography.find(county + ' County')
+            citygeo.assign(cgeo)
+            citygeo.assign(d4)
+            if county in northcounties:
+                citygeo.assign(self.northgeo)
+            elif city in northcities:
+                citygeo.assign(self.northgeo)
+            else:
+                citygeo.assign(self.southgeo)
+        
+
+# Create options for all splits:
+northcounties = ['San Francisco', 'San Mateo']
+northcitiestoadd = [[], ['Palo Alto', 'Stanford'], ['Mountain View'], ['Moffett Field']]
+names = ['Split at County Line', 'include Palo Alto', 'include Mountain View', 'include Moffett Field']
+
+options = []
+northcities = []
+for (c, n) in zip(northcitiestoadd, names):
+    northcities.extend(c)
+    options.append(Option(n, northcounties, northcities))
+    
 
 
 
-# Create geographies for the current D4 and two proposed splits
+pasplit = Option('(Split below Palo Alto)', ['San Francisco', 'San Mateo'], ['Palo Alto'])
 d4 = Geography('D4')
 npa = Geography('North to Palo Alto')
 nmv = Geography('North to Mountain View')
 spa = Geography('South of Palo Alto')
 smv = Geography('South of Mountain View')
+
+
 
 # And now, assign cities to the geographies (and to the counties)
 for city in cities:
@@ -298,6 +337,11 @@ formats['G'].set_bg_color('#40FF40')
 
 worksheet = workbook.add_worksheet('Analysis')
 worksheet.set_column(0, 0, 15)
+
+# The layout of the analysis sheet is:
+# Item, d4 current (extends over two vertical columns), and then a column for each option, with
+#  north and south stacked.  Each time has a total AND a percentage.
+
 
 
 merge_format = workbook.add_format({'align': 'center', 'valign': 'center', 'bold': True, 'fg_color' : '#D7E4BC'})
