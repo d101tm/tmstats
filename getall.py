@@ -89,8 +89,15 @@ class Geography:
     def __repr__(self):
         return '%s %d %s %s' % (self.name, self.clubcount, self.colors, self.dcp)
         
-    def dcpsum(self):
-        return self.dcp['P'] + self.dcp['S'] + self.dcp['D']
+    def cleanup(self):
+        # freeze the result of computations; make it easier to write the report
+        self.dcpsum = self.dcp['P'] + self.dcp['S'] + self.dcp['D']
+        self.nondistinguished = self.dcp[' ']
+        self.red = self.colors['R']
+        self.yellow = self.colors['Y']
+        self.green = self.colors['G']
+        
+
         
 
 
@@ -161,6 +168,10 @@ class Club:
             self.clubstatus = 'Open'
         else:
             self.clubstatus = 'Restricted'
+            
+    def get(self, name):
+        return self.__dict__[name]
+        
 
 # Create the Geography for the whole district
 d4 = Geography('d4')
@@ -172,8 +183,8 @@ class Option:
         self.name = name
         self.northcounties = northcounties
         self.northcities = northcities
-        self.northgeo = Geography('North ' + name)
-        self.southgeo = Geography('South ' + name)
+        self.north = Geography('North ' + name)
+        self.south = Geography('South ' + name)
         for city in cities:
             county = cities[city]
             citygeo = Geography.find(city)
@@ -186,6 +197,10 @@ class Option:
                 citygeo.assign(self.northgeo)
             else:
                 citygeo.assign(self.southgeo)
+    
+    def setcol(self, col):
+        # Where we write our information
+        self.col = col
         
 
 # Create options for all splits:
@@ -200,38 +215,6 @@ for (c, n) in zip(northcitiestoadd, names):
     options.append(Option(n, northcounties, northcities))
     
 
-
-
-pasplit = Option('(Split below Palo Alto)', ['San Francisco', 'San Mateo'], ['Palo Alto'])
-d4 = Geography('D4')
-npa = Geography('North to Palo Alto')
-nmv = Geography('North to Mountain View')
-spa = Geography('South of Palo Alto')
-smv = Geography('South of Mountain View')
-
-
-
-# And now, assign cities to the geographies (and to the counties)
-for city in cities:
-    county = cities[city]
-    citygeo = Geography.find(city)
-    cgeo = Geography.find(county + ' County')
-    citygeo.assign(cgeo)
-    citygeo.assign(d4)
-    if county in ['San Francisco', 'San Mateo']:
-        citygeo.assign(npa)
-        citygeo.assign(nmv)
-    elif city in ['Palo Alto', 'Stanford']:
-        citygeo.assign(npa)
-        citygeo.assign(nmv)
-    elif city in ['Mountain View', 'Moffett Field']:
-        citygeo.assign(spa)
-        citygeo.assign(nmv)
-    else:
-        citygeo.assign(spa)
-        citygeo.assign(smv)
-        
-print 'geographies assigned'
         
 
 # First, get the current information about clubs
@@ -301,7 +284,7 @@ csvfile.close()
 
 # Finally, set the county, set the club's color based on membership, and add it to geographies:
 for c in clubs.values():
-    c.cleanup()  # Shorten items which are too long
+    c.cleanup()  # Shorten items which are too long as received from Toastmasters
     c.setcolor()
     c.setcounty()
     c.addtogeo()
@@ -342,58 +325,32 @@ worksheet.set_column(0, 0, 15)
 # Item, d4 current (extends over two vertical columns), and then a column for each option, with
 #  north and south stacked.  Each time has a total AND a percentage.
 
-
-
-merge_format = workbook.add_format({'align': 'center', 'valign': 'center', 'bold': True, 'fg_color' : '#D7E4BC'})
-    
-worksheet.merge_range(0, 2, 0, 5, "Option 1: Mountain View in the South", merge_format)
-worksheet.merge_range(0, 6, 0, 9, "Option 2: Mountain View in the North", merge_format)
-worksheet.merge_range(1, 2, 1, 3, "North", merge_format)
-worksheet.merge_range(1, 4, 1, 5, "South", merge_format)
-worksheet.merge_range(1, 6, 1, 7, "North", merge_format)
-worksheet.merge_range(1, 8, 1, 9, "South", merge_format)
-worksheet.write(1, 1, "D4 today", bold)
-
-    
-row = 1
-for t in ['', 'Clubs', 'Members', 'Distinguished', 'Green', 'Yellow', 'Red', 'Open', 'Restricted', 'Advanced']:
-    worksheet.write(row, 0, t, bold)
-    row += 1
-    
-worksheet.write_number(2, 1, d4.clubcount)
-worksheet.write_number(3, 1, d4.membercount)
-worksheet.write_number(4, 1, d4.dcpsum())
-worksheet.write_number(5, 1, d4.colors['G'])
-worksheet.write_number(6, 1, d4.colors['Y'])
-worksheet.write_number(7, 1, d4.colors['R'])
-worksheet.write_number(8, 1, d4.open)
-worksheet.write_number(9, 1, d4.restricted)
-worksheet.write_number(10, 1, d4.advanced)
-    
+doublerow_format = workbook.add_format('valign':'center')
+doublerowb_format = workbook.add_format('valign': 'center', 'bold':true)
+header_format = workbook.add_format('align':'center', 'bold':true)
 pct_format = workbook.add_format()
 pct_format.set_num_format(10)
-col = 2
-for v in [npa, spa, nmv, smv]:
-    worksheet.write(2, col, v.clubcount)
-    worksheet.write(3, col, v.membercount)
-    worksheet.write(4, col, v.dcpsum())/d4.dcpsum()
-    worksheet.write(5, col, v.colors['G'])
-    worksheet.write(6, col, v.colors['Y'])
-    worksheet.write(7, col, v.colors['R'])
-    worksheet.write(8, col, v.open)
-    worksheet.write(9, col, v.restricted)
-    worksheet.write(10, col, v.advanced)
-    worksheet.write(2, col + 1, float(v.clubcount) / d4.clubcount, pct_format)
-    worksheet.write(3, col + 1, float(v.membercount) / d4.membercount, pct_format)
-    worksheet.write(4, col + 1, float(v.dcpsum())/d4.dcpsum(), pct_format)
-    worksheet.write(5, col + 1, float(v.colors['G']) / d4.colors['G'], pct_format)
-    worksheet.write(6, col + 1, float(v.colors['Y']) / d4.colors['Y'], pct_format)
-    worksheet.write(7, col + 1, float(v.colors['R']) / d4.colors['R'], pct_format)
-    worksheet.write(8, col + 1, float(v.open) / d4.open, pct_format)
-    worksheet.write(9, col + 1, float(v.restricted) / d4.restricted, pct_format)
-    worksheet.write(10, col + 1, float(v.advanced) / d4.advanced, pct_format)
-    col += 2
 
+# Row 0 is the header: item, d4 current, blank, 2-columns per option
+worksheet.write(0, 1, "D4 Today", bold)
+col = 2
+for o in options:
+    worksheet.merge_range(0, col, 0, col+1, o.name, header_format)
+    o.setcol(col)
+    col += 2
+    
+# Now, start writing information by row pairs.
+def write_datum(row, col, name, membername):
+    worksheet.merge_range(row, 0, row + 1, 0, name, doublerowb_format)
+    worksheet.merge_range(row, 1, row + 1, 1, d4.get(membername), doublerow_format)
+    worksheet.write_string(row, 2, 'North', bold)
+    worksheet.write_string(row+1, 2, 'South', bold)
+    for o in options:
+        worksheet.write_number(row, o.col, o.north.get(membername))
+        worksheet.write_number(row+1, o.col, o.south.get(membername))
+        worksheet.write_number(row, o.col+1, o.north.get(membername) / float(d4.get(membername)), pct_format)
+        worksheet.write_number(row+1, o.col+1, o.south.get(membername) / float(d4.get(membername)), pct_format)
+    
 
 
 def fillsheet(worksheet, infofields, numbers=[]):
