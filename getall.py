@@ -192,11 +192,11 @@ class Option:
             citygeo.assign(cgeo)
             citygeo.assign(d4)
             if county in northcounties:
-                citygeo.assign(self.northgeo)
+                citygeo.assign(self.north)
             elif city in northcities:
-                citygeo.assign(self.northgeo)
+                citygeo.assign(self.north)
             else:
-                citygeo.assign(self.southgeo)
+                citygeo.assign(self.south)
     
     def setcol(self, col):
         # Where we write our information
@@ -211,11 +211,12 @@ names = ['Split at County Line', 'include Palo Alto', 'include Mountain View', '
 options = []
 northcities = []
 for (c, n) in zip(northcitiestoadd, names):
+    print c, n
     northcities.extend(c)
     options.append(Option(n, northcounties, northcities))
     
 
-        
+print options
 
 # First, get the current information about clubs
 
@@ -326,8 +327,8 @@ worksheet.set_column(0, 0, 15)
 #  north and south stacked.  Each time has a total AND a percentage.
 
 doublerow_format = workbook.add_format({'valign':'center'})
-doublerowb_format = workbook.add_format({'valign': 'center', 'bold':true})
-header_format = workbook.add_format({'align':'center', 'bold':true})
+doublerowb_format = workbook.add_format({'valign': 'center', 'bold':True})
+header_format = workbook.add_format({'align':'center', 'bold':True})
 pct_format = workbook.add_format()
 pct_format.set_num_format(10)
 
@@ -340,7 +341,7 @@ for o in options:
     col += 2
     
 # Now, start writing information by row pairs.
-def write_datum(row, col, name, membername):
+def write_datum(row, name, membername):
     worksheet.merge_range(row, 0, row + 1, 0, name, doublerowb_format)
     worksheet.merge_range(row, 1, row + 1, 1, d4.get(membername), doublerow_format)
     worksheet.write_string(row, 2, 'North', bold)
@@ -350,8 +351,9 @@ def write_datum(row, col, name, membername):
         worksheet.write_number(row+1, o.col, o.south.get(membername))
         worksheet.write_number(row, o.col+1, o.north.get(membername) / float(d4.get(membername)), pct_format)
         worksheet.write_number(row+1, o.col+1, o.south.get(membername) / float(d4.get(membername)), pct_format)
-    
 
+
+write_datum(1, 'Members', 'activemembers')
 
 def fillsheet(worksheet, infofields, numbers=[]):
     infomembers = [normalize(f) for f in infofields]
