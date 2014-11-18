@@ -61,30 +61,33 @@ class Geography:
         self.name = name
         self.parents = []
         self.clubcount = 0
-        self.membercount = 0
+        self.activemembers = 0
         self.colors = {'R':0, 'Y':0, 'G':0}
         self.dcp = {'P':0, 'S':0, 'D':0, ' ':0}
         self.advanced = 0
         self.open = 0
         self.restricted = 0
+        self.clubs = {}
+        self.all[name] = self
         
     def assign(self, parent):
-        if parent:
+        if parent and parent not in self.parents:
             self.parents.append(parent)
         
     def addclub(self, club):
-        self.clubcount += 1
-        self.membercount += int(club.activemembers)
-        self.colors[club.color[0].upper()] += 1
-        self.dcp[(club.dcplastyear + ' ')[0].upper()] += 1
-        if club.advanced:
-            self.advanced += 1
-        if club.clubstatus.startswith('Open'):
-            self.open += 1
-        else:
-            self.restricted += 1
-        for p in self.parents:
-            p.addclub(club)
+        if club.clubnumber not in self.clubs:
+            self.clubcount += 1
+            self.activemembers += int(club.activemembers)
+            self.colors[club.color[0].upper()] += 1
+            self.dcp[(club.dcplastyear + ' ')[0].upper()] += 1
+            if club.advanced:
+                self.advanced += 1
+            if club.clubstatus.startswith('Open'):
+                self.open += 1
+            else:
+                self.restricted += 1
+            for p in self.parents:
+                p.addclub(club)
      
     def __repr__(self):
         return '%s %d %s %s' % (self.name, self.clubcount, self.colors, self.dcp)
@@ -211,12 +214,11 @@ names = ['Split at County Line', 'include Palo Alto', 'include Mountain View', '
 options = []
 northcities = []
 for (c, n) in zip(northcitiestoadd, names):
-    print c, n
     northcities.extend(c)
     options.append(Option(n, northcounties, northcities))
     
 
-print options
+
 
 # First, get the current information about clubs
 
@@ -290,6 +292,9 @@ for c in clubs.values():
     c.setcounty()
     c.addtogeo()
 
+# Clean up all the geographies
+for g in Geography.all.values():
+    g.cleanup()
 
 
 # For tonight, let's just create a CSV because we know how to do so
@@ -304,7 +309,7 @@ for c in allclubs:
     w.writerow([clubs[c].__dict__.get(m,'') for m in members])
 outfile.close()
 
-print "ready to create excel"
+
 # Now, let's actually create an interesting Excel file.
 # The file will have several tabs:
 #   Clubinfo - basic info on clubs (as from the Find A Club page)
@@ -313,7 +318,8 @@ print "ready to create excel"
 
 workbook = xlsxwriter.Workbook('clubinfo.xlsx')
 
-bold = workbook.add_format({'bold':1})
+bold = workbook.add_format({'bold':True})
+boldbottom = workbook.add_format({'bold':True, 'bottom':1})
 formats = {'R': workbook.add_format(), 'G': workbook.add_format(), 'Y': workbook.add_format()}
 formats['R'].set_bg_color('#FF4040')
 formats['Y'].set_bg_color('yellow')
@@ -326,15 +332,16 @@ worksheet.set_column(0, 0, 15)
 # Item, d4 current (extends over two vertical columns), and then a column for each option, with
 #  north and south stacked.  Each time has a total AND a percentage.
 
-doublerow_format = workbook.add_format({'valign':'center'})
-doublerowb_format = workbook.add_format({'valign': 'center', 'bold':True})
-header_format = workbook.add_format({'align':'center', 'bold':True})
-pct_format = workbook.add_format()
-pct_format.set_num_format(10)
+doublerow_format = workbook.add_format({'valign':'vcenter', 'bottom':1, 'right':1})
+doublerowb_format = workbook.add_format({'valign': 'vcenter', 'bold':True, 'bottom':1, 'right':1})
+header_format = workbook.add_format({'align':'center', 'bold':True, 'bottom':1, 'right':1})
+pct_format = workbook.add_format({'num_format':10, 'right':1})
+pct_bottom_format = workbook.add_format({'num_format':10, 'bottom':1, 'right':1})
+bottom_format = workbook.add_format({'bottom':1})
 
 # Row 0 is the header: item, d4 current, blank, 2-columns per option
 worksheet.write(0, 1, "D4 Today", bold)
-col = 2
+col = 3  # Leave room for North/South!
 for o in options:
     worksheet.merge_range(0, col, 0, col+1, o.name, header_format)
     o.setcol(col)
@@ -345,15 +352,24 @@ def write_datum(row, name, membername):
     worksheet.merge_range(row, 0, row + 1, 0, name, doublerowb_format)
     worksheet.merge_range(row, 1, row + 1, 1, d4.get(membername), doublerow_format)
     worksheet.write_string(row, 2, 'North', bold)
-    worksheet.write_string(row+1, 2, 'South', bold)
+    worksheet.write_string(row+1, 2, 'South', boldbottom)
     for o in options:
         worksheet.write_number(row, o.col, o.north.get(membername))
-        worksheet.write_number(row+1, o.col, o.south.get(membername))
+        worksheet.write_number(row+1, o.col, o.south.get(membername), bottom_format)
         worksheet.write_number(row, o.col+1, o.north.get(membername) / float(d4.get(membername)), pct_format)
-        worksheet.write_number(row+1, o.col+1, o.south.get(membername) / float(d4.get(membername)), pct_format)
+        worksheet.write_number(row+1, o.col+1, o.south.get(membername) / float(d4.get(membername)), pct_bottom_format)
+    return row+2  # For convenience
 
-
-write_datum(1, 'Members', 'activemembers')
+row = 1
+row = write_datum(row, 'Members', 'activemembers')
+row = write_datum(row, 'Clubs', 'clubcount')
+row = write_datum(row, 'Distinguished', 'dcpsum')
+row = write_datum(row, 'Green', 'green')
+row = write_datum(row, 'Yellow', 'yellow')
+row = write_datum(row, 'Red', 'red')
+row = write_datum(row, 'Community', 'open')
+row = write_datum(row, 'Corporate', 'restricted')
+row = write_datum(row, 'Advanced', 'advanced')
 
 def fillsheet(worksheet, infofields, numbers=[]):
     infomembers = [normalize(f) for f in infofields]
