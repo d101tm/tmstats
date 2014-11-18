@@ -456,7 +456,7 @@ row = write_datum(row, 'Community', 'open')
 row = write_datum(row, 'Corporate', 'restricted')
 row = write_datum(row, 'Advanced', 'advanced')
 
-def fillsheet(worksheet, infofields, numbers=[]):
+def fillsheet(worksheet, infofields, numbers=[], showsuspended=False):
     infomembers = [normalize(f) for f in infofields]
     nummembers = [normalize(f) for f in numbers]
     clubnamecol = infofields.index('Club Name')
@@ -467,24 +467,25 @@ def fillsheet(worksheet, infofields, numbers=[]):
     
     row = 1
     for c in allclubs:
-        for col in xrange(len(infomembers)):
-            member = infomembers[col]
-            what = clubs[c].__dict__.get(member, '')
-            if member in nummembers:
-                if what:
-                  worksheet.write_number(row, col, int(what))
-            else:
-                what = codecs.decode(what,'cp1252').strip()
-                try:
-                    if col != clubnamecol:
-                        worksheet.write_string(row, col, what)
-                    else:
-                        worksheet.write_string(row, col, what, formats[clubs[c].color[0]])
-                except UnicodeDecodeError:
-                    print 'oops'
-                    print unicode(what)
-                    worksheet.write_string(row, col, 'unprintable')
-        row += 1
+        if (showsuspended == bool(clubs[c].suspend)):
+            for col in xrange(len(infomembers)):
+                member = infomembers[col]
+                what = clubs[c].__dict__.get(member, '')
+                if member in nummembers:
+                    if what:
+                      worksheet.write_number(row, col, int(what))
+                else:
+                    what = codecs.decode(what,'cp1252').strip()
+                    try:
+                        if col != clubnamecol:
+                            worksheet.write_string(row, col, what)
+                        else:
+                            worksheet.write_string(row, col, what, formats[clubs[c].color[0]])
+                    except UnicodeDecodeError:
+                        print 'oops'
+                        print unicode(what)
+                        worksheet.write_string(row, col, 'unprintable')
+            row += 1
 
 clubinfofields = ['Division', 'Area', 'Club Number', 'Club Name', 'Status', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?']
 fillsheet(workbook.add_worksheet('Club Information'), clubinfofields)
@@ -498,7 +499,10 @@ perfsheet.set_column(5, 5, 16)
 perfsheet.set_column(6, 6, 15)
 fillsheet(perfsheet, clubperffields, clubperfnums)
 
-
+# Now, list suspended clubs in their own tab
+susfields = ['Division', 'Area', 'Club Number', 'Club Name', 'City', 'County']
+sustab = workbook.add_worksheet('Suspended Clubs')
+fillsheet(sustab, susfields, showsuspended=True)
 
  
 workbook.close()
