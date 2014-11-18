@@ -3,6 +3,7 @@
 import re, urllib, csv, xlsxwriter, codecs
 
 resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
+     'payments': "http://dashboards.toastmasters.org/export.asp?type=CSV&report=districtperformance~%(district)s",
      'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
      'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
      
@@ -283,7 +284,36 @@ for row in r:
         
 csvfile.close()
 
-
+# Now, add payments and account for new and suspended clubs as best as we can
+csvfile = urllib.urlopen(resources(['payments'] % parms))
+r = csv.reader(csvfile, delimiter=',')
+headers = [normalize(p) for p in r.next()]
+clubcol = headers.index('clubnumber')
+paycol = headers.index('totaltodate')
+eventcol = headers.index('charterdatesuspenddate')
+headers[paycol] = 'payments'
+headers.append('charter')
+headers.append('suspend')
+chartercol = headers.index('charter')
+suspcol = headers.index('suspend')
+only = ['payments', 'charter', 'suspend']
+for row in r:
+    try:
+        row[clubcol] = fixcn(row[clubcol])
+        if row[clubcol]:
+            try:
+                row.append('')  # charter
+                row.append('')  # suspended
+                event = row[eventcol].strip().lower()
+                if event.startswith('charter'):
+                    row[chartercol] = event.split()[-1]
+                elif event.startswith('susp'):
+                    row[suspcol] = event.split()[-1]
+                clubs[row[clubcol]].addinfo(rows, headers, only)
+            except KeyError:
+                print row
+            except IndexError:
+                pass
 
 # Finally, set the county, set the club's color based on membership, and add it to geographies:
 for c in clubs.values():
