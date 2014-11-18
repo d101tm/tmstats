@@ -447,7 +447,6 @@ row = write_datum(row, 'Members', 'activemembers')
 row = write_datum(row, 'Payments', 'payments')
 row = write_datum(row, 'Clubs', 'clubcount')
 row = write_datum(row, 'New Clubs', 'chartered')
-row = write_datum(row, 'Suspended','suspended')
 row = write_datum(row, 'Distinguished', 'dcpsum')
 row = write_datum(row, 'Green', 'green')
 row = write_datum(row, 'Yellow', 'yellow')
@@ -500,7 +499,7 @@ perfsheet.set_column(6, 6, 15)
 fillsheet(perfsheet, clubperffields, clubperfnums)
 
 # Now, list suspended clubs in their own tab
-susfields = ['Division', 'Area', 'Club Number', 'Club Name', 'City', 'County']
+susfields = ['Division', 'Area', 'Club Number', 'Club Name']
 sustab = workbook.add_worksheet('Suspended Clubs')
 fillsheet(sustab, susfields, showsuspended=True)
 
