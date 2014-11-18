@@ -3,6 +3,7 @@
 import re, urllib, csv, xlsxwriter, codecs
 
 resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
+     'oldclubs' : "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s",
      'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s",
      'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
      'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
@@ -79,7 +80,9 @@ class Geography:
             self.parents.append(parent)
         
     def addclub(self, club):
-        if club.clubnumber not in self.clubs:
+        if not club.isvalid:
+            print "addclub: invalid club", club
+        if club.isvalid and club.clubnumber not in self.clubs:
             self.clubcount += 1
             self.activemembers += int(club.activemembers)
             self.payments += int(club.payments)
@@ -95,6 +98,7 @@ class Geography:
                 self.chartered += 1
             if club.suspend:
                 self.suspended += 1
+                print 'name = %s, suspended count = %d, club = %s' % (self.name, self.suspended, club)
             for p in self.parents:
                 p.addclub(club)
      
@@ -143,10 +147,14 @@ class Club:
         self.clubnumber = fixcn(self.clubnumber)
         self.citygeo = Geography.find(self.city)
         self.dcplastyear = ' '
+        self.isvalid = False   # So we can handle ancient clubs if need be
  
             
     def __repr__(self):
         return self.clubnumber + ' ' + self.clubname
+        
+    def makevalid(self):
+        self.isvalid = True
         
     def addinfo(self, row, headers, only=None):
         """Add information to a club.  If 'only' is specified, only those columns are kept."""
@@ -157,6 +165,7 @@ class Club:
                     self.__dict__[h] = row[i]
                 except IndexError:
                     self.__dict__[h] = ''
+        self.isvalid = True
             
     def setcolor(self):
         members = int(self.activemembers)
@@ -181,6 +190,8 @@ class Club:
             self.clubstatus = 'Open'
         else:
             self.clubstatus = 'Restricted'
+        if not self.isvalid:
+            print 'not valid: ', self
             
 
         
@@ -239,9 +250,34 @@ Club.setHeaders(headers)
 
 clubcol = headers.index('clubnumber')    
 for row in r:
-    if len(row) > clubcol and fixcn(row[clubcol]):
-        club = Club(row)
-        clubs[club.clubnumber] = club
+    try:
+        row[clubcol] = fixcn(row[clubcol])
+        if row[clubcol]:
+            club = Club(row)
+            clubs[club.clubnumber] = club
+            club.makevalid()
+    except IndexError:
+        pass
+    
+csvfile.close()
+
+# Now, add information about clubs from the previous year.  We only add clubs which were active at the end of the year
+#   and which aren't already in our data (they SHOULD match the suspended clubs)
+
+csvfile = urllib.urlopen(resources['oldclubs'] % parms)
+r = csv.reader(csvfile, delimiter=',')
+headers = [normalize(p) for p in r.next()]
+
+clubcol = headers.index('clubnumber') 
+statcol = headers.index('clubstatus')   
+for row in r:
+    try:
+        row[clubcol] = fixcn(row[clubcol])
+        if row[clubcol] and row[clubcol] not in clubs and row[statcol] != 'Suspended':
+            club = Club(row)
+            clubs[club.clubnumber] = club
+    except IndexError:
+        pass
     
 csvfile.close()
         
@@ -297,7 +333,6 @@ csvfile.close()
 csvfile = urllib.urlopen(resources['payments'] % parms)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
-print headers
 clubcol = headers.index('club')
 paycol = headers.index('totaltodate')
 eventcol = headers.index('charterdatesuspenddate')
@@ -311,22 +346,18 @@ for row in r:
     try:
         row[clubcol] = fixcn(row[clubcol])
         if row[clubcol]:
-            print row
             try:
-                if row[eventcol] != '':
-                    print row[clubcol], row[eventcol]
                 row.append('')  # charter
                 row.append('')  # suspended
                 event = row[eventcol].strip().lower()
                 if event.startswith('charter'):
                     row[chartercol] = event.split()[-1]
-                    print 'Charter: ' + row[clubcol] + ' ' + event + event.split()[-1]
                 elif event.startswith('susp'):
-                    print 'Suspend: ' + row[clubcol] + ' ' + event + event.split()[-1]
                     row[suspcol] = event.split()[-1]
+                    clubs[row[clubcol]].makevalid()
                 clubs[row[clubcol]].addinfo(row, headers, only)
             except KeyError:
-                print row
+                print 'keyerror', row
             except IndexError:
                 pass
     except IndexError:
@@ -413,7 +444,6 @@ row = write_datum(row, 'Members', 'activemembers')
 row = write_datum(row, 'Payments', 'payments')
 row = write_datum(row, 'Clubs', 'clubcount')
 row = write_datum(row, 'New Clubs', 'chartered')
-row = write_datum(row, 'Suspended', 'suspended')
 row = write_datum(row, 'Distinguished', 'dcpsum')
 row = write_datum(row, 'Green', 'green')
 row = write_datum(row, 'Yellow', 'yellow')
