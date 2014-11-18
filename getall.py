@@ -244,7 +244,6 @@ for (c, n) in zip(northcitiestoadd, names):
 
 def addtrailer(what, line):
     # We have to clean up Toastmasters' weird spacing and capitalization
-    print line
     line = ' '.join([p.strip() for p in line]).replace(' As ', ' as ')
     trailers.append("%s: %s" % (what, line))
     
