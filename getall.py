@@ -85,22 +85,22 @@ class Geography:
         if not club.isvalid:
             print "addclub: invalid club", club
         if club.isvalid and club.clubnumber not in self.clubs:
-            self.clubcount += 1
-            self.activemembers += int(club.activemembers)
             self.payments += int(club.payments)
-            self.colors[club.color[0].upper()] += 1
-            self.dcp[(club.dcplastyear + ' ')[0].upper()] += 1
-            if club.advanced:
-                self.advanced += 1
-            if club.clubstatus.startswith('Open'):
-                self.open += 1
-            else:
-                self.restricted += 1
-            if club.charter:
-                self.chartered += 1
             if club.suspend:
                 self.suspended += 1
-                self.clubcount -= 1  # Don't count suspended clubs
+            else:
+                self.clubcount += 1
+                self.activemembers += int(club.activemembers)
+                self.colors[club.color[0].upper()] += 1
+                self.dcp[(club.dcplastyear + ' ')[0].upper()] += 1
+                if club.advanced:
+                    self.advanced += 1
+                if club.clubstatus.startswith('Open'):
+                    self.open += 1
+                else:
+                    self.restricted += 1
+            if club.charter:
+                self.chartered += 1
             for p in self.parents:
                 p.addclub(club)
      
@@ -344,7 +344,7 @@ headers.append('charter')
 headers.append('suspend')
 chartercol = headers.index('charter')
 suspcol = headers.index('suspend')
-only = ['payments', 'charter', 'suspend']
+only = ['payments', 'charter', 'suspend', 'area', 'division']
 for row in r:
     try:
         row[clubcol] = fixcn(row[clubcol])
@@ -382,7 +382,7 @@ for g in Geography.all.values():
 
 outfile = open('output.csv', 'wb')
 w = csv.writer(outfile, delimiter=',')
-fields = ['Club Number', 'Club Name', 'Status', 'Color', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?', 'Mem Base', 'Active Members', 'Goals Met', 'Goals Last Year', 'DCP Last Year']
+fields = ['Division', 'Area', 'Club Number', 'Club Name', 'Status', 'Color', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?', 'Mem Base', 'Active Members', 'Goals Met', 'Goals Last Year', 'DCP Last Year']
 members = [normalize(f) for f in fields]
 w.writerow(fields)
 allclubs = sorted(clubs.keys(), key=int)
@@ -486,10 +486,10 @@ def fillsheet(worksheet, infofields, numbers=[]):
                     worksheet.write_string(row, col, 'unprintable')
         row += 1
 
-clubinfofields = ['Club Number', 'Club Name', 'Status', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?']
+clubinfofields = ['Division', 'Area', 'Club Number', 'Club Name', 'Status', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?']
 fillsheet(workbook.add_worksheet('Club Information'), clubinfofields)
 
-clubperffields = ['Club Number', 'Club Name', 'Mem Base', 'Active Members', 'Goals Met', 'Goals Met Last Year', 'DCP Last Year']
+clubperffields = ['Division', 'Area', 'Club Number', 'Club Name', 'Mem Base', 'Active Members', 'Goals Met', 'Goals Met Last Year', 'DCP Last Year']
 clubperfnums = ['Mem Base', 'Active Members', 'Goals Met', 'Goals Met Last Year']
 perfsheet = workbook.add_worksheet('Club Performance')
 perfsheet.set_column(2, 2, 9)
