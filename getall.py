@@ -97,8 +97,9 @@ class Geography:
         self.yellow = self.colors['Y']
         self.green = self.colors['G']
         
-
-        
+    def get(self, name):
+        return self.__dict__[name]
+    
 
 
 def normalize(s):
@@ -169,8 +170,7 @@ class Club:
         else:
             self.clubstatus = 'Restricted'
             
-    def get(self, name):
-        return self.__dict__[name]
+
         
 
 # Create the Geography for the whole district
