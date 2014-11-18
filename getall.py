@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import re, urllib, csv, xlsxwriter, codecs
+import re, urllib, csv, xlsxwriter, codecs, time
 
 resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
      'oldclubs' : "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s",
@@ -48,6 +48,8 @@ cities =   {'Aptos':'Santa Cruz',
             'Sand City':'Monterey',
             'Seaside':'Monterey',
             'Soledad':'Monterey'}
+            
+trailers = []   # Final lines of each file
             
 class Geography:
     """ This class tracks information about a geographical area (city, county, or proposed division)"""
@@ -231,7 +233,7 @@ class Option:
 # Create options for all splits:
 northcounties = ['San Francisco', 'San Mateo']
 northcitiestoadd = [[], ['Palo Alto', 'Stanford'], ['Mountain View'], ['Moffett Field']]
-names = ['Split at County Line', 'include Palo Alto', 'include Mountain View', 'include Moffett Field']
+names = ['Split at County Line', 'Include Palo Alto', 'Include Mountain View', 'Include Moffett Field']
 
 options = []
 northcities = []
@@ -240,7 +242,13 @@ for (c, n) in zip(northcitiestoadd, names):
     options.append(Option(n, northcounties, northcities))
     
 
-
+def addtrailer(what, line):
+    # We have to clean up Toastmasters' weird spacing and capitalization
+    print line
+    line = ' '.join([p.strip() for p in line]).replace(' As ', ' as ')
+    trailers.append("%s: %s" % (what, line))
+    
+trailers.append("Report generated at %s" % time.strftime("%Y-%m-%d %H:%M:%S"))
 
 # First, get the current information about clubs
 
@@ -260,6 +268,7 @@ for row in r:
             club.makevalid()
     except IndexError:
         pass
+
     
 csvfile.close()
 
@@ -280,8 +289,8 @@ for row in r:
             club = Club(row[0:clubcol+2])  # Only information through the name...
             clubs[club.clubnumber] = club
     except IndexError:
-        pass
-    
+        pass 
+        
 csvfile.close()
         
 # Now, add information from the current performance data
@@ -304,6 +313,8 @@ for row in r:
                 print row
     except IndexError:
         pass
+        
+addtrailer("Club Performance", row)
         
 csvfile.close()
     
@@ -328,7 +339,7 @@ for row in r:
                 print row
     except IndexError:
         pass
-        
+
 csvfile.close()
 
 # Now, add payments and account for new and suspended clubs as best as we can
@@ -365,6 +376,7 @@ for row in r:
                 pass
     except IndexError:
         pass
+addtrailer("Payment Information", row)
 
 # Finally, set the county, set the club's color based on membership, and add it to geographies:
 for c in clubs.values():
@@ -408,7 +420,7 @@ formats['G'].set_bg_color('#40FF40')
 
 worksheet = workbook.add_worksheet('Analysis')
 worksheet.set_column(0, 0, 15)
-
+worksheet.set_column(3, 11, 10)
 # The layout of the analysis sheet is:
 # Item, d4 current (extends over two vertical columns), and then a column for each option, with
 #  north and south stacked.  Each time has a total AND a percentage.
@@ -454,6 +466,12 @@ row = write_datum(row, 'Red', 'red')
 row = write_datum(row, 'Community', 'open')
 row = write_datum(row, 'Corporate', 'restricted')
 row = write_datum(row, 'Advanced', 'advanced')
+
+# And now, let's write the freshness data
+row += 1  # Leave a blank line
+for t in trailers:
+    worksheet.merge_range(row, 0, row, 10, t)
+    row += 1
 
 def fillsheet(worksheet, infofields, numbers=[], showsuspended=False):
     infomembers = [normalize(f) for f in infofields]
