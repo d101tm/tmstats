@@ -3,7 +3,7 @@
 import re, urllib, csv, xlsxwriter, codecs
 
 resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
-     'payments': "http://dashboards.toastmasters.org/export.asp?type=CSV&report=districtperformance~%(district)s",
+     'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s",
      'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
      'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
      
@@ -69,6 +69,9 @@ class Geography:
         self.open = 0
         self.restricted = 0
         self.clubs = {}
+        self.suspended = 0
+        self.chartered = 0
+        self.payments = 0
         self.all[name] = self
         
     def assign(self, parent):
@@ -79,6 +82,7 @@ class Geography:
         if club.clubnumber not in self.clubs:
             self.clubcount += 1
             self.activemembers += int(club.activemembers)
+            self.payments += int(club.payments)
             self.colors[club.color[0].upper()] += 1
             self.dcp[(club.dcplastyear + ' ')[0].upper()] += 1
             if club.advanced:
@@ -87,6 +91,10 @@ class Geography:
                 self.open += 1
             else:
                 self.restricted += 1
+            if club.charter:
+                self.chartered += 1
+            if club.suspend:
+                self.suspended += 1
             for p in self.parents:
                 p.addclub(club)
      
@@ -285,10 +293,13 @@ for row in r:
 csvfile.close()
 
 # Now, add payments and account for new and suspended clubs as best as we can
-csvfile = urllib.urlopen(resources(['payments'] % parms))
+print resources['payments'] % parms
+csvfile = urllib.urlopen(resources['payments'] % parms)
+print csvfile
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
-clubcol = headers.index('clubnumber')
+print headers
+clubcol = headers.index('club')
 paycol = headers.index('totaltodate')
 eventcol = headers.index('charterdatesuspenddate')
 headers[paycol] = 'payments'
@@ -309,11 +320,13 @@ for row in r:
                     row[chartercol] = event.split()[-1]
                 elif event.startswith('susp'):
                     row[suspcol] = event.split()[-1]
-                clubs[row[clubcol]].addinfo(rows, headers, only)
+                clubs[row[clubcol]].addinfo(row, headers, only)
             except KeyError:
                 print row
             except IndexError:
                 pass
+    except IndexError:
+        pass
 
 # Finally, set the county, set the club's color based on membership, and add it to geographies:
 for c in clubs.values():
@@ -386,13 +399,17 @@ def write_datum(row, name, membername):
     for o in options:
         worksheet.write_number(row, o.col, o.north.get(membername))
         worksheet.write_number(row+1, o.col, o.south.get(membername), bottom_format)
-        worksheet.write_number(row, o.col+1, o.north.get(membername) / float(d4.get(membername)), pct_format)
-        worksheet.write_number(row+1, o.col+1, o.south.get(membername) / float(d4.get(membername)), pct_bottom_format)
+        if d4.get(membername) != 0:
+            worksheet.write_number(row, o.col+1, o.north.get(membername) / float(d4.get(membername)), pct_format)
+            worksheet.write_number(row+1, o.col+1, o.south.get(membername) / float(d4.get(membername)), pct_bottom_format)
     return row+2  # For convenience
 
 row = 1
 row = write_datum(row, 'Members', 'activemembers')
+row = write_datum(row, 'Payments', 'payments')
 row = write_datum(row, 'Clubs', 'clubcount')
+row = write_datum(row, 'New Clubs', 'chartered')
+row = write_datum(row, 'Suspended', 'suspended')
 row = write_datum(row, 'Distinguished', 'dcpsum')
 row = write_datum(row, 'Green', 'green')
 row = write_datum(row, 'Yellow', 'yellow')
