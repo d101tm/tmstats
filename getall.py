@@ -55,6 +55,8 @@ class Geography:
     @classmethod
     def find(self, name):
         nname = normalize(name)
+        if nname == '':
+            nname = 'd4'
         if nname not in self.all:
             self.all[nname] = Geography(name)
         return self.all[nname]
@@ -98,7 +100,7 @@ class Geography:
                 self.chartered += 1
             if club.suspend:
                 self.suspended += 1
-                print 'name = %s, suspended count = %d, club = %s' % (self.name, self.suspended, club)
+                self.clubcount -= 1  # Don't count suspended clubs
             for p in self.parents:
                 p.addclub(club)
      
@@ -267,14 +269,15 @@ csvfile.close()
 csvfile = urllib.urlopen(resources['oldclubs'] % parms)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
-
 clubcol = headers.index('clubnumber') 
 statcol = headers.index('clubstatus')   
 for row in r:
     try:
         row[clubcol] = fixcn(row[clubcol])
         if row[clubcol] and row[clubcol] not in clubs and row[statcol] != 'Suspended':
-            club = Club(row)
+            ## TODO: This isn't right, because we don't have the same information as we do for a real club!
+            ##       In particular, we don't have a city.
+            club = Club(row[0:clubcol+2])  # Only information through the name...
             clubs[club.clubnumber] = club
     except IndexError:
         pass
@@ -444,6 +447,7 @@ row = write_datum(row, 'Members', 'activemembers')
 row = write_datum(row, 'Payments', 'payments')
 row = write_datum(row, 'Clubs', 'clubcount')
 row = write_datum(row, 'New Clubs', 'chartered')
+row = write_datum(row, 'Suspended','suspended')
 row = write_datum(row, 'Distinguished', 'dcpsum')
 row = write_datum(row, 'Green', 'green')
 row = write_datum(row, 'Yellow', 'yellow')
