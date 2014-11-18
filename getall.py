@@ -3,11 +3,11 @@
 import re, urllib, csv, xlsxwriter, codecs
 
 resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
-     'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s",
+     'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s",
      'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
      'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
      
-parms = {'district': "04", 'lasttmyear' : "2013-2014"}
+parms = {'district': "04", 'lasttmyear' : "2013-2014", 'tmyear':'2014-2015'}
 
 cities =   {'Aptos':'Santa Cruz',
             'Santa Cruz':'Santa Cruz',
@@ -293,9 +293,8 @@ for row in r:
 csvfile.close()
 
 # Now, add payments and account for new and suspended clubs as best as we can
-print resources['payments'] % parms
+
 csvfile = urllib.urlopen(resources['payments'] % parms)
-print csvfile
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
 print headers
@@ -312,13 +311,18 @@ for row in r:
     try:
         row[clubcol] = fixcn(row[clubcol])
         if row[clubcol]:
+            print row
             try:
+                if row[eventcol] != '':
+                    print row[clubcol], row[eventcol]
                 row.append('')  # charter
                 row.append('')  # suspended
                 event = row[eventcol].strip().lower()
                 if event.startswith('charter'):
                     row[chartercol] = event.split()[-1]
+                    print 'Charter: ' + row[clubcol] + ' ' + event + event.split()[-1]
                 elif event.startswith('susp'):
+                    print 'Suspend: ' + row[clubcol] + ' ' + event + event.split()[-1]
                     row[suspcol] = event.split()[-1]
                 clubs[row[clubcol]].addinfo(row, headers, only)
             except KeyError:
@@ -438,7 +442,7 @@ def fillsheet(worksheet, infofields, numbers=[]):
             else:
                 what = codecs.decode(what,'cp1252').strip()
                 try:
-                    if col <> clubnamecol:
+                    if col != clubnamecol:
                         worksheet.write_string(row, col, what)
                     else:
                         worksheet.write_string(row, col, what, formats[clubs[c].color[0]])
