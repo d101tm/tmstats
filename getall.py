@@ -430,17 +430,22 @@ header_format = workbook.add_format({'align':'center', 'bold':True, 'bottom':1, 
 pct_format = workbook.add_format({'num_format':10, 'right':1})
 pct_bottom_format = workbook.add_format({'num_format':10, 'bottom':1, 'right':1})
 bottom_format = workbook.add_format({'bottom':1})
+empty_format = workbook.add_format({'right':1, 'pattern':2, 'fg_color':'white'})
+empty_bottom_format = workbook.add_format({'bottom':1, 'right':1, 'pattern':2, 'fg_color':'white'})
 
 # Row 0 is the header: item, d4 current, blank, 2-columns per option
 worksheet.write(0, 1, "D4 Today", bold)
 col = 3  # Leave room for North/South!
 for o in options:
-    worksheet.merge_range(0, col, 0, col+1, o.name, header_format)
+    worksheet.merge_range(0, col, 0, col+2, o.name, header_format)
+    worksheet.write_string(1, col, 'Number', header_format)
+    worksheet.write_string(1, col+1, '% of D4', header_format)
+    worksheet.write_string(1, col+2, '% of split', header_format)
     o.setcol(col)
-    col += 2
+    col += 3
     
 # Now, start writing information by row pairs.
-def write_datum(row, name, membername):
+def write_datum(row, name, membername, ofparts=False):
     worksheet.merge_range(row, 0, row + 1, 0, name, doublerowb_format)
     worksheet.merge_range(row, 1, row + 1, 1, d4.get(membername), doublerow_format)
     worksheet.write_string(row, 2, 'North', bold)
@@ -451,19 +456,25 @@ def write_datum(row, name, membername):
         if d4.get(membername) != 0:
             worksheet.write_number(row, o.col+1, o.north.get(membername) / float(d4.get(membername)), pct_format)
             worksheet.write_number(row+1, o.col+1, o.south.get(membername) / float(d4.get(membername)), pct_bottom_format)
+            if ofparts:
+                worksheet.write_number(row, o.col+2, o.north.get(membername) / float(o.north.clubcount), pct_format)
+                worksheet.write_number(row+1, o.col+2, o.south.get(membername) / float(o.south.clubcount), pct_bottom_format)
+            else:
+                worksheet.write_string(row, o.col+2, '', empty_format)
+                worksheet.write_string(row+1, o.col+2, '', empty_bottom_format)
     return row+2  # For convenience
 
-row = 1
+row = 2
 row = write_datum(row, 'Members', 'activemembers')
 row = write_datum(row, 'Payments', 'payments')
 row = write_datum(row, 'Clubs', 'clubcount')
 row = write_datum(row, 'New Clubs', 'chartered')
-row = write_datum(row, 'Distinguished', 'dcpsum')
-row = write_datum(row, 'Green', 'green')
-row = write_datum(row, 'Yellow', 'yellow')
-row = write_datum(row, 'Red', 'red')
-row = write_datum(row, 'Community', 'open')
-row = write_datum(row, 'Corporate', 'restricted')
+row = write_datum(row, 'Distinguished', 'dcpsum', ofparts=True)
+row = write_datum(row, 'Green', 'green', ofparts=True)
+row = write_datum(row, 'Yellow', 'yellow', ofparts=True)
+row = write_datum(row, 'Red', 'red', ofparts=True)
+row = write_datum(row, 'Community', 'open', ofparts=True)
+row = write_datum(row, 'Corporate', 'restricted', ofparts=True)
 row = write_datum(row, 'Advanced', 'advanced')
 
 # And now, let's write the freshness data
