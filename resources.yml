@@ -2,19 +2,14 @@
 ---
 
 
-resources: 
-        clubs:   http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s 
-        oldclubs:   http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s 
-        payments:   http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s 
-        current:   http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s 
-        historical:   http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s 
-     
-parms: 
+# Parms has the information for the District and year to deal with.  We should figure out lasttmyear!     
+Parms: 
        district:   "04"  
        lasttmyear:   2013-2014  
        tmyear: 2014-2015
 
-cities: 
+# Cities maps cities to counties.
+Cities: 
                Aptos: Santa Cruz
                Santa Cruz: Santa Cruz
                Scotts Valley: Santa Cruz
@@ -54,9 +49,6 @@ cities:
                Seaside: Monterey
                Soledad: Monterey
    
-  
-Packages: 
-    YAML:  http://pyyaml.org
-        - Installed by easy_install
-    XlsxWriter:  http://xlsxwriter.readthedocs.org
-        - Installed by easy_install
+# Files to write (can include directory information, of course)
+outcsv: output.csv
+outxlsx: clubinfo.xlsx
