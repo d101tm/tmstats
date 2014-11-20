@@ -48,7 +48,15 @@ Cities:
                Sand City: Monterey
                Seaside: Monterey
                Soledad: Monterey
+               
+# Splits is an array describing possible splits.  Each split only lists the "north" constituents; the rest go to "south"
+Splits:
+    - split: At County Line
+      northcounties: [San Francisco, San Mateo]
+    - split: Below Palo ALto
+      northcounties: [San Francisco, San Mateo]
+      northcities: [Palo Alto, Stanford]
+    - split: Below Mountain View
+      northcounties: [San Francisco, San Mateo]
+      northcities: [Palo Alto, Stanford, Mountain View, Moffett Field]
    
-# Files to write (can include directory information, of course)
-outcsv: output.csv
-outxlsx: clubinfo.xlsx

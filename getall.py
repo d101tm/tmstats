@@ -362,7 +362,7 @@ for g in Geography.all.values():
 
 
 # Create a merged CSV because it might be useful for other purposes, and we're here anyway
-outfile = open(info['outcsv'], 'wb')
+outfile = open('allclubs.csv', 'wb')
 w = csv.writer(outfile, delimiter=',')
 fields = ['Division', 'Area', 'Club Number', 'Club Name', 'Status', 'Color', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?', 'Mem Base', 'Active Members', 'Goals Met', 'Goals Last Year', 'DCP Last Year']
 members = [normalize(f) for f in fields]
@@ -379,7 +379,7 @@ outfile.close()
 #   Clubperf - performance data on each club, including DCP status, membership, current goals...
 #   Analysis - how the districts would split under several conditions
 
-workbook = xlsxwriter.Workbook(info['outxlsx'])
+workbook = xlsxwriter.Workbook('clubinfo.xlsx')
 
 bold = workbook.add_format({'bold':True})
 boldbottom = workbook.add_format({'bold':True, 'bottom':1})
