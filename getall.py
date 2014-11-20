@@ -445,7 +445,9 @@ row = write_datum(row, 'Advanced', 'advanced')
 
 # And now, let's write the freshness data
 row += 1  # Leave a blank line
+trailers.extend(info['Footer'].split('\n'))
 for t in trailers:
+    print t
     worksheet.merge_range(row, 0, row, 10, t)
     row += 1
 

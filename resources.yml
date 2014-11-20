@@ -60,3 +60,9 @@ Splits:
       northcounties: [San Francisco, San Mateo]
       northcities: [Palo Alto, Stanford, Mountain View, Moffett Field]
    
+# Footer is text to put at the bottom of the first page
+Footer: |
+    "County Line" splits between the San Mateo and Santa Clara county lines.
+    "Below Palo Alto" adds Palo Alto and Stanford clubs to the North district.
+    "Below Mountain View" adds Mountain View and Moffett Field clubs to the North district.
+    
