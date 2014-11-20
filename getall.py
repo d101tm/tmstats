@@ -172,21 +172,21 @@ d4 = Geography('d4')
 class Option:
     """This holds the information about a geographical option.
        Specify the counties and cities in the North part; the others go to the South."""
-    def __init__(self, name, northcounties, northcities):
-        self.name = name
-        self.northcounties = northcounties
-        self.northcities = northcities
-        self.north = Geography('North ' + name)
-        self.south = Geography('South ' + name)
+    def __init__(self, s):
+        self.name = s['split']
+        self.northcounties = s['northcounties']
+        self.northcities = s.get('northcities', [])
+        self.north = Geography('North ' + self.name)
+        self.south = Geography('South ' + self.name)
         for city in cities:
             county = cities[city]
             citygeo = Geography.find(city)
             cgeo = Geography.find(county + ' County')
             citygeo.assign(cgeo)
             citygeo.assign(d4)
-            if county in northcounties:
+            if county in self.northcounties:
                 citygeo.assign(self.north)
-            elif city in northcities:
+            elif city in self.northcities:
                 citygeo.assign(self.north)
             else:
                 citygeo.assign(self.south)
@@ -195,17 +195,12 @@ class Option:
         # Where we write our information
         self.col = col
         
-
-# Create options for all splits:
-northcounties = ['San Francisco', 'San Mateo']
-northcitiestoadd = [[], ['Palo Alto', 'Stanford'], ['Mountain View'], ['Moffett Field']]
-names = ['Split at County Line', 'Include Palo Alto', 'Include Mountain View', 'Include Moffett Field']
-
+# Create options for all splits:       
 options = []
-northcities = []
-for (c, n) in zip(northcitiestoadd, names):
-    northcities.extend(c)
-    options.append(Option(n, northcounties, northcities))
+for s in info['Splits']:
+    options.append(Option(s))
+
+
     
 
 def addtrailer(what, line):
