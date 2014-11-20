@@ -1,53 +1,12 @@
 #!/usr/bin/python
 
-import re, urllib, csv, xlsxwriter, codecs, time
+import re, urllib, csv, xlsxwriter, codecs, time, yaml
 
-resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
-     'oldclubs' : "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s",
-     'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s",
-     'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
-     'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
-     
-parms = {'district': "04", 'lasttmyear' : "2013-2014", 'tmyear':'2014-2015'}
-
-cities =   {'Aptos':'Santa Cruz',
-            'Santa Cruz':'Santa Cruz',
-            'Scotts Valley':'Santa Cruz',
-            'Watsonville':'Santa Cruz',
-            'Campbell':'Santa Clara',
-            'Cupertino':'Santa Clara',
-            'Los Gatos':'Santa Clara',
-            'Milpitas':'Santa Clara',
-            'Moffett Field':'Santa Clara',
-            'Morgan Hill':'Santa Clara',
-            'Mountain View':'Santa Clara',
-            'Palo Alto':'Santa Clara',
-            'San Jose':'Santa Clara',
-            'Santa Clara':'Santa Clara',
-            'Saratoga':'Santa Clara',
-            'Stanford':'Santa Clara',
-            'Sunnyvale':'Santa Clara',
-            'Belmont':'San Mateo',
-            'Brisbane':'San Mateo',
-            'Burlingame':'San Mateo',
-            'Daly City':'San Mateo',
-            'Foster City':'San Mateo',
-            'Menlo Park':'San Mateo',
-            'Millbrae':'San Mateo',
-            'Pacifica':'San Mateo',
-            'Redwood City':'San Mateo',
-            'Redwood Shores':'San Mateo',
-            'San Bruno':'San Mateo',
-            'San Carlos':'San Mateo',
-            'San Mateo':'San Mateo',
-            'South San Francisco':'San Mateo',
-            'San Francisco':'San Francisco',
-            'Carmel':'Monterey',
-            'Monterey':'Monterey',
-            'Salinas':'Monterey',
-            'Sand City':'Monterey',
-            'Seaside':'Monterey',
-            'Soledad':'Monterey'}
+info = yaml.load(open('resources.yml','r'))   # Get all of the changeable info
+parms = info['parms']   # Year and district
+cities = info['cities']  # Mapping of cities to counties
+resources = info['resources']  # URLs 
+ 
             
 trailers = []   # Final lines of each file
             
@@ -247,18 +206,23 @@ def addtrailer(what, line):
     line = ' '.join([p.strip() for p in line]).replace(' As ', ' as ')
     trailers.append("%s: %s" % (what, line))
     
-trailers.append("Report generated at %s" % time.strftime("%Y-%m-%d %H:%M:%S"))
+trailers.append("Report generated at %s" % time.strftime("%Y-%m-%d %H:%M:%S %Z"))
 
 # First, get the current information about clubs
 
-csvfile = urllib.urlopen(resources['clubs'] % parms)
+filename = resources['clubs'] % parms
+print filename
+
+csvfile = urllib.urlopen(filename)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
 Club.setHeaders(headers)
 
 
+
 clubcol = headers.index('clubnumber')    
 for row in r:
+    print row
     try:
         row[clubcol] = fixcn(row[clubcol])
         if row[clubcol]:

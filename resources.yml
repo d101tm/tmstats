@@ -1,13 +1,62 @@
-%YAML 1.2
+%YAML 1.1
 ---
-Notes:  This file contains URLs for the resources used in the code.
 
-Resources:
-    Clubs in District 4: "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s"
-    Current Performance: "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s"
-    Historical Performance: "http://dashboards.toastmasters.org/%(tmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(tmyear)s"
+
+resources: 
+        clubs:   http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s 
+        oldclubs:   http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s 
+        payments:   http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s 
+        current:   http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s 
+        historical:   http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s 
+     
+parms: 
+       district:   "04"  
+       lasttmyear:   2013-2014  
+       tmyear: 2014-2015
+
+cities: 
+               Aptos: Santa Cruz
+               Santa Cruz: Santa Cruz
+               Scotts Valley: Santa Cruz
+               Watsonville: Santa Cruz
+               Campbell: Santa Clara
+               Cupertino: Santa Clara
+               Los Gatos: Santa Clara
+               Milpitas: Santa Clara
+               Moffett Field: Santa Clara
+               Morgan Hill: Santa Clara
+               Mountain View: Santa Clara
+               Palo Alto: Santa Clara
+               San Jose: Santa Clara
+               Santa Clara: Santa Clara
+               Saratoga: Santa Clara
+               Stanford: Santa Clara
+               Sunnyvale: Santa Clara
+               Belmont: San Mateo
+               Brisbane: San Mateo
+               Burlingame: San Mateo
+               Daly City: San Mateo
+               Foster City: San Mateo
+               Menlo Park: San Mateo
+               Millbrae: San Mateo
+               Pacifica: San Mateo
+               Redwood City: San Mateo
+               Redwood Shores: San Mateo
+               San Bruno: San Mateo
+               San Carlos: San Mateo
+               San Mateo: San Mateo
+               South San Francisco: San Mateo
+               San Francisco: San Francisco
+               Carmel: Monterey
+               Monterey: Monterey
+               Salinas: Monterey
+               Sand City: Monterey
+               Seaside: Monterey
+               Soledad: Monterey
+   
   
-Packages:
-	YAML: http://pyyaml.org
-	
- 
+Packages: 
+    YAML:  http://pyyaml.org
+        - Installed by easy_install
+    XlsxWriter:  http://xlsxwriter.readthedocs.org
+        - Installed by easy_install
