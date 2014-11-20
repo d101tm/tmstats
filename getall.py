@@ -2,10 +2,17 @@
 
 import re, urllib, csv, xlsxwriter, codecs, time, yaml
 
+resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
+     'oldclubs' : "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s",
+     'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s",
+     'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
+     'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
+     
+
 info = yaml.load(open('resources.yml','r'))   # Get all of the changeable info
-parms = info['parms']   # Year and district
-cities = info['cities']  # Mapping of cities to counties
-resources = info['resources']  # URLs 
+parms = info['Parms']   # Year and district
+cities = info['Cities']  # Mapping of cities to counties
+
  
             
 trailers = []   # Final lines of each file
@@ -211,8 +218,6 @@ trailers.append("Report generated at %s" % time.strftime("%Y-%m-%d %H:%M:%S %Z")
 # First, get the current information about clubs
 
 filename = resources['clubs'] % parms
-print filename
-
 csvfile = urllib.urlopen(filename)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
@@ -222,7 +227,6 @@ Club.setHeaders(headers)
 
 clubcol = headers.index('clubnumber')    
 for row in r:
-    print row
     try:
         row[clubcol] = fixcn(row[clubcol])
         if row[clubcol]:
@@ -238,7 +242,8 @@ csvfile.close()
 # Now, add information about clubs from the previous year.  We only add clubs which were active at the end of the year
 #   and which aren't already in our data (they SHOULD match the suspended clubs)
 
-csvfile = urllib.urlopen(resources['oldclubs'] % parms)
+filename = resources['oldclubs'] % parms
+csvfile = urllib.urlopen(filename)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
 clubcol = headers.index('clubnumber') 
@@ -258,7 +263,8 @@ csvfile.close()
         
 # Now, add information from the current performance data
 
-csvfile = urllib.urlopen(resources['current'] % parms)
+filename = resources['current'] % parms
+csvfile = urllib.urlopen(filename)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
 headers[headers.index('clubstatus')] = 'status'
@@ -283,7 +289,8 @@ csvfile.close()
     
 # And now, add information from historical performance data
 
-csvfile = urllib.urlopen(resources['historical'] % parms)
+filename = resources['historical'] % parms
+csvfile = urllib.urlopen(filename)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
 headers[headers.index('goalsmet')] = 'goalsmetlastyear'
@@ -307,7 +314,8 @@ csvfile.close()
 
 # Now, add payments and account for new and suspended clubs as best as we can
 
-csvfile = urllib.urlopen(resources['payments'] % parms)
+filename = resources['payments'] % parms
+csvfile = urllib.urlopen(filename)
 r = csv.reader(csvfile, delimiter=',')
 headers = [normalize(p) for p in r.next()]
 clubcol = headers.index('club')
@@ -353,9 +361,8 @@ for g in Geography.all.values():
     g.cleanup()
 
 
-# For tonight, let's just create a CSV because we know how to do so
-
-outfile = open('output.csv', 'wb')
+# Create a merged CSV because it might be useful for other purposes, and we're here anyway
+outfile = open(info['outcsv'], 'wb')
 w = csv.writer(outfile, delimiter=',')
 fields = ['Division', 'Area', 'Club Number', 'Club Name', 'Status', 'Color', 'Charter Date', 'Address 1', 'Address 2', 'City', 'County', 'State', 'Zip', 'Meeting Time', 'Meeting Day', 'Club Status', 'Advanced?', 'Mem Base', 'Active Members', 'Goals Met', 'Goals Last Year', 'DCP Last Year']
 members = [normalize(f) for f in fields]
@@ -372,7 +379,7 @@ outfile.close()
 #   Clubperf - performance data on each club, including DCP status, membership, current goals...
 #   Analysis - how the districts would split under several conditions
 
-workbook = xlsxwriter.Workbook('clubinfo.xlsx')
+workbook = xlsxwriter.Workbook(info['outxlsx'])
 
 bold = workbook.add_format({'bold':True})
 boldbottom = workbook.add_format({'bold':True, 'bottom':1})
