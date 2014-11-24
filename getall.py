@@ -358,7 +358,6 @@ def write_datum(row, name, membername, ofparts=False):
     worksheet.write_string(row, 2, 'North', bold)
     worksheet.write_string(row+1, 2, 'South', boldbottom)
     for o in options:
-        print name, membername, o.name, o.north.get(membername), o.south.get(membername), d4.get(membername)
         worksheet.write_number(row, o.col, o.north.get(membername))
         worksheet.write_number(row+1, o.col, o.south.get(membername), bottom_format)
         if d4.get(membername) != 0:
@@ -389,7 +388,6 @@ row = write_datum(row, 'Advanced', 'advanced')
 row += 1  # Leave a blank line
 trailers.extend(info['Footer'].split('\n'))
 for t in trailers:
-    print t
     worksheet.merge_range(row, 0, row, 10, t)
     row += 1
 
