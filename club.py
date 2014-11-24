@@ -22,6 +22,23 @@ class Club:
         self.dcplastyear = ' '
         self.isvalid = False   # So we can handle ancient clubs if need be
         self.citygeo = None
+        
+    def info(self):
+        # Return a key for sorts and compares
+        return {'number': self.number,
+               'name' : self.name,
+               'status' : self.status,
+               'addr1' : self.address1,
+               'addr2' : self.address2,
+               'city': self.city,
+               'zip': self.zip,
+               'time': self.meetingtime,
+               'date': self.meetingday,
+               'open': self.clubstatus,  
+               'advanced': self.advanced,
+               'division': self.division,
+               'area': self.area
+           }
  
             
     def __repr__(self):
