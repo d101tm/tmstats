@@ -1,6 +1,19 @@
 #!/usr/bin/python
 
 import re, urllib, csv, xlsxwriter, codecs, time, yaml
+from club import Club
+
+
+def normalize(s):
+    if s:
+        return re.sub('\W\W*', '', s).strip().lower()
+    else:
+        return ''
+    
+        
+clubs = {}
+
+
 
 resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
      'oldclubs' : "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s",
@@ -12,6 +25,8 @@ resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?
 info = yaml.load(open('resources.yml','r'))   # Get all of the changeable info
 parms = info['Parms']   # Year and district
 cities = info['Cities']  # Mapping of cities to counties
+for city in cities.keys():
+    cities[normalize(city)] = cities[city]    # Provide safety
 
  
             
@@ -88,82 +103,6 @@ class Geography:
     
 
 
-def normalize(s):
-    if s:
-        return re.sub('\W\W*', '', s).strip().lower()
-    else:
-        return ''
-        
-def fixcn(s):
-    try:
-        return('%d' % int(s))
-    except:
-        return None
-        
-clubs = {}
-class Club:
-    
-    @classmethod
-    def setHeaders(self, headers):
-        self.headers = headers
-            
-    def __init__(self, row):
-        for i in range(len(self.headers)):
-            h = self.headers[i]
-            try:
-                self.__dict__[h] = row[i]
-            except IndexError:
-                self.__dict__[h] = ''
-        self.clubnumber = fixcn(self.clubnumber)
-        self.citygeo = Geography.find(self.city)
-        self.dcplastyear = ' '
-        self.isvalid = False   # So we can handle ancient clubs if need be
- 
-            
-    def __repr__(self):
-        return self.clubnumber + ' ' + self.clubname
-        
-    def makevalid(self):
-        self.isvalid = True
-        
-    def addinfo(self, row, headers, only=None):
-        """Add information to a club.  If 'only' is specified, only those columns are kept."""
-        for i in range(len(headers)):
-            h = headers[i]
-            if not only or h in only:
-                try:
-                    self.__dict__[h] = row[i]
-                except IndexError:
-                    self.__dict__[h] = ''
-        self.isvalid = True
-            
-    def setcolor(self):
-        members = int(self.activemembers)
-        if members <= 12:
-            self.color = "Red"
-        elif members < 20:
-            self.color = "Yellow"
-        else:
-            self.color = "Green"
-            
-    def setcounty(self):
-        try:
-            self.county = cities[self.city.strip()]
-        except KeyError:
-            self.county = "Unknown"
-            
-    def addtogeo(self):
-        self.citygeo.addclub(self)
-        
-    def cleanup(self):
-        if self.clubstatus.strip() == 'Open to all':
-            self.clubstatus = 'Open'
-        else:
-            self.clubstatus = 'Restricted'
-        if not self.isvalid:
-            print 'not valid: ', self
-            
-
         
 
 # Create the Geography for the whole district
@@ -223,9 +162,11 @@ Club.setHeaders(headers)
 clubcol = headers.index('clubnumber')    
 for row in r:
     try:
-        row[clubcol] = fixcn(row[clubcol])
+        row[clubcol] = Club.fixcn(row[clubcol])
         if row[clubcol]:
             club = Club(row)
+            club.setgeo(Geography.find(club.city))
+            club.setcounty(cities[normalize(club.city)])
             clubs[club.clubnumber] = club
             club.makevalid()
     except IndexError:
@@ -245,7 +186,7 @@ clubcol = headers.index('clubnumber')
 statcol = headers.index('clubstatus')   
 for row in r:
     try:
-        row[clubcol] = fixcn(row[clubcol])
+        row[clubcol] = Club.fixcn(row[clubcol])
         if row[clubcol] and row[clubcol] not in clubs and row[statcol] != 'Suspended':
             ## TODO: This isn't right, because we don't have the same information as we do for a real club!
             ##       In particular, we don't have a city.
@@ -267,7 +208,7 @@ clubcol = headers.index('clubnumber')
 only = ['membase', 'activemembers', 'goalsmet', 'status']
 for row in r:
     try:
-        row[clubcol] = fixcn(row[clubcol])
+        row[clubcol] = Club.fixcn(row[clubcol])
         if row[clubcol]:
             try:
                 clubs[row[clubcol]].addinfo(row, headers, only)
@@ -294,7 +235,7 @@ clubcol = headers.index('clubnumber')
 only = ['goalsmetlastyear', 'dcplastyear']
 for row in r:
     try:
-        row[clubcol] = fixcn(row[clubcol])
+        row[clubcol] = Club.fixcn(row[clubcol])
         if row[clubcol]:
             try:
                 clubs[row[clubcol]].addinfo(row, headers, only)
@@ -324,7 +265,7 @@ suspcol = headers.index('suspend')
 only = ['payments', 'charter', 'suspend', 'area', 'division']
 for row in r:
     try:
-        row[clubcol] = fixcn(row[clubcol])
+        row[clubcol] = Club.fixcn(row[clubcol])
         if row[clubcol]:
             try:
                 row.append('')  # charter
@@ -348,8 +289,8 @@ addtrailer("Payment Information", row)
 for c in clubs.values():
     c.cleanup()  # Shorten items which are too long as received from Toastmasters
     c.setcolor()
-    c.setcounty()
-    c.addtogeo()
+    if c.citygeo:
+        c.citygeo.addclub(c) # Will propagate to all its parents
 
 # Clean up all the geographies
 for g in Geography.all.values():
@@ -417,6 +358,7 @@ def write_datum(row, name, membername, ofparts=False):
     worksheet.write_string(row, 2, 'North', bold)
     worksheet.write_string(row+1, 2, 'South', boldbottom)
     for o in options:
+        print name, membername, o.name, o.north.get(membername), o.south.get(membername), d4.get(membername)
         worksheet.write_number(row, o.col, o.north.get(membername))
         worksheet.write_number(row+1, o.col, o.south.get(membername), bottom_format)
         if d4.get(membername) != 0:
