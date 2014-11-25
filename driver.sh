@@ -21,9 +21,59 @@ then
     yday=$(date -d '1 day ago' +'%Y-%m-%d' 2>/dev/null)
 fi
 echo $yday
+
+# Set up filenames
+success="$data/$today.success"
+distperf="$data/distperf"
+areaperf="$data/areaperf"
+clubperf="$data/clubperf"
+historical="$data/historical"
+todaytail="$today.csv"
+ydaytail="$yday.csv"
+dtoday="$distperf.$todaytail"
+dyday="$distperf.$ydaytail"
+atoday="$areaperf.$todaytail"
+ayday="$areaperf.$ydaytail"
+ctoday="$clubperf.$todaytail"
+cyday="$clubperf.$ydaytail"
+
+
+# The very first thing to check is whether we have run successfully today.  If so, we're done.
+if [ -a "$success" ]; then
+    exit 0
+fi
+
+# Nope.  Next thing is to see if Toastmasters has made their updates.  We'll get the performance reports for
+#  District, Division/Area, and Clubs.  If any of them are unchanged, we stop and let the next cycle try again.
+
+# District:
+
+curl -so "$dtoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~$dist~~~$tmyear"
+if [  ! -e "$dyday" ] && cmp -s "$dtoday" "$dyday" ; then
+    exit 0
+fi
     
-# Start by getting the current club list.  It may not change every day, but in case it does, fire off the program to advise the
-# webmaster of changes.
+# Division/Area:
+
+curl -so "$atoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=divisionperformance~$dist~~~$tmyear"
+if [  ! -e "$ayday" ] && cmp -s "$atoday" "$ayday" ; then
+    exit 0
+fi
+
+# Club:
+
+curl -so "$ctoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~$dist~~~$tmyear"
+if [  ! -e "$cyday" ] && cmp -s "$ctoday" "$cyday" ; then
+    exit 0
+fi
+
+# OK, data has been updated.  We can proceed!
+    
+# Get the current club list.  
 
 curl -so $data/clubs.$today.csv  "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=$dist"
+
+# Check for changes, and if there are any, notify the Webmaster.
+
 ./clubchanges.py "$data/clubs.$today.csv" "$data/clubs.$yday.csv"
+
