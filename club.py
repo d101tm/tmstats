@@ -1,3 +1,4 @@
+import codecs
 class Club:
     
     @classmethod
@@ -15,22 +16,23 @@ class Club:
         for i in range(len(self.headers)):
             h = self.headers[i]
             try:
-                self.__dict__[h] = row[i]
+                self.__dict__[h] = row[i].strip()
             except IndexError:
                 self.__dict__[h] = ''
         self.clubnumber = self.fixcn(self.clubnumber)
         self.dcplastyear = ' '
         self.isvalid = False   # So we can handle ancient clubs if need be
         self.citygeo = None
+        self.area = self.area.lstrip('0')
         
     def info(self):
         # Return a key for sorts and compares
-        return {'number': self.number,
-               'name' : self.name,
-               'status' : self.status,
+        ret = {'number': self.clubnumber,
+               'name' : self.clubname,
                'addr1' : self.address1,
                'addr2' : self.address2,
                'city': self.city,
+               'state': self.state,
                'zip': self.zip,
                'time': self.meetingtime,
                'date': self.meetingday,
@@ -39,6 +41,8 @@ class Club:
                'division': self.division,
                'area': self.area
            }
+
+        return ret
  
             
     def __repr__(self):
@@ -53,7 +57,7 @@ class Club:
             h = headers[i]
             if not only or h in only:
                 try:
-                    self.__dict__[h] = row[i]
+                    self.__dict__[h] = row[i].strip()
                 except IndexError:
                     self.__dict__[h] = ''
         self.isvalid = True
