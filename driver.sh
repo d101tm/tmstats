@@ -22,7 +22,6 @@ if ! yday=$(date -v-1d +'%Y-%m-%d' 2>/dev/null)
 then
     yday=$(date -d '1 day ago' +'%Y-%m-%d' 2>/dev/null)
 fi
-echo $yday
 
 # Set up filenames
 success="$data/$today.success"
@@ -43,6 +42,14 @@ clubsyday="$data/clubs.$yday.csv"
 oldclubs="$data/oldclubs.csv"
 ymlfile="$data/today.yml"
 
+
+
+
+# The very first thing to check is whether we have run successfully today.  If so, we're done.
+if [ -a "$success" ]; then
+    exit 0
+fi
+
 # Create the YML file with all of the filenames so that the other programs can run:
 cat >"$ymlfile"  << EOF
 %YAML 1.1
@@ -54,12 +61,6 @@ files:
     historical: $historical
     division: $atoday
 EOF
-
-
-# The very first thing to check is whether we have run successfully today.  If so, we're done.
-if [ -a "$success" ]; then
-    exit 0
-fi
 
 # Get historical data, if it doesn't already exist
 if [ ! -a "$historical" ]; then
@@ -110,5 +111,17 @@ curl -so $data/clubs.$today.csv  "http://reports.toastmasters.org/findaclub/csvR
 savedir="$(pwd)"
 cd "$data"
 $savedir/allstats.py "$ymlfile"
+cd "$savedir"
+
+# Now, run the net gain report
+./nothinbutnet.py  "$data/net.html" "$data/net.css" "$ymlfile"
+
+# And create a special version of the net gain report to be standalone, at least for testing
+
+echo "<html><head><link rel='stylesheet' type='text/css' href='net.css'></head><body>" >$data/allnet.html
+cat "$data/net.html" >> $data/allnet.html
+echo "</body></html>" >> $data/allnet.html
+
+# If we get this far, we win!
  
- 
+echo "Finished at $(date)" > "$success"

@@ -3,7 +3,6 @@
 import csv, sys, yaml, urllib, re
 from club import Club
 
-
 def normalize(s):
     if s:
         return re.sub('\W\W*', '', s).strip().lower()
@@ -21,9 +20,23 @@ resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?
      'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s",
      'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
      'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
+     
+outfile = open(sys.argv[1],'w')
+cssoutfile = open(sys.argv[2],'w')
+cssoutfile.write("""
+    table.nbntable { width: 60%; margin-bottom: 1.5em; border: 1px solid black; border-collapse: collapse;}
+    tr.nbngold {background-color: gold;}
+    tr.nbnsilver {background-color: silver;}
+    tr.nbnbronze {background-color: #8C7853;}
+    .nbnclubname {text-align: left;}
+    .nbngain {text-align:right;} 
+    .nbndiv {text-align:center; font-size: 200%;}
+    .nbnhead {background-color: lightblue;}
+""")
+cssoutfile.close()
 
-if len(sys.argv) > 1:
-    resources = yaml.load(open(sys.argv[1],'r'))['files']
+if len(sys.argv) > 3:
+    resources = yaml.load(open(sys.argv[3],'r'))['files']
     parms = {}
 else:
     parms = {'district':'04'}  
@@ -59,13 +72,14 @@ csvfile.close()
 # Now, proceed by division....
 for d in sorted(divisions.keys()):
     div = divisions[d]
-    print '<table width="60%" cols="7* *">'
-    print '<thead>'
-    print '<tr><th colspan="2">Division %s</th></tr>' % d
-    print '<tr><th>Club</td><td>Gain</th></tr>'
-    print '</thead>'
-    print '<tbody>'
+    outfile.write('<table class="nbntable">\n')
+    outfile.write('<thead>\n')
+    outfile.write('<tr class="nbndiv"><th colspan="2">Division %s</th></tr>\n' % d)
+    outfile.write('<tr class="nbnhead"><th class="nbnclubname">Club</th><th class="nbngain">Gain</th></tr>\n')
+    outfile.write('</thead>\n')
+    outfile.write('<tbody>\n')
     gains = {}
+    classes = ['nbngold', 'nbnsilver', 'nbnbronze']
     for c in div:
         if c.gain not in gains:
             gains[c.gain] = [c]
@@ -76,10 +90,11 @@ for d in sorted(divisions.keys()):
     gainlist = sorted(gains.keys(), reverse=True)
     if len(gainlist) > 3:
         gainlist = gainlist[0:3]
-    for g in gainlist:
-        for c in gains[g]:
-            print '<tr><td>%s</td><td>%d</td></tr>' % (c.clubname, c.gain)
-    print '</tbody>'
-    
-    
+    for gnum in xrange(len(gainlist)):
+        g = gainlist[gnum]
+        for i in xrange(len(gains[g])):
+            c = gains[g][i]
+            outfile.write('<tr class="%s"><td class="nbnclubname">%s</td><td class="nbngain">%d</td></tr>\n' % (classes[gnum], c.clubname, c.gain))
+    outfile.write('</tbody>\n')
 
+outfile.close()
