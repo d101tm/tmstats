@@ -1,3 +1,6 @@
 *.csv
+*.pyc
+gator.sh
+bluehost.sh
 *.xls*
 data/
