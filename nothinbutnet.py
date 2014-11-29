@@ -32,9 +32,8 @@ cssoutfile.write("""
     tr.nbnbronze {background-color: #baae97; color: black;}
     .nbnclubname {text-align: left;}
     .nbngain {text-align:right;} 
-    .nbndiv {width: 70%; background-color: #004165; color: white; text-align:center; font-size: 125%;}
+    .nbnhead .nbndiv {width: 40%; background-color: #004165; color: white; text-align:center; font-size: 125%;}
     .nbnhead {background-color: #004165; color: white; }
-    .nbnhead .nbndiv {width: 40%}
     .nbnhead .nbnclubname {width: 30%}
     .nbnhead .nbngain {width: 30%}
 """)
