@@ -24,14 +24,19 @@ resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?
 outfile = open(sys.argv[1],'w')
 cssoutfile = open(sys.argv[2],'w')
 cssoutfile.write("""
-    table.nbntable { width: 60%; margin-bottom: 1.5em; border: 1px solid black; border-collapse: collapse;}
-    tr.nbngold {background-color: gold;}
-    tr.nbnsilver {background-color: silver;}
-    tr.nbnbronze {background-color: #8C7853;}
+    table.nbntable { width: 60%; margin-bottom: 1.5em; border: 1px solid black; border-collapse: collapse; background-color: #004165; color: white;}
+    table.nbntable td {border-width: 0px;}
+    table.nbntable tr {border-width: 0px;}
+    tr.nbngold {background-color: #E5C100; color: black;}
+    tr.nbnsilver {background-color: silver; color: black;}
+    tr.nbnbronze {background-color: #baae97; color: black;}
     .nbnclubname {text-align: left;}
     .nbngain {text-align:right;} 
-    .nbndiv {text-align:center; font-size: 200%;}
-    .nbnhead {background-color: lightblue;}
+    .nbndiv {width: 70%; background-color: #004165; color: white; text-align:center; font-size: 125%;}
+    .nbnhead {background-color: #004165; color: white; }
+    .nbnhead .nbndiv {width: 40%}
+    .nbnhead .nbnclubname {width: 30%}
+    .nbnhead .nbngain {width: 30%}
 """)
 cssoutfile.close()
 
@@ -74,8 +79,7 @@ for d in sorted(divisions.keys()):
     div = divisions[d]
     outfile.write('<table class="nbntable">\n')
     outfile.write('<thead>\n')
-    outfile.write('<tr class="nbndiv"><th colspan="2">Division %s</th></tr>\n' % d)
-    outfile.write('<tr class="nbnhead"><th class="nbnclubname">Club</th><th class="nbngain">Gain</th></tr>\n')
+    outfile.write('<tr class="nbnhead"><th class="nbnclubname">Club</th><th class="nbndiv">Division %s</th><th class="nbngain">Gain</th></tr>\n' % (d))
     outfile.write('</thead>\n')
     outfile.write('<tbody>\n')
     gains = {}
@@ -94,7 +98,7 @@ for d in sorted(divisions.keys()):
         g = gainlist[gnum]
         for i in xrange(len(gains[g])):
             c = gains[g][i]
-            outfile.write('<tr class="%s"><td class="nbnclubname">%s</td><td class="nbngain">%d</td></tr>\n' % (classes[gnum], c.clubname, c.gain))
+            outfile.write('<tr class="%s"><td class="nbnclubname" colspan="2">%s</td><td class="nbngain">%d</td></tr>\n' % (classes[gnum], c.clubname, c.gain))
     outfile.write('</tbody>\n')
 
 outfile.close()

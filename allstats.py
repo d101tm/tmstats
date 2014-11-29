@@ -459,7 +459,6 @@ report = "districtperformance"
 
 if len(sys.argv) == 2:
     # Open files instead of doing our own fetches
-    print sys.argv[1]
     resources = yaml.load(open(sys.argv[1],'r'))['files']
 else:
     resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",

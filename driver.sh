@@ -47,7 +47,8 @@ ymlfile="$data/today.yml"
 
 # The very first thing to check is whether we have run successfully today.  If so, we're done.
 if [ -a "$success" ]; then
-    exit 0
+    echo "already run today"
+    exit 2
 fi
 
 # Create the YML file with all of the filenames so that the other programs can run:
@@ -74,6 +75,7 @@ fi
 
 curl -so "$dtoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~$dist~~~$tmyear"
 if cmp -s "$dtoday" "$dyday" ; then
+    echo "No change in District Performance Report; exiting"
     exit 1
 fi
     
@@ -81,6 +83,7 @@ fi
 
 curl -so "$atoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=divisionperformance~$dist~~~$tmyear"
 if cmp -s "$atoday" "$ayday" ; then
+    echo "No change in Area/Division Performance Report; exiting"
     exit 1
 fi
 
@@ -88,6 +91,7 @@ fi
 
 curl -so "$ctoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~$dist~~~$tmyear"
 if cmp -s "$ctoday" "$cyday" ; then
+    echo "No change in Club Performance Report; exiting"
     exit 1
 fi
 
@@ -98,15 +102,18 @@ fi
 curl -so $data/clubs.$today.csv  "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=$dist"
 
 # Check for changes, and if there are any, notify the Webmaster.
+echo "Checking for club changes"
 
 ./clubchanges.py "$data/clubs.$today.csv" "$data/clubs.$yday.csv" > "$data/clubchanges.$today.eml"
 
 
 # Next, run the reformation report
+echo "Running reformation analysis"
 
 ./reformation.py "$ymlfile"
 
 # Next, run the statistics.  The program is ill-behaved, so we need to move to the data directory first.
+echo "Running allstats"
 
 savedir="$(pwd)"
 cd "$data"
@@ -114,6 +121,7 @@ $savedir/allstats.py "$ymlfile"
 cd "$savedir"
 
 # Now, run the net gain report
+echo "Running net gain report"
 ./nothinbutnet.py  "$data/net.html" "$data/net.css" "$ymlfile"
 
 # And create a special version of the net gain report to be standalone, at least for testing
@@ -125,3 +133,4 @@ echo "</body></html>" >> $data/allnet.html
 # If we get this far, we win!
  
 echo "Finished at $(date)" > "$success"
+cat "$success"
