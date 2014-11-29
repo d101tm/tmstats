@@ -73,22 +73,22 @@ fi
 # District:
 
 curl -so "$dtoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~$dist~~~$tmyear"
-if [  ! -e "$dyday" ] && cmp -s "$dtoday" "$dyday" ; then
-    exit 0
+if cmp -s "$dtoday" "$dyday" ; then
+    exit 1
 fi
     
 # Division/Area:
 
 curl -so "$atoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=divisionperformance~$dist~~~$tmyear"
-if [  ! -e "$ayday" ] && cmp -s "$atoday" "$ayday" ; then
-    exit 0
+if cmp -s "$atoday" "$ayday" ; then
+    exit 1
 fi
 
 # Club:
 
 curl -so "$ctoday" "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~$dist~~~$tmyear"
-if [  ! -e "$cyday" ] && cmp -s "$ctoday" "$cyday" ; then
-    exit 0
+if cmp -s "$ctoday" "$cyday" ; then
+    exit 1
 fi
 
 # OK, data has been updated.  We can proceed!
