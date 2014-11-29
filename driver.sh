@@ -47,7 +47,6 @@ ymlfile="$data/today.yml"
 
 # The very first thing to check is whether we have run successfully today.  If so, we're done.
 if [ -a "$success" ]; then
-    echo "already run today"
     exit 2
 fi
 
