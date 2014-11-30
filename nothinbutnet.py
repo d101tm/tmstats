@@ -99,5 +99,6 @@ for d in sorted(divisions.keys()):
             c = gains[g][i]
             outfile.write('<tr class="%s"><td class="nbnclubname" colspan="2">%s</td><td class="nbngain">%d</td></tr>\n' % (classes[gnum], c.clubname, c.gain))
     outfile.write('</tbody>\n')
+    outfile.write('</table>\n')
 
 outfile.close()
