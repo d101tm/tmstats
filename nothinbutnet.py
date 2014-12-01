@@ -27,15 +27,16 @@ cssoutfile.write("""
     table.nbntable { width: 60%; margin-bottom: 1.5em; border: 1px solid black; border-collapse: collapse; background-color: #004165; color: white;}
     table.nbntable td {border-width: 0px;}
     table.nbntable tr {border-width: 0px;}
-    tr.nbngold {background-color: #E5C100; color: black;}
-    tr.nbnsilver {background-color: silver; color: black;}
-    tr.nbnbronze {background-color: #baae97; color: black;}
+    table.nbntable th {border-width: 0px;}
+    tr.nbngold {background-color: #FFDE4A; color: black;}
+    tr.nbnsilver {background-color: #EEEEEE; color: black;}
+    tr.nbnbronze {background-color: #FFC25E; color: black;}
     .nbnclubname {text-align: left;}
     .nbngain {text-align:right;} 
     .nbnhead .nbndiv {width: 40%; background-color: #004165; color: white; text-align:center; font-size: 125%;}
     .nbnhead {background-color: #004165; color: white; }
-    .nbnhead .nbnclubname {width: 30%}
-    .nbnhead .nbngain {width: 30%}
+    .nbnhead .nbnclubname {background-color: #004165; color: white; width: 30%}
+    .nbnhead .nbngain {background-color: #004165; color: white; width: 30%}
 """)
 cssoutfile.close()
 
@@ -84,12 +85,13 @@ for d in sorted(divisions.keys()):
     gains = {}
     classes = ['nbngold', 'nbnsilver', 'nbnbronze']
     for c in div:
-        if c.gain not in gains:
-            gains[c.gain] = [c]
-        else:
-            gains[c.gain].append(c)
+        if c.gain > 0:
+            if c.gain not in gains:
+                gains[c.gain] = [c]
+            else:
+                gains[c.gain].append(c)
     
-    # Get the top 3 gains (>0, of course)
+    # Get the top 3 gains
     gainlist = sorted(gains.keys(), reverse=True)
     if len(gainlist) > 3:
         gainlist = gainlist[0:3]
