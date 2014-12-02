@@ -34,9 +34,10 @@ if len(sys.argv) == 2:
 
 info = yaml.load(open('resources.yml','r'))   # Get all of the changeable info
 parms = info['Parms']   # Year and district
-cities = info['Cities']  # Mapping of cities to counties
-for city in cities.keys():
-    cities[normalize(city)] = cities[city]    # Provide safety
+ocities = info['Cities']  # Mapping of cities to counties
+cities = {}
+for city in ocities.keys():
+    cities[normalize(city)] = ocities[city]    # Provide safety
 
  
             
@@ -124,7 +125,7 @@ class Option:
     def __init__(self, s):
         self.name = s['split']
         self.northcounties = s['northcounties']
-        self.northcities = s.get('northcities', [])
+        self.northcities = [normalize(c) for c in s.get('northcities', [])]
         self.north = Geography('North ' + self.name)
         self.south = Geography('South ' + self.name)
         for city in cities:
@@ -144,10 +145,15 @@ class Option:
         # Where we write our information
         self.col = col
         
+    def __repr__(self):
+        return '%s contains\n  %s\n    %s' % (self.name, '\n  '.join(self.northcounties), '\n      '.join(self.northcities))
+    
+        
 # Create options for all splits:       
 options = []
 for s in info['Splits']:
     options.append(Option(s))
+    
 
 
     
