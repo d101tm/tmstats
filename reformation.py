@@ -409,7 +409,7 @@ def fillsheet(worksheet, infofields, numbers=[], showsuspended=False):
                     if what:
                       worksheet.write_number(row, col, int(what))
                 else:
-                    what = codecs.decode(what,'cp1252').strip()
+                    what = codecs.decode(what,'utf-8').strip()
                     try:
                         if col != clubnamecol:
                             worksheet.write_string(row, col, what)
