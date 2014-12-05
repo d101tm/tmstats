@@ -45,8 +45,8 @@ ymlfile="$data/today.yml"
 
 
 
-# The very first thing to check is whether we have run successfully today.  If so, we're done.
-if [ -a "$success" ]; then
+# The very first thing to check is whether we have run successfully today.  If so, we're done.  Force a run by passing 'force' as the first argument.
+if [ "x$1" != "xforce" -a -e "$success" ] ; then
     exit 2
 fi
 
@@ -96,9 +96,8 @@ fi
 
 # OK, data has been updated.  We can proceed!
     
-# Get the current club list.  
-
-curl -so $data/clubs.$today.csv  "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=$dist"
+# Get the current club list.  (Updated for new TMI site)
+curl -so $data/clubs.$today.csv  "https://www.toastmasters.org/api/club/exportclubs?format=text%2Fcsv&district=$dist"
 
 # Check for changes, and if there are any, notify the Webmaster.
 echo "Checking for club changes"
