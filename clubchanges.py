@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import sys, csv, re, codecs
+import sys, csv, re, codecs, os
 from club import Club
 """ Inform the webmaster of any changes """
 
@@ -12,14 +12,12 @@ def normalize(s):
         
         
 if len(sys.argv) < 3:
-    today = 'data/clubs.2014-11-24.csv'
-    yday = 'data/clubs.2014-11-23.csv'
+    (yday, today) = ['data/'+c for c in os.listdir('./data/') if 'clubs.' in c][-2:]
 else:
     today = sys.argv[1]
     yday = sys.argv[2]
 
-print 'today', today
-print 'yesterday', yday
+
 
 tclubs = {}
 yclubs = {}
@@ -80,12 +78,10 @@ def printit(newc, oldc):
         print "Meets at %s on %s" % (newc.meetingtime, newc.meetingday)
         if oldc and (oldc.meetingtime + oldc.meetingday != newc.meetingtime + newc.meetingday):
             print "  was %s on %s" % (oldc.meetingtime, oldc.meetingday)
-        newloc = "Location:\n  %s\n  %s\n  %s, %s  %s" % (newc.address1, newc.address2, newc.city, newc.state, newc.zip)
-        print codecs.decode(newloc,'cp1252').strip()
+        newloc = codecs.decode("Location:\n  %s\n  %s\n  %s, %s  %s" % (newc.address1, newc.address2, newc.city, newc.state, newc.zip),'utf-8').strip()
+        print "Location: %s" % (newloc)
         if oldc:
-            oldloc = "Location:\n  %s\n  %s\n  %s, %s  %s" % (newc.address1, newc.address2, newc.city, newc.state, newc.zip)
-            if oldloc != newloc:
-                print "was %s" % codecs.decode(oldloc,'cp1252').strip()
+            oldloc = codecs.decode("Location:\n  %s\n  %s\n  %s, %s  %s" % (newc.address1, newc.address2, newc.city, newc.state, newc.zip),'utf-8').strip()
         print "Membership: %s" % (newc.clubstatus)
         if oldc and oldc.clubstatus != newc.clubstatus:
             print "  was %s" % oldc.clubstatus
@@ -97,7 +93,9 @@ def printit(newc, oldc):
         print "Club: %s, club number %s" % (oldc.clubname, oldc.clubnumber)
         print "Division s, Area %s" % (oldc.division, oldc.area)
     
-print len(newclubs), 'new clubs'
+if len(newclubs) > 0:
+    print len(newclubs), 'new clubs'
+
 for c in newclubs:
     printit(tclubs[c], None)
     
@@ -119,7 +117,10 @@ for c in sorted([int(cnum) for cnum in sameclubs]):
                     print "today = '%s'\n  was = '%s'" % (tclubs[c].info()[k], yclubs[c].info()[k])
                 except UnicodeDecodeError:
                     pass
-        printit (tclubs[c], yclubs[c])
+        try:
+            printit (tclubs[c], yclubs[c])
+        except UnicodeEncodeError:
+            print 'code error'
         
         
 
