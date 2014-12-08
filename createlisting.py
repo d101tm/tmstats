@@ -11,12 +11,16 @@ from club import Club
     
 headinfo= {}
 headinfo['style'] = """
-    table.clubtable {width: 75%; display: none;}
-    span.cityname {font-weight: bold; font-size: 150%;}
+    table.clubtable {width: 75%; display: none; border-collapse: collapse;}
+    .fullcity td {border: 0px solid white;}
+    .fullcity tr {border: 0px solid white;}
+    div.fullcity {padding-bottom: 3px;}
+    h3.cityname {font-weight: bold; font-size: 150%;}
+    h3.cityname:hover {background-color: #772432; color: white;}
     col.c1 {width: 25%;}
     col.c2 {width: 25%;}
     col.c3 {width: 50%;}
-    td.clubname {font-weight: bold; font-size: 125%;}
+    td.clubname {padding-top: 6px; font-weight: bold; font-size: 125%;}
     td.tminfo {vertical-align: top;}
     td.meeting {vertical-align: top;}
     td.location {vertical-align: top;}
@@ -59,10 +63,14 @@ clubtemplate = """
 <td class="clubname" colspan="3">%(clubname)s</td>
 </tr>
 <tr>
-<td class="tminfo">%(tminfo)s<br />%(restrict)s</td>
+<td colspan="3">%(restrict)s</td>
+</tr>
+<tr>
+<td class="tminfo">%(tminfo)s</td>
 <td class="meeting">%(meetingday)s %(meetingtime)s<br />%(contact)s</td>
 <td class="location">%(location)s<br />%(city)s, %(state)s %(zip)s</td>
-</tr>"""
+</tr>
+"""
 
 # Helper functions
 
@@ -104,7 +112,7 @@ for row in r:
 csvfile.close()
 
 outfile = open('data/clublist.html', 'wb')
-headfile = open('data/clublist.head', 'wb')
+headfile = open('data/clublist.css', 'wb')
 bodyfile = open('data/clublist.body', 'wb')
 
 headfile.write(headinfo['style'])
@@ -112,7 +120,6 @@ outfile.write(header)
 
 
 for city in sorted(cities.keys()):
-    print city
     
     info = {}
     info['cityid']= normalize(city)
@@ -130,7 +137,7 @@ for city in sorted(cities.keys()):
         else:
             data['restrict'] = 'Contact club about membership requirements'
         if club.advanced:
-            data['restrict'] += '<br />Advanced Club'
+            data['restrict'] += '; Club is an Advanced Club'
         data['meetingday'] = club.meetingday.replace(' ','&nbsp;')
         data['meetingtime'] = club.meetingtime.replace(' ','&nbsp;')
         data['contact'] = []
