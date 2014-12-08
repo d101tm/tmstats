@@ -11,19 +11,27 @@ from club import Club
     
 headinfo= {}
 headinfo['style'] = """
-    table.clubtable {width: 75%; display: none; border-collapse: collapse;}
+    table.clubtable {width: 720px; display: none; border-collapse: collapse;
+       border-left-style: hidden !important;
+       border-right-style: hidden !important;
+    }
     .fullcity td {border: 0px solid white;}
     .fullcity tr {border: 0px solid white;}
     div.fullcity {padding-bottom: 3px;}
     h3.cityname {font-weight: bold; font-size: 150%;}
     h3.cityname:hover {background-color: #772432; color: white;}
-    col.c1 {width: 25%;}
-    col.c2 {width: 25%;}
-    col.c3 {width: 50%;}
-    td.clubname {padding-top: 6px; font-weight: bold; font-size: 125%;}
-    td.tminfo {vertical-align: top;}
-    td.meeting {vertical-align: top;}
-    td.location {vertical-align: top;}
+    col.c1 {width: 22%;}
+    col.c2 {width: 32%;}
+    col.c3 {width: 46%;}
+    td.clubname {padding-top: 6px; font-weight: bold; font-size: 125%;
+          color: #772432; border-top: 1px solid #ddd;}
+    td.tminfo {vertical-align: top; padding-right: 3px;
+           border-right: 1px solid #ddd;}
+    td.meeting {vertical-align: top; padding-right: 3px;
+           padding-left: 3px;
+           border-right: 1px solid #ddd;}
+    td.location {vertical-align: top; padding-left: 3px;}
+    div.locfirst {text-indent: -1em; padding-left: 1em;}
 """
 
 \
@@ -152,9 +160,11 @@ for city in sorted(cities.keys()):
             data['contact'].append('Phone: %s' % (club.phone))
         data['contact'] = '<br />'.join(data['contact'])
         # It looks like Toastmasters uses two consecutive blanks to encode a linebreak in the address info
-        club.address1 = '<br />'.join(club.address1.split('  '))
-        club.address2 = '<br />'.join(club.address2.split('  '))
-        data['location'] = '<br />'.join([club.address1, club.address2])
+        address = club.address1.split('  ') + club.address2.split('  ')
+        data['location'] = '<div class="locfirst">' + \
+                           address[0] + \
+                           '</div>' + \
+                           ('<br />'.join(address[1:]))
         data['city'] = club.city
         data['state'] = club.state
         data['zip'] = club.zip
