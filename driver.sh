@@ -129,7 +129,8 @@ cat "$data/net.html" >> $data/allnet.html
 echo "</body></html>" >> $data/allnet.html
 
 # Now, create the clublisting
-./createlisting.py "$data/clubs.$today.csv"
+echo "Creating clubs by city"
+./listclubsbycity.py "$data/clubs.$today.csv"
 
 
 # If we get this far, we win!
