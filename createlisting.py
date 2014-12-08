@@ -126,7 +126,8 @@ for city in sorted(cities.keys()):
     info['cityname'] = city
     info['clubs'] = ''
     allclubinfo = []
-        
+    
+    cities[city].sort(key=lambda x:x.clubname)
     for club in cities[city]:
         data = {}
         data['clubname'] = club.clubname
