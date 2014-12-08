@@ -128,6 +128,10 @@ echo "<html><head><link rel='stylesheet' type='text/css' href='net.css'></head><
 cat "$data/net.html" >> $data/allnet.html
 echo "</body></html>" >> $data/allnet.html
 
+# Now, create the clublisting
+./createlisting.py "$data/clubs.$today.csv"
+
+
 # If we get this far, we win!
  
 echo "Finished at $(date)" > "$success"
