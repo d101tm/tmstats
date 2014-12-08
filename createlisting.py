@@ -1,16 +1,16 @@
 #!/usr/bin/python
-""" Create the "Club Listing By City" as an includable HTML file. """
+""" Create the "Club Listing By City" as an includable HTML file. 
+    Also create the CSS/JS and actual HTML as separate pieces for Joomla. """
 
 import csv, sys, re
 from club import Club
 
 # Create the templates
 
-header = """
-<html>
-<head>
-    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-    <style type="text/css">
+
+    
+headinfo= {}
+headinfo['style'] = """
     table.clubtable {width: 75%; display: none;}
     span.cityname {font-weight: bold; font-size: 150%;}
     col.c1 {width: 25%;}
@@ -20,14 +20,32 @@ header = """
     td.tminfo {vertical-align: top;}
     td.meeting {vertical-align: top;}
     td.location {vertical-align: top;}
+"""
+
+\
+
+header = """
+<html>
+<head>
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script>
+        jQ = jQuery.noConflict();
+    </script>    
+    <style type="text/css">
+    %(style)s
     </style>
 </head>
-<body>
+</body>
+""" % headinfo
+
+footer = """
+</body>
+</html>
 """
 
 citytemplate = """
 <div class="fullcity" id="%(cityid)s">
-<span class="cityname" onclick='$ ( "#%(cityid)sclubs" ).toggle();'>%(cityname)s</span>
+<h3 class="cityname title pane-toggler" onclick='jQ ( "#%(cityid)sclubs" ).toggle();'>%(cityname)s</h3>
 <table class="clubtable" id="%(cityid)sclubs">
 <colgroup>
 <col class="c1"><col class="c2"><col class="c3">
@@ -86,17 +104,12 @@ for row in r:
 csvfile.close()
 
 outfile = open('data/clublist.html', 'wb')
+headfile = open('data/clublist.head', 'wb')
+bodyfile = open('data/clublist.body', 'wb')
 
+headfile.write(headinfo['style'])
 outfile.write(header)
-header = """
-<html>
-<head>
-    <style type="text/css">
-    
-    </style>
-</head>
-<body>
-"""
+
 
 for city in sorted(cities.keys()):
     print city
@@ -142,9 +155,11 @@ for city in sorted(cities.keys()):
     info['clubs'] = '\n'.join(allclubinfo)
     outfile.write(citytemplate % info)
     outfile.write('\n')
+    bodyfile.write(citytemplate % info)
+    bodyfile.write('\n')
     
-outfile.write("""
-</body>
-</html>""")
+outfile.write(footer);
 outfile.close()
+bodyfile.close()
+headfile.close( )
     
