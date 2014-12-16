@@ -104,11 +104,23 @@ echo "Checking for club changes"
 
 ./clubchanges.py "$data/clubs.$today.csv" "$data/clubs.$yday.csv" > "$data/clubchanges.$today.eml"
 
+rc=$?
+if [[ "$rc" != 0 ]] ; then
+   echo "return code: $rc, exiting"
+   exit $rc
+fi
+
 
 # Next, run the reformation report
 echo "Running reformation analysis"
 
 ./reformation.py "$ymlfile"
+
+rc=$?
+if [[ "$rc" != 0 ]] ; then
+   echo "return code: $rc, exiting"
+   exit $rc
+fi
 
 # Next, run the statistics.  The program is ill-behaved, so we need to move to the data directory first.
 echo "Running allstats"
@@ -122,6 +134,12 @@ cd "$savedir"
 echo "Running net gain report"
 ./nothinbutnet.py  "$data/net.html" "$data/net.css" "$ymlfile"
 
+rc=$?
+if [[ "$rc" != 0 ]] ; then
+   echo "return code: $rc, exiting"
+   exit $rc
+fi
+
 # And create a special version of the net gain report to be standalone, at least for testing
 
 echo "<html><head><link rel='stylesheet' type='text/css' href='net.css'></head><body>" >$data/allnet.html
@@ -132,6 +150,11 @@ echo "</body></html>" >> $data/allnet.html
 echo "Creating clubs by city"
 ./listclubsbycity.py "$data/clubs.$today.csv"
 
+rc=$?
+if [[ "$rc" != 0 ]] ; then
+   echo "return code: $rc, exiting"
+   exit $rc
+fi
 
 # If we get this far, we win!
  
