@@ -7,6 +7,9 @@ dist=04
 tmyear=2014-2015
 lastyear=2013-2014
 
+# Force Python to use UTF-8 for stdin and stdout and stderr throughout:
+export PYTHONIOENCODING="utf8"
+
 # Even if we're running in a weird shell, let's use THIS directory as the current directory
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 cd "$SCRIPTPATH"
@@ -101,7 +104,7 @@ curl -so $data/clubs.$today.csv  "https://www.toastmasters.org/api/club/exportcl
 
 # Check for changes, and if there are any, notify the Webmaster.
 echo "Checking for club changes"
-
+   
 ./clubchanges.py "$data/clubs.$today.csv" "$data/clubs.$yday.csv" > "$data/clubchanges.$today.eml"
 
 rc=$?
