@@ -76,6 +76,8 @@ csvfile.close()
 
 # Now, proceed by division....
 for d in sorted(divisions.keys()):
+    if d.strip() == '0D':
+        continue
     div = divisions[d]
     outfile.write('<table class="nbntable">\n')
     outfile.write('<thead>\n')
