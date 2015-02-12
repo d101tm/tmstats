@@ -141,7 +141,7 @@ for city in sorted(cities.keys()):
         data['clubname'] = club.clubname
         data['tminfo'] = 'Club Number %s<br />District %s<br />Division %s, Area %s<br />Charter: %s' % \
                             (club.clubnumber, club.district, club.division, club.area, club.charterdate)
-        if club.clubstatus.startswith('Open'):
+        if club.clubstatus.startswith('Open') or club.clubstatus.startswith('None'):
             data['restrict'] = 'Club is open to all'
         else:
             data['restrict'] = 'Contact club about membership requirements'
