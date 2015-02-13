@@ -164,7 +164,7 @@ for city in sorted(cities.keys()):
     for club in cities[city]:
         data = {}
         data['clubname'] = club.clubname
-        data['tminfo'] = 'Club %s<br />Division %s, Area %s<br />Charter: %s' % \
+        data['tminfo'] = 'Club %s<br />Area %s%s<br />Charter: %s' % \
                             (club.clubnumber, club.division, club.area, club.charterdate)
         data['stminfo'] = 'Club %s | Area %s%s | Charter: %s' % \
                             (club.clubnumber, club.division, club.area, club.charterdate)
