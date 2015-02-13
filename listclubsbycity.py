@@ -82,9 +82,9 @@ clubtemplate = """
 """
  
 narrowcitytemplate = """
-<div class="fullcity" id="%(cityid)s">
-<h3 class="cityname title pane-toggler" onclick='jQ ( "#%(cityid)sclubs" ).toggle();'>%(cityname)s</h3>
-<table class="clubtable" id="%(cityid)sclubs">
+<div class="fullcity" id="n%(cityid)s">
+<h3 class="cityname title pane-toggler" onclick='jQ ( "#n%(cityid)sclubs" ).toggle();'>%(cityname)s</h3>
+<table class="clubtable" id="n%(cityid)sclubs">
 %(narrowclubs)s
 </table>
 </div>"""
