@@ -1,6 +1,7 @@
 #!/usr/bin/python
 """ Create the "Club Listing By City" as an includable HTML file. 
-    Also create the CSS/JS and actual HTML as separate pieces for Joomla. """
+    Also create the CSS/JS and actual HTML as separate pieces for Joomla.
+    And create narrow versions to be phone-friendly. """
 
 import csv, sys, re
 from club import Club
@@ -79,14 +80,23 @@ clubtemplate = """
 <td class="location">%(location)s<br />%(city)s, %(state)s %(zip)s</td>
 </tr>
 """
+ 
+narrowcitytemplate = """
+<div class="fullcity" id="%(cityid)s">
+<h3 class="cityname title pane-toggler" onclick='jQ ( "#%(cityid)sclubs" ).toggle();'>%(cityname)s</h3>
+<table class="clubtable" id="%(cityid)sclubs">
+%(narrowclubs)s
+</table>
+</div>"""
 
 narrowtemplate = """
 <tr>
 <td class="clubname">%(clubname)s</td>
 </tr>
-<tr><td>%(restrict)s | Meets %(meetingday)s %(meetingtime)s</td></tr>
+<tr><td>%(restrict)s<td></tr>
+<tr><td>%(meetingday)s %(meetingtime)s</td></tr>
 <tr><td class="location">%(location)s<br />%(city)s, %(state)s %(zip)s</td></tr>
-<tr><td>%(stiminfo)s</td></tr>
+<tr><td>%(stminfo)s</td></tr>
 <tr><td>%(scontact)s</td></tr>
 """
 
@@ -133,9 +143,12 @@ csvfile.close()
 outfile = open('data/clublist.html', 'wb')
 headfile = open('data/clublist.css', 'wb')
 bodyfile = open('data/clublist.body', 'wb')
+narrowfile = open('data/narrowclublist.html', 'wb')
+narrowbodyfile = open('data/narrowclublist.body', 'wb')
 
 headfile.write(headinfo['style'])
 outfile.write(header)
+narrowfile.write(header)
 
 
 for city in sorted(cities.keys()):
@@ -145,13 +158,14 @@ for city in sorted(cities.keys()):
     info['cityname'] = city
     info['clubs'] = ''
     allclubinfo = []
+    allnarrowinfo = []
     
     cities[city].sort(key=lambda x:x.clubname.lower())
     for club in cities[city]:
         data = {}
         data['clubname'] = club.clubname
-        data['tminfo'] = 'Club Number %s<br />District %s<br />Division %s, Area %s<br />Charter: %s' % \
-                            (club.clubnumber, club.district, club.division, club.area, club.charterdate)
+        data['tminfo'] = 'Club %s<br />Division %s, Area %s<br />Charter: %s' % \
+                            (club.clubnumber, club.division, club.area, club.charterdate)
         data['stminfo'] = 'Club %s | Area %s%s | Charter: %s' % \
                             (club.clubnumber, club.division, club.area, club.charterdate)
         if club.clubstatus.startswith('Open') or club.clubstatus.startswith('None'):
@@ -164,7 +178,7 @@ for city in sorted(cities.keys()):
         data['meetingtime'] = club.meetingtime.replace(' ','&nbsp;')
         data['contact'] = []
         if club.clubwebsite: 
-            data['contact'].append('<a href="http://%s" target="_blank"> Website</a>' % (club.clubwebsite))
+            data['contact'].append('<a href="http://%s" target="_blank">Website</a>' % (club.clubwebsite))
         if club.facebook:
             data['contact'].append('<a href="http://%s" target="_blank">Facebook</a>' % (club.facebook))
         if club.clubemail:
@@ -183,15 +197,24 @@ for city in sorted(cities.keys()):
         data['state'] = club.state
         data['zip'] = club.zip
         allclubinfo.append(clubtemplate % data)
+	allnarrowinfo.append(narrowtemplate % data)
         
     info['clubs'] = '\n'.join(allclubinfo)
     outfile.write(citytemplate % info)
     outfile.write('\n')
     bodyfile.write(citytemplate % info)
     bodyfile.write('\n')
+    info['narrowclubs'] = '\n'.join(allnarrowinfo)
+    narrowfile.write(narrowcitytemplate % info)
+    narrowfile.write('\n')
+    narrowbodyfile.write(narrowcitytemplate % info)
+    narrowbodyfile.write('\n')
     
 outfile.write(footer);
+narrowfile.write(footer);
 outfile.close()
 bodyfile.close()
+narrowfile.close()
+narrowbodyfile.close()
 headfile.close( )
     
