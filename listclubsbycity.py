@@ -75,10 +75,21 @@ clubtemplate = """
 </tr>
 <tr>
 <td class="tminfo">%(tminfo)s</td>
-<td class="meeting">%(meetingday)s %(meetingtime)s<br />%(contact)s</td>
+<td class="meeting">%(meetingday)s %(meetingtime)s<br />%(lcontact)s</td>
 <td class="location">%(location)s<br />%(city)s, %(state)s %(zip)s</td>
 </tr>
 """
+
+narrowtemplate = """
+<tr>
+<td class="clubname">%(clubname)s</td>
+</tr>
+<tr><td>%(restrict)s | Meets %(meetingday)s %(meetingtime)s</td></tr>
+<tr><td class="location">%(location)s<br />%(city)s, %(state)s %(zip)s</td></tr>
+<tr><td>%(stiminfo)s</td></tr>
+<tr><td>%(scontact)s</td></tr>
+"""
+
 
 # Helper functions
 
@@ -141,6 +152,8 @@ for city in sorted(cities.keys()):
         data['clubname'] = club.clubname
         data['tminfo'] = 'Club Number %s<br />District %s<br />Division %s, Area %s<br />Charter: %s' % \
                             (club.clubnumber, club.district, club.division, club.area, club.charterdate)
+        data['stminfo'] = 'Club %s | Area %s%s | Charter: %s' % \
+                            (club.clubnumber, club.division, club.area, club.charterdate)
         if club.clubstatus.startswith('Open') or club.clubstatus.startswith('None'):
             data['restrict'] = 'Club is open to all'
         else:
@@ -151,14 +164,15 @@ for city in sorted(cities.keys()):
         data['meetingtime'] = club.meetingtime.replace(' ','&nbsp;')
         data['contact'] = []
         if club.clubwebsite: 
-            data['contact'].append('<a href="http://%s">Website</a>' % (club.clubwebsite))
+            data['contact'].append('<a href="http://%s" target="_blank"> Website</a>' % (club.clubwebsite))
         if club.facebook:
-            data['contact'].append('<a href="http://%s">Facebook</a>' % (club.facebook))
+            data['contact'].append('<a href="http://%s" target="_blank">Facebook</a>' % (club.facebook))
         if club.clubemail:
-            data['contact'].append('<a href="mailto:%s">Email</a>' % (club.clubemail))
+            data['contact'].append('<a href="mailto:%s" target="_blank">Email</a>' % (club.clubemail))
         if club.phone:
             data['contact'].append('Phone: %s' % (club.phone))
-        data['contact'] = '<br />'.join(data['contact'])
+        data['lcontact'] = '<br />'.join(data['contact'])
+        data['scontact'] = ' | '.join(data['contact'])
         # It looks like Toastmasters uses two consecutive blanks to encode a linebreak in the address info
         address = club.address1.split('  ') + club.address2.split('  ')
         data['location'] = '<div class="locfirst">' + \
