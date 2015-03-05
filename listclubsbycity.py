@@ -12,7 +12,7 @@ from club import Club
     
 headinfo= {}
 headinfo['style'] = """
-    table.clubtable {width: 720px; display: none; border-collapse: collapse;
+    table.clubtable {width: 100%; display: none; border-collapse: collapse;
        border-left-style: hidden !important;
        border-right-style: hidden !important;
     }
