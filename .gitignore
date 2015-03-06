@@ -2,6 +2,7 @@
 *.pyc
 gator.sh
 bluehost.sh
+*.db
 *.xls*
 hourly
 data/
