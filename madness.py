@@ -47,6 +47,7 @@ for row in r:
     except IndexError:
         pass
 
+
     
 csvfile.close()
 
@@ -73,8 +74,6 @@ for row in r:
         if club.pct >= 0.75:
            qualifiers.append(club)
     
-# Sort the clubs by division and area:
-qualifiers.sort(key=lambda c: c.division + c.area)
 
 # And create the fragment
 outfile.write("""<table style="margin-left: auto; margin-right: auto; padding: 4px;">
@@ -82,30 +81,34 @@ outfile.write("""<table style="margin-left: auto; margin-right: auto; padding: 4
     <tr valign="top">
       <td><strong>Area</strong></td>
       <td><strong>Club</strong></td>
-      <td><strong>% of Base</strong></td>
+      <td><strong>Renewal</strong></td>
       <td><strong>&nbsp;</strong></td>
       <td><strong>Area</strong></td>
       <td><strong>Club</strong></td>
-      <td><strong>% of Base</strong></td>
+      <td><strong>Renewal</strong></td>
   </tr>
 """)
-even = True
-for club in qualifiers:
-    if even:
-        outfile.write('    <tr>')
-        outfile.write('\n')
-    else:
-        outfile.write('      <td>&nbsp;</td>')
-        outfile.write('\n')
-    outfile.write('      <td>%s%s</td><td>%s</td><td>%.2f%%</td>' % (club.division, club.area, club.clubname, club.pct * 100))
-    outfile.write('\n')
-    if not even:
-        outfile.write('    </tr>')
-        outfile.write('\n')
-    even = not even
 
-if even:
+# Sort the clubs by division and area:
+qualifiers.sort(key=lambda c: c.division + c.area)
+
+# But now we want to go down, not across...
+incol1 = (1 + len(qualifiers)) / 2    # Number of items in the first column.  
+left = 0  # Start with the zero'th item
+for i in range(incol1):
+    club = qualifiers[i]
+    outfile.write('    <tr>\n')
+    outfile.write('      <td>%s%s</td><td>%s</td><td>%.1f%%</td>\n' % (club.division, club.area, club.clubname, club.pct * 100))
+    outfile.write('      <td>&nbsp;</td>\n')
+    try:
+        club = qualifiers[i+incol1]   # For the right column
+    except IndexError:
+        outfile.write('    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>\n')    # Close up the row neatly
+        outfile.write('    </tr>\n')
+        break
+    outfile.write('      <td>%s%s</td><td>%s</td><td>%.1f%%</td>\n' % (club.division, club.area, club.clubname, club.pct * 100))
     outfile.write('    </tr>\n')
+    
 outfile.write("""  </tbody>
 </table>
 """)
