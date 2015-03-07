@@ -133,6 +133,17 @@ cd "$data"
 $savedir/allstats.py "$ymlfile"
 cd "$savedir"
 
+# Run March Madness
+echo "Running March Madness"
+./madness.py "$data/madness.html" "$ymlfile"
+
+rc=$?
+if [[ "$rc" != 0 ]] ; then
+   echo "return code: $rc, exiting"
+   exit $rc
+fi
+
+
 # Now, run the net gain report
 echo "Running net gain report"
 ./nothinbutnet.py  "$data/net.html" "$data/net.css" "$ymlfile"
