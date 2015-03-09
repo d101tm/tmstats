@@ -1,6 +1,6 @@
 #!/usr/bin/python
-""" Generate the "Nothin' but Net" report based on the current club statistics. """
-import csv, sys, yaml, urllib, re
+""" Generate the "March Madness" report based on the current club statistics. """
+import csv, sys, yaml, urllib, re, os.path
 from club import Club
 
 def normalize(s):
@@ -73,6 +73,9 @@ for row in r:
         club.pct = club.aprren / club.membase
         if club.pct >= 0.75:
            qualifiers.append(club)
+    else:
+        club.pct = 0.00
+    clubs[row[clubcol]] = club    
     
 
 # And create the fragment
@@ -114,3 +117,15 @@ outfile.write("""  </tbody>
 """)
 
 outfile.close()
+
+# Finally, create a CSV with the raw information for further analysis.
+# Sort all clubs by division and area:
+clublist = [clubs[c] for c in clubs]
+clublist.sort(key=lambda c: c.division + c.area + ' ' + c.clubnumber)
+outfile = open(os.path.splitext(sys.argv[1])[0] + '.csv', 'w')
+w = csv.writer(outfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+w.writerow(['Division', 'Area', 'Name', 'Number', 'Base', 'April Renewals', '% of Base'])
+for c in clublist:
+    w.writerow([c.division, c.area, c.clubname, c.clubnumber, c.membase, c.aprren, c.pct])
+outfile.close()
+    
