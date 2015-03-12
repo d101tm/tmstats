@@ -3,6 +3,7 @@
 """ We assume we care about the data directory underneath us. """
 
 import csv, sqlite3, sys, os, glob
+from club import Club
 
 def normalize(str):
     if str:
@@ -26,8 +27,7 @@ curs.execute("""CREATE TABLE IF NOT EXISTS clubs (
         clubnumber INT,
         clubname VARCHAR(100) COLLATE NOCASE,
         charter VARCHAR(10),  
-        addr1 VARCHAR(100) COLLATE NOCASE,
-        addr2 VARCHAR(100) COLLATE NOCASE,
+        address VARCHAR(200) COLLATE NOCASE,
         city VARCHAR(100) COLLATE NOCASE,
         state VARCHAR(100) COLLATE NOCASE,
         zip VARCHAR(20) COLLATE NOCASE,
@@ -40,47 +40,56 @@ curs.execute("""CREATE TABLE IF NOT EXISTS clubs (
         clubemail VARCHAR(100) COLLATE NOCASE,
         clubfacebook VARCHAR(100) COLLATE NOCASE,
         advanced BOOL,
-        firstdate VARCHAR(10),
-        lastdate VARCHAR(10)
+        infodate VARCHAR(10)
         )""")
 
 clubhist = {}
+headers = None
 
 for c in clubfiles:
     cdate = c.split('.')[1]
     print cdate
     infile = open(c, 'r')
-    names = infile.readline().strip().split(',')
     reader = csv.reader(infile)
+    if not headers:
+        headers = [p.lower().replace(' ','') for p in reader.next()]
+        clubcol = headers.index('clubnumber')    
+        Club.setHeaders(headers)
+        dbheaders = [p for p in headers]
+        dbheaders[dbheaders.index('address1')] = 'address'
+        del dbheaders[dbheaders.index('address2')]   # I know there's a more Pythonic way.
+        dbheaders.append('filedate')     # For now...
+    else:
+        reader.next()  # Throw away a line
     for row in reader:
+        if len(row) < 20:
+            break     # we're finished
+
+        # Convert to unicode.  Toastmasters usually uses UTF-8 but occasionally uses Windows CP1252 on the wire.
         try:
-            to_db = [unicode(t.strip(), "utf8") for t in row]
+            row = [unicode(t.strip(), "utf8") for t in row]
         except UnicodeDecodeError:
-            to_db = [unicode(t.strip(), "CP1252") for t in row]
-        if len(to_db) > 20:
+            row = [unicode(t.strip(), "CP1252") for t in row]
+             
+        if len(row) > 20:
             # Special case...Millbrae somehow snuck two club websites in!
-            to_db[16] = to_db[16] + ',' + to_db[17]
-            del to_db[17]
+            row[16] = row[16] + ',' + row[17]
+            del row[17]
 
-        if len(to_db) >  15:
-            if 'pen' in to_db[15]:
-                to_db[15] = 'Open'
-            else:
-                to_db[15] = 'Restricted'
-            clubnum = row[3]
-            if clubnum not in clubhist:
-                mustupdate = True
-            else:
-                mustupdate =  to_db <> clubhist[clubnum][0:20]   # Don't care about firstdate
+        row[clubcol] = Club.fixcn(row[clubcol])   # Canonicalize the club number
+        club = Club(row)       # And create something we can deal with.
+        if club.clubstatus.startswith('Open') or club.clubstatus.startswith('None'):
+            club.clubstatus = 'Open'
+        else:
+            club.clubstatus = 'Restricted'
 
-            if mustupdate:
-                print len(to_db), clubnum
-                to_db.append(cdate)  # Update 'firstdate' for this combination
-                clubhist[clubnum] = to_db  # Save without lastdate
-                to_db.append(cdate)  # Set 'lastdate'
-                curs.execute('INSERT INTO CLUBS VALUES (' + ','.join('?'*len(to_db)) + ');', to_db)
-            else:
-                curs.execute('UPDATE CLUBS SET lastdate=? WHERE clubnumber=? and firstdate=?', (cdate, clubnum, clubhist[clubnum][20]))
+        # Clean up the address
+        club.address = '\n'.join(club.address1.split('  ') + club.address2.split('  '))
+        club.filedate = cdate
+        
+        # And put it into the database
+        curs.execute('INSERT INTO CLUBS VALUES (' + ','.join('?'*len(dbheaders)) + ');', [club.__dict__[x] for x in dbheaders])
+
         
 conn.commit()
 conn.close()
