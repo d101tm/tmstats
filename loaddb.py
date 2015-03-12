@@ -11,7 +11,11 @@ def normalize(str):
     else:
         return ''
 
-
+def different(c1, c2, headers):
+    for h in headers:
+        if c1.__dict__[h] != c2.__dict__[h]:
+            return True
+    return False
 
 os.chdir("data")  # Yes, this is sleazy
 
@@ -40,7 +44,8 @@ curs.execute("""CREATE TABLE IF NOT EXISTS clubs (
         clubemail VARCHAR(100) COLLATE NOCASE,
         clubfacebook VARCHAR(100) COLLATE NOCASE,
         advanced BOOL,
-        infodate VARCHAR(10)
+        firstdate VARCHAR(10),
+        lastdate VARCHAR(10)
         )""")
 
 clubhist = {}
@@ -59,6 +64,7 @@ for c in clubfiles:
         dbheaders[dbheaders.index('address1')] = 'address'
         del dbheaders[dbheaders.index('address2')]   # I know there's a more Pythonic way.
         dbheaders.append('filedate')     # For now...
+        
     else:
         reader.next()  # Throw away a line
     for row in reader:
@@ -84,12 +90,23 @@ for c in clubfiles:
             club.clubstatus = 'Restricted'
 
         # Clean up the address
-        club.address = '\n'.join(club.address1.split('  ') + club.address2.split('  '))
+        club.address = ';'.join([x.strip() for x in club.address1.split('  ') + club.address2.split('  ')])
+        club.address = ';'.join([x.strip() for x in club.address.split(',')])
+        club.address = ', '.join(club.address.split(';'))
         club.filedate = cdate
         
-        # And put it into the database
-        curs.execute('INSERT INTO CLUBS VALUES (' + ','.join('?'*len(dbheaders)) + ');', [club.__dict__[x] for x in dbheaders])
-
+        # And put it into the database if need be
+        if club.clubnumber not in clubhist or different(club, clubhist[club.clubnumber], dbheaders[:-2]):
+            values = [club.__dict__[x] for x in dbheaders]
+            values.append(cdate)
+            curs.execute('INSERT INTO CLUBS VALUES (' + ','.join('?'*len(values)) + ');', values)
+            clubhist[club.clubnumber] = club
+            if different(club, clubhist[club.clubnumber], dbheaders[:-2]):
+                print 'it\'s different after being set.'
+                sys.exit(3) 
+        else:
+            # update the lastdate
+            curs.execute('UPDATE CLUBS SET lastdate = ? WHERE clubnumber = ? AND firstdate = ?;', (cdate, club.clubnumber, clubhist[club.clubnumber].filedate))
         
 conn.commit()
 conn.close()
