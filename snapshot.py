@@ -151,17 +151,83 @@ for c in clubs.values():
     else:
         c.clubstatus = 'Restricted'
 
-csvfile = open('alldata.csv', 'wb')
-w = UnicodeWriter(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-w.writerow(allheaders)
-for c in sorted(clubs.values(), key=lambda x:x.area + x.division + x.clubnumber.zfill(8)):
+
+# Now, onward to the alignment.  All we care about is the new area and new division, if any.
+csvfile = open('alignment.csv', 'rbU')
+r = csv.reader(csvfile)
+
+# This is terrible, but I'm hard-coding the layout of the file.
+clubcol = 4
+cdatecol = 5
+newdistcol = 7
+newareacol = 8
+newdivcol = 9
+
+for row in r:
+    clubnum = Club.fixcn(row[clubcol])
+    try:
+        c = clubs[clubnum]
+        nd = row[newdistcol].strip()
+        if nd:
+            c.newdistrict = nd
+        else:
+            c.newdistrict = c.district
+        ndiv = row[newdivcol].strip()
+        if ndiv:
+            c.newdivision = ndiv
+        else:
+            c.newdivision = c.division
+        narea = row[newareacol].strip()
+        if narea:
+            c.newarea = narea
+        else:
+            c.newarea = c.area
+    except KeyError:
+        pass   # Don't care about lost clubs
+
+csvfile.close()
+
+# Add the new information to the file...at the front
+finalheaders = ['newdistrict', 'newdivision', 'newarea']
+finalheaders.extend(allheaders)
+
+# Swap order
+areacol = finalheaders.index('area')
+divisioncol = finalheaders.index('division')
+finalheaders[areacol] = 'division'
+finalheaders[divisioncol] = 'area'
+
+
+outfile = open('alldata.csv', 'wb')
+w = UnicodeWriter(outfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+w.writerow(finalheaders)
+def getkey(x):
+    key = ''
+    try:
+        key += x.newdistrict
+    except AttributeError:
+        key += ' '
+    try:
+        key += x.newdivision
+    except AttributeError:
+        key += ' '
+    try:
+        key += x.newarea
+    except AttributeError:
+        key += ' '
+    try:
+        key += x.clubnumber.zfill(8)
+    except AttributeError:
+        key += '00000000'
+    return key
+
+for c in sorted(clubs.values(), key=lambda x:getkey(x)):
     row = []
-    for it in allheaders:
+    for it in finalheaders:
         try:
             row.append(c.__dict__[it])
         except KeyError:
             row.append('')
     w.writerow(row)
 
-csvfile.close()
-
+outfile.close()
