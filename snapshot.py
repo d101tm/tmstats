@@ -187,6 +187,46 @@ for row in r:
 
 csvfile.close()
 
+# We're not done...now we need to add new clubs.
+csvfile = open('newclubs.csv', 'rbU')
+r = csv.reader(csvfile)
+
+# This is terrible, but I'm hard-coding the layout of the file.
+clubcol = 4
+cdatecol = 3
+newdistcol = 6
+newareacol = 7
+newdivcol = 8
+
+for row in r:
+    clubnum = Club.fixcn(row[clubcol])
+    try:
+        c = clubs[clubnum]
+        nd = row[newdistcol].strip()
+        if nd:
+            c.newdistrict = nd
+        else:
+            c.newdistrict = c.district
+        ndiv = row[newdivcol].strip()
+        if ndiv:
+            c.newdivision = ndiv
+        else:
+            c.newdivision = c.division
+        narea = row[newareacol].strip()
+        if narea:
+            c.newarea = narea
+        else:
+            c.newarea = c.area
+        ncd = row[cdatecol].strip()
+        if ncd:
+            c.charterdate = ncd
+    except KeyError:
+        pass   # Don't care about lost clubs
+
+csvfile.close()
+
+
+
 # Add the new information to the file...at the front
 finalheaders = ['newdistrict', 'newdivision', 'newarea']
 finalheaders.extend(allheaders)
@@ -198,7 +238,7 @@ finalheaders[areacol] = 'division'
 finalheaders[divisioncol] = 'area'
 
 
-outfile = open('alldata.csv', 'wb')
+outfile = open('snapshot.csv', 'wb')
 w = UnicodeWriter(outfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 w.writerow(finalheaders)
 def getkey(x):
@@ -231,3 +271,165 @@ for c in sorted(clubs.values(), key=lambda x:getkey(x)):
     w.writerow(row)
 
 outfile.close()
+
+# Assign clubs to their new areas.  If they've changed, also assign to the area they're leaving
+gonefrom = {}
+newareas = {}
+divs = {}
+
+for c in clubs.values():
+    old = c.division + c.area
+    try:
+        new = c.newdivision + c.newarea
+    except AttributeError:
+        new = '  '
+        c.newdivision = ' '
+        c.newarea = ' '
+    if old != new:
+        c.was = '(from %s)' % old
+    else:
+        c.was = '&nbsp;'
+    if old not in gonefrom:
+        gonefrom[old] = []
+    if new not in newareas:
+        newareas[new] = []
+    if c.eligibility != 'Suspended':
+        newareas[new].append(c)
+        if old != new:
+            gonefrom[old].append(c)
+        if c.newdivision not in divs:
+            divs[c.newdivision] = {}
+        divs[c.newdivision][new] = new
+    else:
+        gonefrom[old].append(c)
+
+# Now, let's create an HTML file...because I love HTML files
+hout = open('snapshot.html', 'w')
+hout.write(""" <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>District 4 Realignment</title>
+<style type="text/css">
+
+
+        html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
+              font-size: 75%;}
+      
+        table {font-size: 12px; border-width: 1px; border-spacing: 0; border-collapse: collapse; border-style: solid;}
+        td, th {border-color: black; border-width: 1px;  vertical-align: middle;
+            padding: 2px;}
+
+        .name {text-align: left; font-weight: bold; width: 40%;}
+        .number {text-align: right; width: 5%;}
+        .goals {border-left: none;}
+
+        .green {background-color: lightgreen; font-weight: bold;}
+        .yellow {background-color: yellow;}
+        .red {background-color: red;}
+        .rightalign {text-align: right;}
+        .sep {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
+        .greyback {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
+        
+        .bold {font-weight: bold;}
+        .italic {font-style: italic;}
+        .areacell {border: none;}
+        .areatable {margin-bottom: 18pt; width: 100%; page-break-inside: avoid;}
+        .suspended {text-decoration: line-through; color: red;}
+
+        .divh1 {page-break-before: always !important;}
+        .divtable {border: none; 
+                   display: block; 
+                   float: none; 
+                   position: relative; 
+                   page-break-inside: avoid;}
+
+
+        
+        .newhead {width: 60%; text-align: center; background-color: aliceblue; float: left;}
+        .newalign {width: 60%; float: left;}
+        .gonehead {width: 35%; float: right; text-align: center; background-color: aliceblue;}
+        .leaving {width: 35%; float: right;}
+        .movement {width: 9%; font-weight: bold;}
+        .areaname {text-align: center; font-size: 125%; font-weight: bold;}
+    
+        @media print { 
+            body {-webkit-print-color-adjust: exact !important;}
+                        td {padding: 1px !important;}}
+        </style>
+</head>
+<body>
+""")
+
+
+def writeNewAlignment(hout, newareas, a):
+    hout.write('        <td class="newalign">\n')
+    hout.write('          <table>\n')
+    # New alignment goes here
+    hout.write('            <thead>\n')
+    hout.write('              <tr><td>Club</td><td>Club Name</td><td>Charter</td><td class="rightalign">Base</td><td class="rightalign">Current</td><td class="rightalign">Goals</td><td>Movement</td></tr>\n')
+    hout.write('            </thead>\n')
+    hout.write('            <tbody>\n')
+    for c in sorted(newareas[a], key=lambda x:int(x.clubnumber)):
+        hout.write('              <tr>\n')
+        hout.write('                <td class="number">%s</td>\n' % c.clubnumber)
+        hout.write('                <td class="%s name">%s</td>\n' % (c.color.lower(), c.clubname))
+        hout.write('                <td class="charter">%s</td>\n' % (c.charterdate))
+        hout.write('                <td class="rightalign">%s</td>\n' % (c.membase))
+        hout.write('                <td class="rightalign">%s</td>\n' % (c.activemembers))
+        hout.write('                <td class="rightalign">%s</td>\n' % (c.goalsmet))
+        hout.write('                <td class="movement">%s</td>\n' % (c.was))
+        hout.write('              </tr>\n')
+    hout.write('            </tbody>\n')
+    hout.write('          </table>\n')
+    hout.write('        </td><!--end newalign-->\n')
+
+def writeGoneFrom(hout, gonefrom, a):
+    if a in gonefrom and len(gonefrom[a]) > 0:
+        hout.write('        <td class="leaving">\n')
+        hout.write('          <table>\n')
+        hout.write('            <thead>\n')
+        hout.write('              <tr><td>Club</td><td>Club Name</td><td>Disposition</td></tr>\n')
+        hout.write('            </thead>\n')
+        hout.write('            <tbody>\n')
+        for c in sorted(gonefrom[a], key=lambda x: int(x.clubnumber)):
+            hout.write('               <tr><td class="number">%s</td><td class="%s">%s</td>' % (c.clubnumber, c.color.lower(), c.clubname))
+            if c.eligibility == 'Suspended':
+                hout.write('<td>Suspended</td>')
+            else:
+                hout.write('<td>To %s%s</td>' % (c.newdivision, c.newarea))
+            hout.write('</tr>\n')
+        hout.write('            </tbody>\n')
+        hout.write('          </table>\n')
+        hout.write('        </td><!--end leaving-->\n')
+
+h1class=""
+for div in sorted(divs.keys()):
+    areas = sorted(divs[div].keys())
+    hout.write('<h1 %s name="div%s">Division %s</h1>\n' % (h1class, div, div))
+    h1class = 'class="divh1"'  # Don't have a blank page first
+    hout.write('  <table class="divtable">\n')
+    hout.write('  <thead><tr><td class="divname" colspan="2">Division %s</td></tr></thead>\n' % div)
+    hout.write('    <tbody><!--begin areas-->\n')
+    for a in areas:
+        hout.write('  <tr><td>\n')
+        hout.write('    <table class="areatable">\n')
+        hout.write('      <colgroup span="2">\n')
+        hout.write('      <thead>\n')
+        hout.write('        <tr><td class="areaname" colspan="2">Area %s</td></tr>\n' % a)
+        hout.write('        <tr><td class="newhead">New Alignment</td><td class="gonehead">Clubs Leaving Area</td></tr>\n')
+        hout.write('      </thead>\n')
+        hout.write('      <tbody><!-- Area %s-->\n' % a)
+        hout.write('        <tr>\n')
+        writeNewAlignment(hout, newareas, a)
+        writeGoneFrom(hout, gonefrom, a)
+        hout.write('        </tr>\n')
+        hout.write('      </tbody><!-- Area %s -->\n' % a)
+        hout.write('    </table><!-- Areatable -->\n')
+        hout.write('  </td></tr>\n')
+    hout.write('    </tbody><!--end areas-->\n')
+    hout.write('<!-- End division %s table -->' % div)
+    hout.write('  </table>\n')
+
+hout.write('</body>\n</html>')
+hout.close()
