@@ -91,7 +91,7 @@ def printit(newc, oldc):
             print "  was %s" % ("Advanced Club" if oldc.advanced else "Normal club")
     elif oldc and not newc:
         print "Club: %s, club number %s" % (oldc.clubname, oldc.clubnumber)
-        print "Division s, Area %s" % (oldc.division, oldc.area)
+        print "Division %s, Area %s" % (oldc.division, oldc.area)
     
 if len(newclubs) > 0:
     print len(newclubs), 'new clubs'
