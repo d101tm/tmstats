@@ -370,6 +370,9 @@ def writeNewAlignment(hout, newareas, a):
     hout.write('              <tr><td>Club</td><td>Club Name</td><td>Charter</td><td class="rightalign">Base</td><td class="rightalign">Current</td><td class="rightalign">Goals</td><td>Movement</td></tr>\n')
     hout.write('            </thead>\n')
     hout.write('            <tbody>\n')
+    clubcount = 0
+    basecount = 0
+    membercount = 0
     for c in sorted(newareas[a], key=lambda x:int(x.clubnumber)):
         hout.write('              <tr>\n')
         hout.write('                <td class="number">%s</td>\n' % c.clubnumber)
@@ -380,9 +383,16 @@ def writeNewAlignment(hout, newareas, a):
         hout.write('                <td class="rightalign">%s</td>\n' % (c.goalsmet))
         hout.write('                <td class="movement">%s</td>\n' % (c.was))
         hout.write('              </tr>\n')
+        clubcount += 1
+        basecount += int(c.membase)
+        membercount += int(c.activemembers)
     hout.write('            </tbody>\n')
+    hout.write('            <tfoot>\n')
+    hout.write('            <tr><td colspan="7">Area totals:  %d clubs with %d members (base: %d)</td></tr>\n' % (clubcount, basecount, membercount))
+    hout.write('            </tfoot>\n')
     hout.write('          </table>\n')
     hout.write('        </td><!--end newalign-->\n')
+    return (clubcount, basecount, membercount)
 
 def writeGoneFrom(hout, gonefrom, a):
     if a in gonefrom and len(gonefrom[a]) > 0:
@@ -406,6 +416,9 @@ def writeGoneFrom(hout, gonefrom, a):
 h1class=""
 for div in sorted(divs.keys()):
     areas = sorted(divs[div].keys())
+    clubcount = 0
+    basecount = 0
+    membercount = 0
     hout.write('<h1 %s name="div%s">Division %s</h1>\n' % (h1class, div, div))
     h1class = 'class="divh1"'  # Don't have a blank page first
     hout.write('  <table class="divtable">\n')
@@ -421,13 +434,18 @@ for div in sorted(divs.keys()):
         hout.write('      </thead>\n')
         hout.write('      <tbody><!-- Area %s-->\n' % a)
         hout.write('        <tr>\n')
-        writeNewAlignment(hout, newareas, a)
+        (cc, bc, mc) = writeNewAlignment(hout, newareas, a)
+        clubcount += cc
+        basecount += bc
+        membercount += mc
         writeGoneFrom(hout, gonefrom, a)
         hout.write('        </tr>\n')
         hout.write('      </tbody><!-- Area %s -->\n' % a)
         hout.write('    </table><!-- Areatable -->\n')
         hout.write('  </td></tr>\n')
     hout.write('    </tbody><!--end areas-->\n')
+    hout.write('    <tfoot>\n')
+    hout.write('    <tr><td colspan="2">Division Total: %d clubs with %d members (base: %d)</td></tr>\n' % (clubcount, membercount, basecount))
     hout.write('<!-- End division %s table -->' % div)
     hout.write('  </table>\n')
 
