@@ -63,7 +63,10 @@ class Club:
         self.isvalid = True
             
     def setcolor(self):
-        members = int(self.activemembers)
+	try:
+        	members = int(self.activemembers)
+	except:
+		members = 0
         if members <= 12:
             self.color = "Red"
         elif members < 20:

@@ -401,7 +401,7 @@ def fillsheet(worksheet, infofields, numbers=[], showsuspended=False):
     
     row = 1
     for c in allclubs:
-        if (showsuspended == bool(clubs[c].suspend)):
+        if (showsuspended == bool(clubs[c].__dict__.get('suspend', True))):
             for col in xrange(len(infomembers)):
                 member = infomembers[col]
                 what = clubs[c].__dict__.get(member, '')
