@@ -143,6 +143,15 @@ if [[ "$rc" != 0 ]] ; then
    exit $rc
 fi
 
+# Run Distinguished Clubs
+echo "Running Distinguished Clubs"
+./distclubs.py "$data/distclubs.html" "$ymlfile"
+
+rc=$?
+if [[ "$rc" != 0 ]] ; then
+   echo "return code: $rc, exiting"
+   exit $rc
+fi
 
 # Now, run the net gain report
 echo "Running net gain report"
