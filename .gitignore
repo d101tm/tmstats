@@ -1,4 +1,5 @@
 *.csv
+*.yml
 *.pyc
 gator.sh
 bluehost.sh
