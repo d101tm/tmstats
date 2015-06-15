@@ -237,6 +237,31 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
     reader = csv.reader(infile)
     hline = reader.next()
     headers = cleanheaders(hline)
+    try:
+        clubcol = headers.index('clubnumber')    
+    except ValueError:
+        print "'clubnumber' not in '%s'" % hline
+        return
+    # We're going to use the last column for the effective date of the data
+    headers.append('asof')
+    valstr = ','.join(['%s' for each in headers])
+    headstr = ','.join(headers)
+    for row in reader:
+        if row[0].startswith("Month"):
+            break
+            
+        row.append(cdate)
+        curs.execute('INSERT IGNORE INTO clubperf (' + headstr + ') VALUES (' + valstr + ')', row)
+        
+        
+        
+                
+    conn.commit()
+    # Now, insert the month into all of today's entries
+    month = row[0].split()[-1]  # Month of Apr, for example
+    curs.execute('UPDATE distperf SET month = %s WHERE asof = %s', (month, cdate))
+    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("distperf", %s)', (cdate,))
+    conn.commit()
     
 
 if __name__ == "__main__":
