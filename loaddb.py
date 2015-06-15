@@ -34,36 +34,33 @@ def doHistoricalClubs(conn):
             continue
         print "loading clubs for", cdate
         infile = open(c, 'rU')
-        doDailyClubs(infile, conn, curs, headers, cdate, clubhist)
+        doDailyClubs(infile, conn, curs, cdate, clubhist)
         infile.close()
     
     # Commit all changes    
     conn.commit()
 
 
-def doDailyClubs(infile, conn, curs, headers, cdate, clubhist):
+def doDailyClubs(infile, conn, curs, cdate, clubhist):
     """ infile is a file-like object """
 
     reader = csv.reader(infile)
-    if not headers:
-        hline = reader.next()
-        headers = [p.lower().replace(' ','') for p in hline]
-        headers = [p.replace('?','') for p in headers]
-        try:
-            clubcol = headers.index('clubnumber')    
-        except ValueError:
-            print "'clubnumber' not in '%s'" % hline
-            return
-        Club.setHeaders(headers)
-        dbheaders = [p for p in headers]
-        dbheaders[dbheaders.index('address1')] = 'address'
-        del dbheaders[dbheaders.index('address2')]   # I know there's a more Pythonic way.
-        dbheaders.append('firstdate')
-        dbheaders.append('lastdate')     # For now...
-    
-    
-    else:
-        reader.next()  # Throw away a line
+
+    hline = reader.next()
+    headers = [p.lower().replace(' ','') for p in hline]
+    headers = [p.replace('?','') for p in headers]
+    try:
+        clubcol = headers.index('clubnumber')    
+    except ValueError:
+        print "'clubnumber' not in '%s'" % hline
+        return
+    Club.setHeaders(headers)
+    dbheaders = [p for p in headers]
+    dbheaders[dbheaders.index('address1')] = 'address'
+    del dbheaders[dbheaders.index('address2')]   # I know there's a more Pythonic way.
+    dbheaders.append('firstdate')
+    dbheaders.append('lastdate')     # For now...
+
     for row in reader:
         if len(row) < 20:
             break     # we're finished
@@ -138,7 +135,27 @@ def doDailyClubs(infile, conn, curs, headers, cdate, clubhist):
     curs.execute('INSERT INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
         
 
+def doHistoricalDistrictPerformance(conn):
+    perffiles = glob.glob("distperf.*.csv")
+    headers = None
+    curs = conn.cursor()
 
+    for c in perffiles:
+        cdate = c.split('.')[1]
+        curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="distperf" AND loadedfor=%s', (cdate,))
+        if curs.fetchone()[0] > 0:
+            continue
+        print "loading distperf for", cdate
+        infile = open(c, 'rU')
+        doDailyDistrictPerformance(infile, conn, curs, headers, cdate)
+        infile.close()
+
+    # Commit all changes    
+    conn.commit()
+    
+def doDailyDistrictPerformance(infile, conn, curs, headers, cdate):
+    return
+    
 
 if __name__ == "__main__":
 
@@ -146,13 +163,7 @@ if __name__ == "__main__":
     os.chdir("data")  # Yes, this is sleazy
 
     doHistoricalClubs(conn)
+    doHistoricalDistrictPerformance(conn)
 
-    curs = conn.cursor()
-    curs.execute('SELECT COUNT(*) FROM CLUBS')
-    print curs.fetchall()
-    conn.commit()
-    print 'Commit done'
-    curs.execute('SELECT COUNT(*) FROM CLUBS')
-    print curs.fetchall()
     conn.close()
     
