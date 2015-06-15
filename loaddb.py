@@ -23,6 +23,8 @@ def different(new, old, headers):
     
 def cleandate(date):
     charterdate = date.split('/')  
+    if len(charterdate[2]) == 2:
+        charterdate[2] = "20" + charterdate[2]
     return '-'.join((charterdate[2],charterdate[0],charterdate[1]))
         
 def doHistoricalClubs(conn):
@@ -188,14 +190,28 @@ def doDailyDistrictPerformance(infile, conn, curs, cdate):
     for row in reader:
         if row[0].startswith("Month"):
             break
+        action = row[-1].split()  # For later...
         row.append(cdate)
         curs.execute('INSERT IGNORE INTO distperf (' + headstr + ') VALUES (' + valstr + ')', row)
+        
+        
+        # If this item represents a suspended club, and it's the first time we've seen this suspension,
+        # add it to the clubchanges database
+        if 'Susp' in action:
+            clubnumber = row[clubcol]
+            suspdate = cleandate(action[action.index('Susp') + 1])
+            curs.execute('SELECT * FROM clubchanges WHERE clubnumber=%s and item="Suspended" and new=%s', (clubnumber, suspdate))
+            if not curs.fetchone():
+                # Add this suspension
+                print cdate, suspdate
+                curs.execute('INSERT INTO clubchanges (item, old, new, clubnumber, changedate) VALUES ("Suspended", "", %s, %s, %s)', (suspdate, clubnumber, cdate))
+                
     conn.commit()
     # Now, insert the month into all of today's entries
     month = row[0].split()[-1]  # Month of Apr, for example
     curs.execute('UPDATE distperf SET month = %s WHERE asof = %s', (month, cdate))
     curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("distperf", %s)', (cdate,))
- 
+    conn.commit() 
 
     
     

@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS distperf (
     dist CHAR(1),
     month VARCHAR(12),
     asof date,
+    action VARCHAR(40),
     primary key(clubnumber, asof)
 ) CHARACTER SET utf8;
         
