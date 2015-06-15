@@ -19,10 +19,18 @@ class dbconn(Singleton):
         self.dbuser = self.parms.get('dbuser','')
         self.dbpassword = self.parms.get('dbpassword','')
         self.dbname = self.parms.get('dbname','')
+        print "Connecting to %s %s with pw %s db %s" % (self.host, self.dbuser, self.dbpassword, self.dbname)
         self.conn = mysql.connect(self.host, self.dbuser, self.dbpassword, self.dbname)
         
     def cursor(self):
         return self.conn.cursor()
+        
+    def commit(self):
+        return self.conn.commit()
+        
+    def close(self):
+        self.conn.close()
+        self.conn = None
         
 if __name__ == '__main__':
 
@@ -36,3 +44,5 @@ if __name__ == '__main__':
     c = conn.cursor()
     c.execute('show tables')
     print c.fetchall()
+    conn.commit()
+    conn.close()
