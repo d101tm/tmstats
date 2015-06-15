@@ -20,12 +20,16 @@ def different(new, old, headers):
             print 'old = %s, new = %s' % (old.__dict__[h], new.__dict__[h])
             res.append((h, old.__dict__[h], new.__dict__[h]))
     return res
-
+    
+def cleandate(date):
+    charterdate = date.split('/')  
+    return '-'.join((charterdate[2],charterdate[0],charterdate[1]))
+        
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
     clubhist = {}
-    headers = None
     curs = conn.cursor()
+    firsttime = True
 
     for c in clubfiles:
         cdate = c.split('.')[1]
@@ -34,14 +38,15 @@ def doHistoricalClubs(conn):
             continue
         print "loading clubs for", cdate
         infile = open(c, 'rU')
-        doDailyClubs(infile, conn, curs, cdate, clubhist)
+        doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime)
+        firsttime = False
         infile.close()
     
     # Commit all changes    
     conn.commit()
 
 
-def doDailyClubs(infile, conn, curs, cdate, clubhist):
+def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
     """ infile is a file-like object """
 
     reader = csv.reader(infile)
@@ -95,9 +100,8 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist):
         club.lastdate = cdate
     
         # Clean up the charter date
+        charterdate = cleandate(club.charterdate)
 
-        charterdate = club.charterdate.split('/')  
-        club.charterdate = '-'.join((charterdate[2],charterdate[0],charterdate[1]))
     
         # Clean up advanced status
         club.advanced = (club.advanced != '')
@@ -108,6 +112,8 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist):
             changes = different(club, clubhist[club.clubnumber], dbheaders[:-2])
         else:
             changes = []
+            if not firsttime:
+                curs.execute('INSERT INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, "New Club", "", "")', (club.clubnumber, cdate))
         if club.clubnumber not in clubhist or changes:
             club.firstdate = club.lastdate
             values = [club.__dict__[x] for x in dbheaders]
@@ -137,7 +143,6 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist):
 
 def doHistoricalDistrictPerformance(conn):
     perffiles = glob.glob("distperf.*.csv")
-    headers = None
     curs = conn.cursor()
 
     for c in perffiles:
@@ -147,14 +152,52 @@ def doHistoricalDistrictPerformance(conn):
             continue
         print "loading distperf for", cdate
         infile = open(c, 'rU')
-        doDailyDistrictPerformance(infile, conn, curs, headers, cdate)
+        doDailyDistrictPerformance(infile, conn, curs, cdate)
         infile.close()
 
     # Commit all changes    
     conn.commit()
     
-def doDailyDistrictPerformance(infile, conn, curs, headers, cdate):
-    return
+def doDailyDistrictPerformance(infile, conn, curs, cdate):
+    reader = csv.reader(infile)
+    hline = reader.next()
+    headers = [p.lower().replace(' ','') for p in hline]
+    headers = [p.replace('?','') for p in headers]
+    headers = [p.replace('.','') for p in headers]
+    headers = [p.replace('/','') for p in headers]
+    # Do some renaming
+    renames = (('club', 'clubnumber'),
+               ('new', 'newmembers'),('lateren', 'laterenewals'),('octren', 'octrenewals'),
+               ('aprren', 'aprrenewals'),('totalren', 'totalrenewals'),('totalchart', 'totalcharter'),
+               ('distinguishedstatus', 'dist'), ('charterdatesuspenddate', 'action'))
+    for (old, new) in renames:
+        try:
+            index = headers.index(old)
+            headers[index] = new
+        except:
+            pass
+    try:
+        clubcol = headers.index('clubnumber')    
+    except ValueError:
+        print "'clubnumber' not in '%s'" % hline
+        return
+    # We're going to use the last column for the effective date of the data
+    headers.append('asof')
+    valstr = ','.join(['%s' for each in headers])
+    headstr = ','.join(headers)
+    for row in reader:
+        if row[0].startswith("Month"):
+            break
+        row.append(cdate)
+        curs.execute('INSERT IGNORE INTO distperf (' + headstr + ') VALUES (' + valstr + ')', row)
+    conn.commit()
+    # Now, insert the month into all of today's entries
+    month = row[0].split()[-1]  # Month of Apr, for example
+    curs.execute('UPDATE distperf SET month = %s WHERE asof = %s', (month, cdate))
+    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("distperf", %s)', (cdate,))
+ 
+
+    
     
 
 if __name__ == "__main__":
