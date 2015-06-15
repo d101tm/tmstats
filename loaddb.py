@@ -19,35 +19,47 @@ def different(c1, c2, headers):
             return True
     return False
 
+def doHistoricalClubs(conn):
+    clubfiles = glob.glob("clubs.*.csv")
+    clubhist = {}
+    headers = None
+    curs = conn.cursor()
+
+    for c in clubfiles:
+        cdate = c.split('.')[1]
+        curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="clubs" AND loadedfor=%s', (cdate,))
+        if curs.fetchone()[0] > 0:
+            continue
+        print "loading clubs for", cdate
+        infile = open(c, 'rU')
+        doDailyClubs(infile, conn, curs, headers, cdate, clubhist)
+        infile.close()
+    
+    # Commit all changes    
+    conn.commit()
 
 
-conn = dbconn.dbconn()
-curs = conn.cursor()
+def doDailyClubs(infile, conn, curs, headers, cdate, clubhist):
+    """ infile is a file-like object """
 
-os.chdir("data")  # Yes, this is sleazy
-clubfiles = glob.glob("clubs.*.csv")
-
-
-clubhist = {}
-headers = None
-
-for c in clubfiles:
-    cdate = c.split('.')[1]
-    print cdate
-    infile = open(c, 'rU')
     reader = csv.reader(infile)
     if not headers:
-        headers = [p.lower().replace(' ','') for p in reader.next()]
+        hline = reader.next()
+        headers = [p.lower().replace(' ','') for p in hline]
         headers = [p.replace('?','') for p in headers]
-        clubcol = headers.index('clubnumber')    
+        try:
+            clubcol = headers.index('clubnumber')    
+        except ValueError:
+            print "'clubnumber' not in '%s'" % hline
+            return
         Club.setHeaders(headers)
         dbheaders = [p for p in headers]
         dbheaders[dbheaders.index('address1')] = 'address'
         del dbheaders[dbheaders.index('address2')]   # I know there's a more Pythonic way.
         dbheaders.append('firstdate')
         dbheaders.append('lastdate')     # For now...
-        
-        
+    
+    
     else:
         reader.next()  # Throw away a line
     for row in reader:
@@ -59,7 +71,7 @@ for c in clubfiles:
             row = [unicode(t.strip(), "utf8") for t in row]
         except UnicodeDecodeError:
             row = [unicode(t.strip(), "CP1252") for t in row]
-             
+         
         if len(row) > 20:
             # Special case...Millbrae somehow snuck two club websites in!
             row[16] = row[16] + ',' + row[17]
@@ -71,32 +83,32 @@ for c in clubfiles:
             club.clubstatus = 'Open'
         else:
             club.clubstatus = 'Restricted'
-            
+        
         # Clean up the club and district numbers
         club.clubnumber = int(club.clubnumber)
-        club.district = int(club.district)
+        club.district = int(club.district )
 
         # Clean up the address
         club.address = ';'.join([x.strip() for x in club.address1.split('  ') + club.address2.split('  ')])
         club.address = ';'.join([x.strip() for x in club.address.split(',')])
         club.address = ', '.join(club.address.split(';'))
-        
+    
         club.lastdate = cdate
-        
+    
         # Clean up the charter date
 
         charterdate = club.charterdate.split('/')  
         club.charterdate = '-'.join((charterdate[2],charterdate[0],charterdate[1]))
-        
+    
         # Clean up advanced status
         club.advanced = (club.advanced != '')
-        
-        
+    
+    
         # And put it into the database if need be
         if club.clubnumber not in clubhist or different(club, clubhist[club.clubnumber], dbheaders[:-2]):
             club.firstdate = club.lastdate
             values = [club.__dict__[x] for x in dbheaders]
-            
+        
             thestr = 'INSERT INTO CLUBS (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
             try:
                 curs.execute(thestr, values)
@@ -109,13 +121,26 @@ for c in clubfiles:
         else:
             # update the lastdate
             curs.execute('UPDATE CLUBS SET lastdate = %s WHERE clubnumber = %s AND firstdate = %s;', (cdate, club.clubnumber, clubhist[club.clubnumber].firstdate))
+    
+    # If all the files were processed, today's work is done.    
+    curs.execute('INSERT INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
         
 
-curs.execute('SELECT COUNT(*) FROM CLUBS')
-print curs.fetchall()
-conn.commit()
-print 'Commit done'
-curs.execute('SELECT COUNT(*) FROM CLUBS')
-print curs.fetchall()
-conn.close()
+
+
+if __name__ == "__main__":
+
+    conn = dbconn.dbconn()
+    os.chdir("data")  # Yes, this is sleazy
+
+    doHistoricalClubs(conn)
+
+    curs = conn.cursor()
+    curs.execute('SELECT COUNT(*) FROM CLUBS')
+    print curs.fetchall()
+    conn.commit()
+    print 'Commit done'
+    curs.execute('SELECT COUNT(*) FROM CLUBS')
+    print curs.fetchall()
+    conn.close()
     
