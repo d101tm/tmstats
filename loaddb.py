@@ -26,6 +26,13 @@ def cleandate(date):
     if len(charterdate[2]) == 2:
         charterdate[2] = "20" + charterdate[2]
     return '-'.join((charterdate[2],charterdate[0],charterdate[1]))
+    
+def cleanheaders(hline):
+    headers = [p.lower().replace(' ','') for p in hline]
+    headers = [p.replace('?','') for p in headers]
+    headers = [p.replace('.','') for p in headers]
+    headers = [p.replace('/','') for p in headers]
+    return headers
         
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
@@ -54,8 +61,8 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
     reader = csv.reader(infile)
 
     hline = reader.next()
-    headers = [p.lower().replace(' ','') for p in hline]
-    headers = [p.replace('?','') for p in headers]
+    headers = cleanheaders(hline)
+
     try:
         clubcol = headers.index('clubnumber')    
     except ValueError:
@@ -91,8 +98,8 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
             club.clubstatus = 'Restricted'
         
         # Clean up the club and district numbers
-        club.clubnumber = int(club.clubnumber)
-        club.district = int(club.district )
+        club.clubnumber = club.clubnumber.lstrip('0 ')
+        club.district = club.district.lstrip('0 ')
 
         # Clean up the address
         club.address = ';'.join([x.strip() for x in club.address1.split('  ') + club.address2.split('  ')])
@@ -102,7 +109,7 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
         club.lastdate = cdate
     
         # Clean up the charter date
-        charterdate = cleandate(club.charterdate)
+        club.charterdate = cleandate(club.charterdate)
 
     
         # Clean up advanced status
@@ -115,22 +122,20 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
         else:
             changes = []
             if not firsttime:
-                curs.execute('INSERT INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, "New Club", "", "")', (club.clubnumber, cdate))
+                curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, "New Club", "", "")', (club.clubnumber, cdate))
         if club.clubnumber not in clubhist or changes:
             club.firstdate = club.lastdate
             values = [club.__dict__[x] for x in dbheaders]
         
-            thestr = 'INSERT INTO CLUBS (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
+            thestr = 'INSERT IGNORE INTO CLUBS (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
             try:
                 curs.execute(thestr, values)
-            except:
+            except Exception, e:
+                print e
                 print "Duplicate entry for", club
             # Capture changes
             for (item, old, new) in changes:
-                try:
-                    curs.execute('INSERT INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
-                except Exception, e:
-                    print e
+                curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
             clubhist[club.clubnumber] = club
             if different(club, clubhist[club.clubnumber], dbheaders[:-2]):
                 print 'it\'s different after being set.'
@@ -140,7 +145,7 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
             curs.execute('UPDATE CLUBS SET lastdate = %s WHERE clubnumber = %s AND firstdate = %s;', (cdate, club.clubnumber, clubhist[club.clubnumber].firstdate))
     
     # If all the files were processed, today's work is done.    
-    curs.execute('INSERT INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
+    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
         
 
 def doHistoricalDistrictPerformance(conn):
@@ -163,10 +168,7 @@ def doHistoricalDistrictPerformance(conn):
 def doDailyDistrictPerformance(infile, conn, curs, cdate):
     reader = csv.reader(infile)
     hline = reader.next()
-    headers = [p.lower().replace(' ','') for p in hline]
-    headers = [p.replace('?','') for p in headers]
-    headers = [p.replace('.','') for p in headers]
-    headers = [p.replace('/','') for p in headers]
+    headers = cleanheaders(hline)
     # Do some renaming
     renames = (('club', 'clubnumber'),
                ('new', 'newmembers'),('lateren', 'laterenewals'),('octren', 'octrenewals'),
@@ -204,7 +206,7 @@ def doDailyDistrictPerformance(infile, conn, curs, cdate):
             if not curs.fetchone():
                 # Add this suspension
                 print cdate, suspdate
-                curs.execute('INSERT INTO clubchanges (item, old, new, clubnumber, changedate) VALUES ("Suspended", "", %s, %s, %s)', (suspdate, clubnumber, cdate))
+                curs.execute('INSERT IGNORE INTO clubchanges (item, old, new, clubnumber, changedate) VALUES ("Suspended", "", %s, %s, %s)', (suspdate, clubnumber, cdate))
                 
     conn.commit()
     # Now, insert the month into all of today's entries
@@ -214,6 +216,27 @@ def doDailyDistrictPerformance(infile, conn, curs, cdate):
     conn.commit() 
 
     
+def doHistoricalClubPerformance(conn):
+    perffiles = glob.glob("clubperf.*.csv")
+    curs = conn.cursor()
+
+    for c in perffiles:
+        cdate = c.split('.')[1]
+        curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="clubperf" AND loadedfor=%s', (cdate,))
+        if curs.fetchone()[0] > 0:
+            continue
+        print "loading clubperf for", cdate
+        infile = open(c, 'rU')
+        doDailyClubPerformance(infile, conn, curs, cdate)
+        infile.close()
+
+    # Commit all changes    
+    conn.commit()
+    
+def doDailyClubPerformance(infile, conn, curs, cdate):
+    reader = csv.reader(infile)
+    hline = reader.next()
+    headers = cleanheaders(hline)
     
 
 if __name__ == "__main__":
@@ -223,6 +246,7 @@ if __name__ == "__main__":
 
     doHistoricalClubs(conn)
     doHistoricalDistrictPerformance(conn)
+    doHistoricalClubPerformance(conn)
 
     conn.close()
     
