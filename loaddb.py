@@ -11,13 +11,15 @@ def normalize(str):
     else:
         return ''
 
-def different(c1, c2, headers):
+def different(new, old, headers):
+    """ Returns a list of items which have changed, each of which is a tuple of (item, old, new)."""
+    res = []
     for h in headers:
-        if c1.__dict__[h] != c2.__dict__[h]:
-            print h ,'is different for club', c1.clubnumber
-            print 'old = %s, new = %s' % (c1.__dict__[h], c2.__dict__[h])
-            return True
-    return False
+        if new.__dict__[h] != old.__dict__[h]:
+            print h ,'is different for club', new.clubnumber
+            print 'old = %s, new = %s' % (old.__dict__[h], new.__dict__[h])
+            res.append((h, old.__dict__[h], new.__dict__[h]))
+    return res
 
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
@@ -105,7 +107,11 @@ def doDailyClubs(infile, conn, curs, headers, cdate, clubhist):
     
     
         # And put it into the database if need be
-        if club.clubnumber not in clubhist or different(club, clubhist[club.clubnumber], dbheaders[:-2]):
+        if club.clubnumber in clubhist:
+            changes = different(club, clubhist[club.clubnumber], dbheaders[:-2])
+        else:
+            changes = []
+        if club.clubnumber not in clubhist or changes:
             club.firstdate = club.lastdate
             values = [club.__dict__[x] for x in dbheaders]
         
@@ -114,6 +120,12 @@ def doDailyClubs(infile, conn, curs, headers, cdate, clubhist):
                 curs.execute(thestr, values)
             except:
                 print "Duplicate entry for", club
+            # Capture changes
+            for (item, old, new) in changes:
+                try:
+                    curs.execute('INSERT INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
+                except Exception, e:
+                    print e
             clubhist[club.clubnumber] = club
             if different(club, clubhist[club.clubnumber], dbheaders[:-2]):
                 print 'it\'s different after being set.'
