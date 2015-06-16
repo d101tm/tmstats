@@ -16,8 +16,8 @@ def different(new, old, headers):
     res = []
     for h in headers:
         if new.__dict__[h] != old.__dict__[h]:
-            print h ,'is different for club', new.clubnumber
-            print 'old = %s, new = %s' % (old.__dict__[h], new.__dict__[h])
+            #print h ,'is different for club', new.clubnumber
+            #print 'old = %s, new = %s' % (old.__dict__[h], new.__dict__[h])
             res.append((h, old.__dict__[h], new.__dict__[h]))
     return res
     
@@ -53,7 +53,6 @@ def doHistoricalClubs(conn):
         curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="clubs" AND loadedfor=%s', (cdate,))
         if curs.fetchone()[0] > 0:
             continue
-        print "loading clubs for", cdate
         infile = open(c, 'rU')
         doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime)
         firsttime = False
@@ -74,8 +73,10 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
     try:
         clubcol = headers.index('clubnumber')    
     except ValueError:
-        print "'clubnumber' not in '%s'" % hline
+        if not hline[0].startswith('{"Message"'):
+            print "'clubnumber' not in '%s'" % hline
         return
+    print "loading clubs for", cdate
     Club.setHeaders(headers)
     dbheaders = [p for p in headers]
     dbheaders[dbheaders.index('address1')] = 'address'
@@ -142,7 +143,6 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
                 curs.execute(thestr, values)
             except Exception, e:
                 print e
-                print "Duplicate entry for", club
             # Capture changes
             for (item, old, new) in changes:
                 curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
@@ -167,7 +167,6 @@ def doHistoricalDistrictPerformance(conn):
         curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="distperf" AND loadedfor=%s', (cdate,))
         if curs.fetchone()[0] > 0:
             continue
-        print "loading distperf for", cdate
         infile = open(c, 'rU')
         doDailyDistrictPerformance(infile, conn, curs, cdate)
         infile.close()
@@ -195,6 +194,7 @@ def doDailyDistrictPerformance(infile, conn, curs, cdate):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
+    print "loading distperf for", cdate    
     areacol = headers.index('area')
     districtcol = headers.index('district')
     # We're going to use the last column for the effective date of the data
@@ -220,7 +220,6 @@ def doDailyDistrictPerformance(infile, conn, curs, cdate):
             curs.execute('SELECT * FROM clubchanges WHERE clubnumber=%s and item="Suspended" and new=%s', (clubnumber, suspdate))
             if not curs.fetchone():
                 # Add this suspension
-                print cdate, suspdate
                 curs.execute('INSERT IGNORE INTO clubchanges (item, old, new, clubnumber, changedate) VALUES ("Suspended", "", %s, %s, %s)', (suspdate, clubnumber, cdate))
                 
     conn.commit()
@@ -240,7 +239,6 @@ def doHistoricalClubPerformance(conn):
         curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="clubperf" AND loadedfor=%s', (cdate,))
         if curs.fetchone()[0] > 0:
             continue
-        print "loading clubperf for", cdate
         infile = open(c, 'rU')
         doDailyClubPerformance(infile, conn, curs, cdate)
         infile.close()
@@ -257,6 +255,7 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
+    print "loading clubperf for", cdate
     areacol = headers.index('area')
     districtcol = headers.index('district')
     memcol = headers.index('activemembers')
@@ -328,7 +327,6 @@ def doHistoricalAreaPerformance(conn):
         curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="areaperf" AND loadedfor=%s', (cdate,))
         if curs.fetchone()[0] > 0:
             continue
-        print "loading areaperf for", cdate
         infile = open(c, 'rU')
         doDailyAreaPerformance(infile, conn, curs, cdate)
         infile.close()
@@ -346,6 +344,7 @@ def doDailyAreaPerformance(infile, conn, curs, cdate):
     except ValueError:
         print "'club' not in '%s'" % hline
         return
+    print "loading areaperf for", cdate
     areacol = headers.index('area')
     districtcol = headers.index('district')
 

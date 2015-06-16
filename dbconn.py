@@ -19,7 +19,7 @@ class dbconn(Singleton):
         self.dbuser = self.parms.get('dbuser','')
         self.dbpassword = self.parms.get('dbpassword','')
         self.dbname = self.parms.get('dbname','')
-        print "Connecting to %s %s with pw %s db %s" % (self.host, self.dbuser, self.dbpassword, self.dbname)
+        #print "Connecting to %s %s with pw %s db %s" % (self.host, self.dbuser, self.dbpassword, self.dbname)
         self.conn = mysql.connect(self.host, self.dbuser, self.dbpassword, self.dbname)
         
     def cursor(self):
