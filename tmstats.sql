@@ -7,6 +7,7 @@ drop table loaded;
 drop table clubchanges;
 drop table distperf;
 drop table clubperf;
+drop table areaperf;
 
 CREATE TABLE IF NOT EXISTS clubs (
     # This table is derived from the Toastmasters clublist and has mostly static data about clubs.
@@ -104,5 +105,46 @@ CREATE TABLE IF NOT EXISTS clubperf (
     goal9 INT,
     goal10 INT,
     asof date,
+    month VARCHAR(12),
+    primary key(clubnumber, asof)
+) CHARACTER SET utf8;
+
+CREATE TABLE IF NOT EXISTS areaperf (
+    # This table is derived from the daily "Area/Division Performance" report.
+    district INT,
+    division CHAR(2),
+    area CHAR(2),
+    clubnumber INT,
+    clubname VARCHAR(100),
+    octoberrenewals INT,
+    aprilrenewals INT,
+    novvisitaward INT,
+    mayvisitaward INT,
+    membershiptodate INT,
+    clubgoalsmet INT,
+    distinguishedclub VARCHAR(20),
+    areaclubbase INT,
+    areapaidclubgoalfordist INT,
+    areapaidclubgoalforselectdist INT,
+    areapaidclubgoalforpresdist INT,
+    totalpaidareaclubs INT,
+    areadistclubgoalfordist INT,
+    areadistclubgoalforselectdist INT,
+    areadistclubgoalforpresdist INT,
+    totaldistareaclubs INT,
+    distinguishedarea VARCHAR(30),
+    divisionclubbase INT,
+    divisionpaidclubgoalfordist INT,
+    divisionpaidclubgoalforselectdist INT,
+    divisionpaidclubgoalforpresdist INT,
+    totalpaiddivisionclubs INT,
+    divisiondistclubgoalfordist INT,
+    divisiondistclubgoalforselectdist INT,
+    divisiondistclubgoalforpresdist INT,
+    totaldistdivisionclubs INT,
+    distinguisheddivision VARCHAR(30),
+    charterdatesuspenddate VARCHAR(20),
+    asof date,
+    month VARCHAR(12),
     primary key(clubnumber, asof)
 ) CHARACTER SET utf8;

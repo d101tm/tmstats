@@ -315,10 +315,64 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
     conn.commit()
     # Now, insert the month into all of today's entries
     month = row[0].split()[-1]  # Month of Apr, for example
-    curs.execute('UPDATE distperf SET month = %s WHERE asof = %s', (month, cdate))
-    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("distperf", %s)', (cdate,))
+    curs.execute('UPDATE clubperf SET month = %s WHERE asof = %s', (month, cdate))
+    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubperf", %s)', (cdate,))
     conn.commit()
     
+def doHistoricalAreaPerformance(conn):
+    perffiles = glob.glob("areaperf.*.csv")
+    curs = conn.cursor()
+
+    for c in perffiles:
+        cdate = c.split('.')[1]
+        curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="areaperf" AND loadedfor=%s', (cdate,))
+        if curs.fetchone()[0] > 0:
+            continue
+        print "loading areaperf for", cdate
+        infile = open(c, 'rU')
+        doDailyAreaPerformance(infile, conn, curs, cdate)
+        infile.close()
+
+    # Commit all changes    
+    conn.commit()
+    
+def doDailyAreaPerformance(infile, conn, curs, cdate):
+    reader = csv.reader(infile)
+    hline = reader.next()
+    headers = cleanheaders(hline)
+    try:
+        clubcol = headers.index('club')   
+        headers[clubcol] = 'clubnumber' 
+    except ValueError:
+        print "'club' not in '%s'" % hline
+        return
+    areacol = headers.index('area')
+    districtcol = headers.index('district')
+
+    # We're going to use the last column for the effective date of the data
+    headers.append('asof')
+    valstr = ','.join(['%s' for each in headers])
+    headstr = ','.join(headers)
+    for row in reader:
+        if row[0].startswith("Month"):
+            break
+            
+        row.append(cdate)
+        row[areacol] = cleanitem(row[areacol])
+        row[clubcol] = cleanitem(row[clubcol])
+        row[districtcol] = cleanitem(row[districtcol])
+        clubnumber = row[clubcol]        
+       
+        
+        curs.execute('INSERT IGNORE INTO areaperf (' + headstr + ') VALUES (' + valstr + ')', row)
+        
+       
+    conn.commit()
+    # Now, insert the month into all of today's entries
+    month = row[0].split()[-1]  # Month of Apr, for example
+    curs.execute('UPDATE areaperf SET month = %s WHERE asof = %s', (month, cdate))
+    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("areaperf", %s)', (cdate,))
+    conn.commit()
 
 if __name__ == "__main__":
 
@@ -328,6 +382,7 @@ if __name__ == "__main__":
     doHistoricalClubs(conn)
     doHistoricalDistrictPerformance(conn)
     doHistoricalClubPerformance(conn)
+    doHistoricalAreaPerformance(conn)
 
     conn.close()
     
