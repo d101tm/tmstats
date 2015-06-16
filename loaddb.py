@@ -291,7 +291,7 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
         if len(ans) == 2:
             if ans[0][0] != ans[1][0]:
                 curs2 = conn.cursor()
-                curs2.execute('INSERT IGNORE INTO clubchanges (item, old, new, clubnumber, changeddate) VALUES ("Status Change", %s, %s, %s, %s)', (ans[1][0], ans[0],[0], clubnumber, cdate))
+                curs2.execute('INSERT IGNORE INTO clubchanges (item, old, new, clubnumber, changedate) VALUES ("Status Change", %s, %s, %s, %s)', (ans[1][0], ans[0][0], clubnumber, cdate))
         
     conn.commit()
     # Now, insert the month into all of today's entries
