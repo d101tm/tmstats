@@ -54,7 +54,7 @@ def doHistoricalClubs(conn):
         if curs.fetchone()[0] > 0:
             continue
         infile = open(c, 'rU')
-        doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime)
+        doDailyClubs(infile, conn, cdate, clubhist, firsttime)
         firsttime = False
         infile.close()
     
@@ -62,9 +62,9 @@ def doHistoricalClubs(conn):
     conn.commit()
 
 
-def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
+def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
     """ infile is a file-like object """
-
+    curs = conn.cursor()
     reader = csv.reader(infile)
 
     hline = reader.next()
@@ -168,13 +168,14 @@ def doHistoricalDistrictPerformance(conn):
         if curs.fetchone()[0] > 0:
             continue
         infile = open(c, 'rU')
-        doDailyDistrictPerformance(infile, conn, curs, cdate)
+        doDailyDistrictPerformance(infile, conn, cdate)
         infile.close()
 
     # Commit all changes    
     conn.commit()
     
-def doDailyDistrictPerformance(infile, conn, curs, cdate):
+def doDailyDistrictPerformance(infile, conn, cdate):
+    curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
     headers = cleanheaders(hline)
@@ -240,13 +241,14 @@ def doHistoricalClubPerformance(conn):
         if curs.fetchone()[0] > 0:
             continue
         infile = open(c, 'rU')
-        doDailyClubPerformance(infile, conn, curs, cdate)
+        doDailyClubPerformance(infile, conn, cdate)
         infile.close()
 
     # Commit all changes    
     conn.commit()
     
-def doDailyClubPerformance(infile, conn, curs, cdate):
+def doDailyClubPerformance(infile, conn, cdate):
+    curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
     headers = cleanheaders(hline)
@@ -328,13 +330,14 @@ def doHistoricalAreaPerformance(conn):
         if curs.fetchone()[0] > 0:
             continue
         infile = open(c, 'rU')
-        doDailyAreaPerformance(infile, conn, curs, cdate)
+        doDailyAreaPerformance(infile, conn, cdate)
         infile.close()
 
     # Commit all changes    
     conn.commit()
     
-def doDailyAreaPerformance(infile, conn, curs, cdate):
+def doDailyAreaPerformance(infile, conn, cdate):
+    curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
     headers = cleanheaders(hline)
