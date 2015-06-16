@@ -242,6 +242,7 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
+
     memcol = headers.index('activemembers')
     otr1col = headers.index('offtrainedround1')
     otr2col = headers.index('offtrainedround2')
@@ -260,7 +261,7 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
             break
             
         row.append(cdate)
-        
+        clubnumber = row[clubcol]        
         # Compute Colorcode
         members = int(row[memcol])
         if members <= 12:
@@ -284,7 +285,14 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
         
         curs.execute('INSERT IGNORE INTO clubperf (' + headstr + ') VALUES (' + valstr + ')', row)
         
-                
+        # Let's see if the club status has changed; if so, indicate that in the clubchanges table.
+        curs.execute('SELECT clubstatus, asof FROM clubperf WHERE clubnumber=%s ORDER BY ASOF DESC LIMIT 2 ', (clubnumber,) )
+        ans = curs.fetchall()
+        if len(ans) == 2:
+            if ans[0][0] != ans[1][0]:
+                curs2 = conn.cursor()
+                curs2.execute('INSERT IGNORE INTO clubchanges (item, old, new, clubnumber, changeddate) VALUES ("Status Change", %s, %s, %s, %s)', (ans[1][0], ans[0],[0], clubnumber, cdate))
+        
     conn.commit()
     # Now, insert the month into all of today's entries
     month = row[0].split()[-1]  # Month of Apr, for example
