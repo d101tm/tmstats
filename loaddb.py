@@ -242,8 +242,17 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
+    memcol = headers.index('activemembers')
+    otr1col = headers.index('offtrainedround1')
+    otr2col = headers.index('offtrainedround2')
+    octduescol = headers.index('memduesontimeoct')
+    aprduescol = headers.index('memduesontimeapr')
+    offlistcol = headers.index('offlistontime')
     # We're going to use the last column for the effective date of the data
     headers.append('asof')
+    headers.append('color')
+    headers.append('goal9')
+    headers.append('goal10')
     valstr = ','.join(['%s' for each in headers])
     headstr = ','.join(headers)
     for row in reader:
@@ -251,9 +260,29 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
             break
             
         row.append(cdate)
+        
+        # Compute Colorcode
+        members = int(row[memcol])
+        if members <= 12:
+            row.append('Red')
+        elif members < 20:
+            row.append('Yellow')
+        else:
+            row.append('Green')
+            
+        # Compute Goal 9 (training):
+        if int(row[otr1col]) >= 4 and int(row[otr2col] >= 4):
+            row.append(1)
+        else:
+            row.append(0)
+            
+        # Compute Goal 10 (paperwork):
+        if ((int(row[octduescol]) > 0) or (int(row[aprduescol]) > 0)) and int(row[offlistcol]) > 0:
+            row.append(1)
+        else:
+            row.append(0)
+        
         curs.execute('INSERT IGNORE INTO clubperf (' + headstr + ') VALUES (' + valstr + ')', row)
-        
-        
         
                 
     conn.commit()
