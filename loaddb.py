@@ -33,6 +33,14 @@ def cleanheaders(hline):
     headers = [p.replace('.','') for p in headers]
     headers = [p.replace('/','') for p in headers]
     return headers
+    
+def cleanitem(item):
+    """ Return the item with leading zeros and spaces stripped if it's an integer; leave it alone otherwise. """
+    try:
+        item = '%d' % int(item)
+    except ValueError:
+        pass
+    return item
         
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
@@ -97,9 +105,11 @@ def doDailyClubs(infile, conn, curs, cdate, clubhist, firsttime=False):
         else:
             club.clubstatus = 'Restricted'
         
-        # Clean up the club and district numbers
-        club.clubnumber = club.clubnumber.lstrip('0 ')
-        club.district = club.district.lstrip('0 ')
+        # Clean up the club and district numbers and the area
+        club.clubnumber = cleanitem(club.clubnumber)
+        club.district = cleanitem(club.district)
+        club.area = cleanitem(club.area)
+
 
         # Clean up the address
         club.address = ';'.join([x.strip() for x in club.address1.split('  ') + club.address2.split('  ')])
@@ -185,6 +195,8 @@ def doDailyDistrictPerformance(infile, conn, curs, cdate):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
+    areacol = headers.index('area')
+    districtcol = headers.index('district')
     # We're going to use the last column for the effective date of the data
     headers.append('asof')
     valstr = ','.join(['%s' for each in headers])
@@ -194,6 +206,9 @@ def doDailyDistrictPerformance(infile, conn, curs, cdate):
             break
         action = row[-1].split()  # For later...
         row.append(cdate)
+        row[areacol] = cleanitem(row[areacol])
+        row[clubcol] = cleanitem(row[clubcol])
+        row[districtcol] = cleanitem(row[districtcol])
         curs.execute('INSERT IGNORE INTO distperf (' + headstr + ') VALUES (' + valstr + ')', row)
         
         
@@ -242,7 +257,8 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
-
+    areacol = headers.index('area')
+    districtcol = headers.index('district')
     memcol = headers.index('activemembers')
     otr1col = headers.index('offtrainedround1')
     otr2col = headers.index('offtrainedround2')
@@ -261,6 +277,9 @@ def doDailyClubPerformance(infile, conn, curs, cdate):
             break
             
         row.append(cdate)
+        row[areacol] = cleanitem(row[areacol])
+        row[clubcol] = cleanitem(row[clubcol])
+        row[districtcol] = cleanitem(row[districtcol])
         clubnumber = row[clubcol]        
         # Compute Colorcode
         members = int(row[memcol])

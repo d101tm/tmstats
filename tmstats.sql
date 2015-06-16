@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS clubs (
     # This table is derived from the Toastmasters clublist and has mostly static data about clubs.
     district INT,
     division CHAR(2),
-    area INT,
+    area CHAR(2),
     clubnumber INT,
     clubname VARCHAR(100) ,
     charterdate date,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS distperf (
     # This table is derived from the daily "District Performance" report. 
     district INT,
     division CHAR(2),
-    area INT,
+    area CHAR(2),
     clubnumber INT,
     clubname VARCHAR(100),
     newmembers INT,
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS clubperf (
     # This table is derived from the daily "Club Performance" report.
     district INT,
     division CHAR(2),
-    area INT,
+    area CHAR(2),
     clubnumber INT,
     clubname VARCHAR(100),
     clubstatus VARCHAR(20),
