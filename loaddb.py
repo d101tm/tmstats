@@ -375,12 +375,15 @@ def doDailyAreaPerformance(infile, conn, cdate):
     curs.execute('UPDATE areaperf SET month = %s WHERE asof = %s', (month, cdate))
     curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("areaperf", %s)', (cdate,))
     conn.commit()
-
+ 
 if __name__ == "__main__":
-
+ 
+    
+    # Make it easy to run under TextMate
+    if 'TM_DIRECTORY' in os.environ:
+        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+        
     conn = dbconn.dbconn()
-    os.chdir("data")  # Yes, this is sleazy
-
     doHistoricalClubs(conn)
     doHistoricalDistrictPerformance(conn)
     doHistoricalClubPerformance(conn)
