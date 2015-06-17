@@ -180,6 +180,13 @@ if [[ "$rc" != 0 ]] ; then
 fi
 
 # If we get this far, we win!
+
+# Let's clean up earlier versions of the data files by consolidating them in the history ZIP file.  
+# We leave yesterday's and today's intact.
+cd "$data"
+zip -Tm history clubperf.*.csv areaperf.*.csv clubs.*.csv distperf.*.csv clubchanges.*.eml -x \*.$today.\* -x \*.$yday.\*
+rm *.success
+cd "$savedir"
  
 echo "Finished at $(date)" > "$success"
 cat "$success"
