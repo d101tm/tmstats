@@ -378,12 +378,17 @@ def doDailyAreaPerformance(infile, conn, cdate):
  
 if __name__ == "__main__":
  
-    
+    import tmparms
     # Make it easy to run under TextMate
     if 'TM_DIRECTORY' in os.environ:
         os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+    
+    # Handle parameters
+    parms = tmparms.tmparms()
+    parms.parse()
+    print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
+    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
         
-    conn = dbconn.dbconn()
     doHistoricalClubs(conn)
     doHistoricalDistrictPerformance(conn)
     doHistoricalClubPerformance(conn)
