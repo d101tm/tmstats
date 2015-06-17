@@ -19,7 +19,7 @@ if [ ! -d "$data" ] ; then
     mkdir ""$data""  
 fi
 
-# Keep track of where we are
+# Keep track of where we started
 savedir="$(pwd)"
 
 # Life would be nice if we could always use the same commands.  We can't.  This should work on Mac OS X, Bluehost, and HostGator.
@@ -105,8 +105,10 @@ fi
 # Get the current club list.  (Updated for new TMI site)
 curl -so $data/clubs.$today.csv  "https://www.toastmasters.org/api/club/exportclubs?format=text%2Fcsv&district=$dist"
 
+
 # Load the database
 cd "$data"
+echo "Loading database"
 $savedir/loaddb.py 
 cd "$savedir"
 
@@ -119,6 +121,7 @@ if [[ "$rc" != 0 ]] ; then
     exit $rc
 fi
 cd "$savedir"
+
 
 # Check for changes, and if there are any, notify the Webmaster.
 echo "Checking for club changes"
@@ -143,7 +146,7 @@ if [[ "$rc" != 0 ]] ; then
    exit $rc
 fi
 
-# Next, run the statistics.  The program is ill-behaved, so we need to move to the data directory first.
+# Next, run the statistics.  
 echo "Running allstats"
 
 cd "$data"
