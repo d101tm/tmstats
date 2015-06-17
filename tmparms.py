@@ -34,12 +34,14 @@ class tmparms(Singleton):
         # Actually use the parameters.  Handle the general parameters here; others are left to the caller to interpret.
         
         # Now merge parameters with values from the YML file; parameters override the file.
+        # Known parameters here go directly into the tmparms (self) object; others go into self.args.
+        # Parameters read from the YML file go into self.ymlvalues
         self.args = self.parser.parse_args()
-        self.parms = yaml.load(open(self.args.YMLfile,'r'))
-        self.dbhost = self.args.dbhost if self.args.dbhost else self.parms.get('dbhost', 'localhost')
-        self.dbname = self.args.dbname if self.args.dbname else self.parms.get('dbname', '')
-        self.dbuser = self.args.dbuser if self.args.dbuser else self.parms.get('dbuser', '')
-        self.dbpass = self.args.dbpass if self.args.dbpass else self.parms.get('dbpass', '')
+        self.ymlvalues= yaml.load(open(self.args.YMLfile,'r'))
+        self.dbhost = self.args.dbhost if self.args.dbhost else self.ymlvalues.get('dbhost', 'localhost')
+        self.dbname = self.args.dbname if self.args.dbname else self.ymlvalues.get('dbname', '')
+        self.dbuser = self.args.dbuser if self.args.dbuser else self.ymlvalues.get('dbuser', '')
+        self.dbpass = self.args.dbpass if self.args.dbpass else self.ymlvalues.get('dbpass', '')
 
 if __name__ == '__main__':
     # Make it easy to run under TextMate
