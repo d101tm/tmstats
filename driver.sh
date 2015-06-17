@@ -19,6 +19,9 @@ if [ ! -d "$data" ] ; then
     mkdir ""$data""  
 fi
 
+# Keep track of where we are
+savedir="$(pwd)"
+
 # Life would be nice if we could always use the same commands.  We can't.  This should work on Mac OS X, Bluehost, and HostGator.
 today=$(date +'%Y-%m-%d')
 if ! yday=$(date -v-1d +'%Y-%m-%d' 2>/dev/null)
@@ -102,6 +105,21 @@ fi
 # Get the current club list.  (Updated for new TMI site)
 curl -so $data/clubs.$today.csv  "https://www.toastmasters.org/api/club/exportclubs?format=text%2Fcsv&district=$dist"
 
+# Load the database
+cd "$data"
+$savedir/loaddb.py 
+cd "$savedir"
+
+# Check for currency; if not, exit.
+cd "$data"
+$savedir/currency.py
+rc=$?
+if [[ "$rc" != 0 ]] ; then
+    echo "return code: $rc, exiting"
+    exit $rc
+fi
+cd "$savedir"
+
 # Check for changes, and if there are any, notify the Webmaster.
 echo "Checking for club changes"
    
@@ -128,7 +146,6 @@ fi
 # Next, run the statistics.  The program is ill-behaved, so we need to move to the data directory first.
 echo "Running allstats"
 
-savedir="$(pwd)"
 cd "$data"
 $savedir/allstats.py "$ymlfile"
 cd "$savedir"
