@@ -2,12 +2,6 @@
 
 # Club table
 
-drop table clubs;
-drop table loaded;
-drop table clubchanges;
-drop table distperf;
-drop table clubperf;
-drop table areaperf;
 
 CREATE TABLE IF NOT EXISTS clubs (
     # This table is derived from the Toastmasters clublist and has mostly static data about clubs.
