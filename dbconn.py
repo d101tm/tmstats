@@ -6,7 +6,7 @@ import MySQLdb as mysql
 class Singleton(object):
     def __new__(type, *args, **kwargs):
         if not '_the_instance' in type.__dict__:
-            type._the_instance = object.__new__(type, *args, **kwargs)
+            type._the_instance = object.__new__(type)
         return type._the_instance
     
 class dbconn(Singleton):
@@ -18,7 +18,7 @@ class dbconn(Singleton):
         self.dbpass = dbpass
         self.dbname = dbname
         #print "Connecting to %s %s with pw %s db %s" % (self.host, self.dbuser, self.dbpassword, self.dbname)
-        self.conn = mysql.connect(self.dbhost, self.dbuser, self.dbpass, self.dbname)
+        self.conn = mysql.connect(self.dbhost, self.dbuser, self.dbpass, self.dbname, use_unicode=True, charset='UTF8')
         
     def cursor(self):
         return self.conn.cursor()
