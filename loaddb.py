@@ -44,6 +44,7 @@ def cleanitem(item):
         
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
+    clubfiles.sort()
     clubhist = {}
     curs = conn.cursor()
     firsttime = True
@@ -138,21 +139,24 @@ def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
             club.firstdate = club.lastdate
             values = [club.__dict__[x] for x in dbheaders]
         
-            thestr = 'INSERT IGNORE INTO CLUBS (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
+            thestr = 'INSERT IGNORE INTO clubs (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
             try:
                 curs.execute(thestr, values)
             except Exception, e:
                 print e
             # Capture changes
             for (item, old, new) in changes:
-                curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
+                try:
+                    curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
+                except Exception, e:
+		    print e
             clubhist[club.clubnumber] = club
             if different(club, clubhist[club.clubnumber], dbheaders[:-2]):
                 print 'it\'s different after being set.'
                 sys.exit(3) 
         else:
             # update the lastdate
-            curs.execute('UPDATE CLUBS SET lastdate = %s WHERE clubnumber = %s AND firstdate = %s;', (cdate, club.clubnumber, clubhist[club.clubnumber].firstdate))
+            curs.execute('UPDATE clubs SET lastdate = %s WHERE clubnumber = %s AND firstdate = %s;', (cdate, club.clubnumber, clubhist[club.clubnumber].firstdate))
     
     # If all the files were processed, today's work is done.    
     curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
@@ -160,6 +164,7 @@ def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
 
 def doHistoricalDistrictPerformance(conn):
     perffiles = glob.glob("distperf.*.csv")
+    perffiles.sort()
     curs = conn.cursor()
 
     for c in perffiles:
@@ -233,6 +238,7 @@ def doDailyDistrictPerformance(infile, conn, cdate):
     
 def doHistoricalClubPerformance(conn):
     perffiles = glob.glob("clubperf.*.csv")
+    perffiles.sort()
     curs = conn.cursor()
 
     for c in perffiles:
@@ -322,6 +328,7 @@ def doDailyClubPerformance(infile, conn, cdate):
     
 def doHistoricalAreaPerformance(conn):
     perffiles = glob.glob("areaperf.*.csv")
+    perffiles.sort()
     curs = conn.cursor()
 
     for c in perffiles:
