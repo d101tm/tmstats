@@ -32,6 +32,9 @@ class tmparms(Singleton):
     def __repr__(self):
         return '\n'.join(['%s: "%s"' % (k, self.__dict__[k]) for k in self.__dict__ if k != 'parser'])
         
+    def add_argument(self, *args, **kwargs):
+        self.parser.add_argument(*args, **kwargs)
+        
     def parse(self):
 
         # Parameters are put directly into this object, based on their name in the YML file
