@@ -21,9 +21,11 @@ parms = tmparms.tmparms()
 today = datetime.today()
 parms.parser.add_argument("--date", dest='date', default=datetime.today().strftime('%Y-%m-%d'))
 parms.parse()
+
+
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
-date = parms.args.date
+date = parms.date
 print "SELECT tablename FROM loaded WHERE loadedfor='%s'"% (date)
 
 curs.execute("SELECT tablename FROM loaded WHERE loadedfor='%s'"% (date))
