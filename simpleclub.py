@@ -13,8 +13,12 @@ class Club:
         
     @classmethod
     def getClubsOn(self, date, curs, setfields=False):
-        """ Get the clubs which were in existence on a specified date """
-        curs.execute("SELECT * FROM clubs WHERE firstdate <= %s AND lastdate >= %s", (date, date))
+        """ Get the clubs which were in existence on a specified date 
+            or the most recent occurrence of each club if date=None """
+        if date:
+            curs.execute("SELECT * FROM clubs WHERE firstdate <= %s AND lastdate >= %s", (date, date))
+        else:
+            curs.execute("SELECT clubs.* FROM clubs INNER JOIN (SELECT clubnumber, MAX(lastdate) AS m FROM clubs GROUP BY clubnumber) lasts ON lasts.m = clubs.lastdate AND lasts.clubnumber = clubs.clubnumber;")
         # Get the fieldnames before we get anything else:
         fieldnames = [f[0] for f in curs.description]
         if setfields:
