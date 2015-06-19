@@ -7,6 +7,25 @@ class Club:
         self.fieldnames = names
         self.badnames = ['firstdate', 'lastdate']
         self.goodnames = [n for n in names if n not in self.badnames]
+        
+    @classmethod
+    def getClubsOn(self, date, curs, setfields=False):
+        """ Get the clubs which were in existence on a specified date """
+        curs.execute("SELECT * FROM clubs WHERE firstdate <= %s AND lastdate >= %s", (date, date))
+        if setfields:
+            # Get the fieldnames before we get anything else:
+            fieldnames = [f[0] for f in curs.description]
+            Club.setfields(fieldnames)
+    
+        res = {}
+    
+        # OK, now build the list of clubs at the beginning of the period
+        for eachclub in curs.fetchall():
+            club = Club(eachclub)
+            res[club.clubnumber] = club
+            
+        return res
+        
     
     def __init__(self, values):
         self.cmp = []

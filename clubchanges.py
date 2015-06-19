@@ -54,26 +54,13 @@ if __name__ == "__main__":
     
    
     # Get information for clubs as of the "from" date:
-
-    curs.execute("SELECT * FROM clubs WHERE firstdate <= %s AND lastdate >= %s", (fromdate, fromdate))
-    
-    # Get the fieldnames before we get anything else:
-    fieldnames = [f[0] for f in curs.description]
-    Club.setfields(fieldnames)
-    
+    oldclubs = Club.getClubsOn(fromdate, curs, setfields=True)
     newclubs = {}   # Where clubs created during the period go
     changedclubs = {}  # Where clubs changed during the period go
-    oldclubs = {}  # Clubs at the beginning; clubs still around at the end are removed
-    
-    # OK, now build the list of clubs at the beginning of the period
-    for eachclub in curs.fetchall():
-        club = Club(eachclub)
-        oldclubs[club.clubnumber] = club
+
     
     # And compare to the the list of clubs at the end of the period
-    curs.execute("SELECT * FROM clubs WHERE firstdate <= %s AND lastdate >= %s", (todate, todate))    
-    for eachclub in curs.fetchall():
-        club = Club(eachclub) 
+    for club in Club.getClubsOn(todate, curs).values():
         if club.clubnumber not in oldclubs:
             club.info = 'New Club'
             newclubs[club.clubnumber] = club
