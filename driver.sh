@@ -126,7 +126,7 @@ cd "$savedir"
 # Check for changes, and if there are any, notify the Webmaster.
 echo "Checking for club changes"
    
-./clubchanges.py "$data/clubs.$today.csv" "$data/clubs.$yday.csv" > "$data/clubchanges.$today.eml"
+./clubchanges.py 
 
 rc=$?
 if [[ "$rc" != 0 ]] ; then
