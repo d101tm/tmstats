@@ -3,7 +3,7 @@
 """ We assume we care about the data directory underneath us. """
 
 import csv, dbconn, sys, os, glob
-from club import Club
+from simpleclub import Club
 
 def normalize(str):
     if str:
@@ -45,7 +45,6 @@ def cleanitem(item):
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
     clubfiles.sort()
-    clubhist = {}
     curs = conn.cursor()
     firsttime = True
 
@@ -55,7 +54,7 @@ def doHistoricalClubs(conn):
         if curs.fetchone()[0] > 0:
             continue
         infile = open(c, 'rU')
-        doDailyClubs(infile, conn, cdate, clubhist, firsttime)
+        doDailyClubs(infile, conn, cdate, firsttime)
         firsttime = False
         infile.close()
     
@@ -63,8 +62,10 @@ def doHistoricalClubs(conn):
     conn.commit()
 
 
-def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
+def doDailyClubs(infile, conn, cdate, firsttime=False):
     """ infile is a file-like object """
+    from datetime import datetime, timedelta
+    
     curs = conn.cursor()
     reader = csv.reader(infile)
 
@@ -78,13 +79,22 @@ def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
             print "'clubnumber' not in '%s'" % hline
         return
     print "loading clubs for", cdate
-    Club.setHeaders(headers)
     dbheaders = [p for p in headers]
-    dbheaders[dbheaders.index('address1')] = 'address'
-    del dbheaders[dbheaders.index('address2')]   # I know there's a more Pythonic way.
+    addrcol1 = dbheaders.index('address1')
+    addrcol2 = dbheaders.index('address2')
+    dbheaders[addrcol1] = 'address'
+    del dbheaders[addrcol2]   # I know there's a more Pythonic way.
     dbheaders.append('firstdate')
     dbheaders.append('lastdate')     # For now...
 
+    Club.setfields(dbheaders)
+
+    
+    # We need to get clubs for yesterday so we know whether to update an entry or
+    #   start a new one.
+    yesterday = datetime.strftime(datetime.strptime(cdate, '%Y-%m-%d') - timedelta(1),'%Y-%m-%d')
+    clubhist = Club.getClubsOn(yesterday, curs)
+   
     for row in reader:
         if len(row) < 20:
             break     # we're finished
@@ -99,9 +109,28 @@ def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
             # Special case...Millbrae somehow snuck two club websites in!
             row[16] = row[16] + ',' + row[17]
             del row[17]
+            
+        #print row[addrcol1]
+        #print row[addrcol2]
+        # Now, clean up the address:
+        address = ';'.join([x.strip() for x in row[addrcol1].split('  ') + row[addrcol2].split('  ')])
+        address = ';'.join([x.strip() for x in address.split(',')])
+        address = ', '.join(address.split(';'))
+        row[addrcol1] = address
+        del row[addrcol2]
+        
+            
+        # Get the right number of items into the row by setting today as the 
+        #   tentative first and last date
+        row.append(cdate)
+        row.append(cdate)
+        
+        # And create the object
+        club = Club(row)
 
-        row[clubcol] = Club.fixcn(row[clubcol])   # Canonicalize the club number
-        club = Club(row)       # And create something we can deal with.
+        
+        # Now, clean up things coming from Toastmasters
+
         if club.clubstatus.startswith('Open') or club.clubstatus.startswith('None'):
             club.clubstatus = 'Open'
         else:
@@ -112,20 +141,14 @@ def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
         club.district = cleanitem(club.district)
         club.area = cleanitem(club.area)
 
-
-        # Clean up the address
-        club.address = ';'.join([x.strip() for x in club.address1.split('  ') + club.address2.split('  ')])
-        club.address = ';'.join([x.strip() for x in club.address.split(',')])
-        club.address = ', '.join(club.address.split(';'))
-    
-        club.lastdate = cdate
     
         # Clean up the charter date
         club.charterdate = cleandate(club.charterdate)
 
     
         # Clean up advanced status
-        club.advanced = (club.advanced != '')
+        club.advanced = '1' if (club.advanced != '') else '0'
+    
     
     
         # And put it into the database if need be
@@ -133,6 +156,8 @@ def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
             changes = different(club, clubhist[club.clubnumber], dbheaders[:-2])
         else:
             changes = []
+        
+        if changes:
             if not firsttime:
                 curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, "New Club", "", "")', (club.clubnumber, cdate))
         if club.clubnumber not in clubhist or changes:
@@ -149,14 +174,14 @@ def doDailyClubs(infile, conn, cdate, clubhist, firsttime=False):
                 try:
                     curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
                 except Exception, e:
-		    print e
+		            print e
             clubhist[club.clubnumber] = club
             if different(club, clubhist[club.clubnumber], dbheaders[:-2]):
                 print 'it\'s different after being set.'
                 sys.exit(3) 
         else:
             # update the lastdate
-            curs.execute('UPDATE clubs SET lastdate = %s WHERE clubnumber = %s AND firstdate = %s;', (cdate, club.clubnumber, clubhist[club.clubnumber].firstdate))
+            curs.execute('UPDATE clubs SET lastdate = %s WHERE clubnumber = %s AND lastdate = %s;', (cdate, club.clubnumber, yesterday))
     
     # If all the files were processed, today's work is done.    
     curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
@@ -389,6 +414,8 @@ if __name__ == "__main__":
     # Make it easy to run under TextMate
     if 'TM_DIRECTORY' in os.environ:
         os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+        
+    reload(sys).setdefaultencoding('utf8')
     
     # Handle parameters
     parms = tmparms.tmparms()
