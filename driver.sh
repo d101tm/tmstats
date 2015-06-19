@@ -126,7 +126,9 @@ cd "$savedir"
 # Check for changes, and if there are any, notify the Webmaster.
 echo "Checking for club changes"
    
-./clubchanges.py 
+cd "$data"
+"$savedir"/clubchanges.py 
+cd "$savedir"
 
 rc=$?
 if [[ "$rc" != 0 ]] ; then
