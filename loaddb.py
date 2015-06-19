@@ -90,10 +90,10 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     Club.setfields(dbheaders)
 
     
-    # We need to get clubs for yesterday so we know whether to update an entry or
-    #   start a new one.
-    yesterday = datetime.strftime(datetime.strptime(cdate, '%Y-%m-%d') - timedelta(1),'%Y-%m-%d')
-    clubhist = Club.getClubsOn(yesterday, curs)
+    # We need to get clubs for the most recent update so we know whether to update an entry 
+    #   or start a new one.
+    #yesterday = datetime.strftime(datetime.strptime(cdate, '%Y-%m-%d') - timedelta(1),'%Y-%m-%d')
+    clubhist = Club.getClubsOn(None, curs)
    
     for row in reader:
         if len(row) < 20:
@@ -181,7 +181,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
                 sys.exit(3) 
         else:
             # update the lastdate
-            curs.execute('UPDATE clubs SET lastdate = %s WHERE clubnumber = %s AND lastdate = %s;', (cdate, club.clubnumber, yesterday))
+            curs.execute('UPDATE clubs SET lastdate = %s WHERE clubnumber = %s AND lastdate = %s;', (cdate, club.clubnumber, clubhist[club.clubnumber].lastdate))
     
     # If all the files were processed, today's work is done.    
     curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
