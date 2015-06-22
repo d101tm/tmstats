@@ -6,10 +6,21 @@ import datetime
 class Club:
     """ Keep information about a club """
     @classmethod
-    def setfields(self, names):
+    def setfieldnames(self, names):
         self.fieldnames = names
         self.badnames = ['firstdate', 'lastdate']
         self.goodnames = [n for n in names if n not in self.badnames]
+        
+    @classmethod
+    def addfieldnames(self, goodnames, badnames=[]):
+        for name in goodnames:
+            if name not in self.fieldnames:
+                self.fieldnames.append(name)
+                self.goodnames.append(name)
+        for name in badnames:
+            if name not in self.fieldnames:
+                self.fieldnames.append(name)
+                self.badnames.append(name)
         
     @classmethod
     def getClubsOn(self, date, curs, setfields=False):
@@ -22,7 +33,7 @@ class Club:
         # Get the fieldnames before we get anything else:
         fieldnames = [f[0] for f in curs.description]
         if setfields:
-            Club.setfields(fieldnames)
+            Club.setfieldnames(fieldnames)
     
         res = {}
     
@@ -49,6 +60,21 @@ class Club:
             self.__dict__[name] = value
             if name not in self.badnames:
                 self.cmp.append(value)
+                
+    def addvalues(self, values, fieldnames):
+        """ Add values to the club; don't change anything already there. """
+        for (name, value) in zip(fieldnames, values):
+            if name not in self.__dict__:
+                # Let's normalize everything to strings/unicode strings
+                if isinstance(value, (int, long, float, bool)):
+                    value = '%s' % value
+                if isinstance(value, bool):
+                    value = '1' if value else '0'
+                elif isinstance(value, (datetime.datetime, datetime.date)):
+                    value = ('%s' % value)[0:10]
+                self.__dict__[name] = value
+                if name not in self.badnames:
+                    self.cmp.append(value)
      
     def __eq__(self, other):
         return self.cmp == other.cmp

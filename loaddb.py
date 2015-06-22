@@ -87,7 +87,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     dbheaders.append('firstdate')
     dbheaders.append('lastdate')     # For now...
 
-    Club.setfields(dbheaders)
+    Club.setfieldnames(dbheaders)
 
     
     # We need to get clubs for the most recent update so we know whether to update an entry 
