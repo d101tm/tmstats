@@ -51,8 +51,11 @@ ymlfile="$data/today.yml"
 
 
 
-# The very first thing to check is whether we have run successfully today.  If so, we're done.  Force a run by passing 'force' as the first argument.
-if [ "x$1" != "xforce" -a -e "$success" ] ; then
+# The very first thing to check is whether we have run successfully today.  
+# If so, we're done.  
+# Force a run by passing 'force' or 'test' as the first argument.
+# 'test' will not zip and delete the historical CSVs.
+if [ "x$1" != "xforce" -a "x$1" != "xtest" -a -e "$success" ] ; then
     exit 2
 fi
 
@@ -202,6 +205,10 @@ if [[ "$rc" != 0 ]] ; then
 fi
 
 # If we get this far, we win!
+if [[ "x$1" == "xtest" ]] ; then
+    echo "not deleting CSVs or recording success"
+    exit $rc
+fi
 
 # Let's clean up earlier versions of the data files by consolidating them in the history ZIP file.  
 # We leave yesterday's and today's intact.
