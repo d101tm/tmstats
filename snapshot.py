@@ -3,8 +3,10 @@
     Uses "alignment.xlsx" and the latest available files in the data directory
     """
 
-import xlsxwriter, csv, sys, os, glob, codecs, cStringIO, re
-from club import Club
+import xlsxwriter, csv, sys, os, codecs, cStringIO, re
+import dbconn, tmparms
+from datetime import datetime
+from simpleclub import Club
 
 class UnicodeWriter:
     """
@@ -41,115 +43,63 @@ def normalize(s):
     else:
         return
 
-os.chdir('data')    # To the data directory!
 
-# We need the latest version of all the statistics
-latest = sorted(glob.glob('clubs.*.csv'))[-1].split('.')[1]
+ 
+import tmparms
+# Make it easy to run under TextMate
+if 'TM_DIRECTORY' in os.environ:
+    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+    
+reload(sys).setdefaultencoding('utf8')
 
-# Start with the club listing (which should, one hopes, include everything)
-# But it doesn't.  
+# Handle parameters
+parms = tmparms.tmparms()
+parms.parser.add_argument("--date", dest='date', default=datetime.today().strftime('%Y-%m-%d'))
+parms.parse()
+print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
+conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
+curs = conn.cursor()
 
-clubs = {}
+# Get club information from the database as of the date requested (or today)
+clubs = Club.getClubsOn(parms.date, curs, setfields=True)
 
-csvfile = open('clubs.' + latest + '.csv', 'rbU')
-r = csv.reader(csvfile, delimiter=',')
-baseheaders = [normalize(p) for p in r.next()]
-Club.setHeaders(baseheaders)
-clubcol = baseheaders.index('clubnumber')
-allheaders = baseheaders
+# Now, add relevant club performance information.  If there are clubs in the 
+# performance data which aren't in the master list from TMI, note it and add
+# them anyway.
 
-for row in r:
+perffields = ['clubnumber', 'clubname', 'district', 'area', 'division', 'eligibility', 'color', 'membase', 'activemembers', 'goalsmet']
+
+print parms.date
+curs.execute("SELECT clubnumber, clubname, district, area, division, clubstatus as eligibility, color, membase, activemembers, goalsmet FROM clubperf WHERE asof = %s", (parms.date,))
+
+for info in curs.fetchall():
+    clubnum = Club.stringify(info[0])
     try:
-        row = [unicode(x, 'UTF8') for x in row]
-    except UnicodeDecodeError:
-        row = [unicode(x, 'CP1252') for x in row]
+        club = clubs[clubnum]
+        club.addvalues(info, perffields)
+    except KeyError:
+        print 'Club %s (%d) not in CLUBS table, patching in.' % (info[1], info[0])
+        clubs[clubnum] = Club(info, perffields)
+        clubs[clubnum].charterdate = ''
+        
+# Now, for any clubs which are suspended, add their suspend data from distperf
+# TODO:  Separate "action" (in distperf) and "charterdatesuspenddate" (in areaperf)
+# TODO:       into different fields for chartering and suspension.  Requires changes to
+# TODO:       loaddb.  DO BEFORE CHANGING ANY OTHER ROUTINES!
 
-    try:
-        row[clubcol] = Club.fixcn(row[clubcol])
-        clubnum = row[clubcol]
-        if clubnum:
-            club = Club(row)
-            clubs[clubnum] = club
-    except IndexError:
-        pass
+curs.execute("SELECT clubnumber, action FROM distperf")
+for (clubnum, action) in curs.fetchall():
+    if clubnum in clubs:
+        action = action.lower().split()
+        if 'susp' in action:
+            suspdate = action[1+action.index('susp')]
+        else:
+            suspdate = ''
+        clubs[clubnum].addvalues(['suspended'],[suspdate])
+      
+           
 
-csvfile.close()
-# OK, now we have the basics.  Now, add relevant performance information
 
-csvfile = open('clubperf.' + latest + '.csv', 'rbU')
-r = csv.reader(csvfile, delimiter=',')
-headers = [normalize(p) for p in r.next()]
-headers[headers.index('clubstatus')] = 'eligibility'  # Avoid name collision
-ourheaders = ['eligibility', 'membase', 'activemembers', 'goalsmet']
-allheaders.extend(ourheaders)
-clubcol = headers.index('clubnumber')
-for row in r:
-    try:
-        row = [unicode(x, 'UTF8') for x in row]
-    except UnicodeDecodeError:
-        row = [unicode(x, 'CP1252') for x in row]
-
-    try:
-        row[clubcol] = Club.fixcn(row[clubcol])
-        clubnum = row[clubcol]
-        if clubnum:
-            if clubnum not in clubs:
-                # We need to patch in information about this club
-                newr = []
-                for item in baseheaders:
-                    try:
-                        newr.append(row[headers.index(item)])
-                    except ValueError:
-                        newr.append('')
-                clubs[clubnum] = Club(newr)
-                clubs[clubnum].clubnumber = clubnum  # Inconsistency, thy name is WHQ
-            # Add our info
-            clubs[clubnum].addinfo(row, headers, ourheaders)
-    except IndexError:
-        pass
-
-csvfile.close()
-
-# And now get the suspend date if the club is suspended...
-csvfile = open('areaperf.' + latest + '.csv', 'rbU')
-r = csv.reader(csvfile, delimiter=',')
-headers = [normalize(p) for p in r.next()]
-headers[headers.index('charterdatesuspenddate')] = 'eventdate'
-ourheaders = ['eventdate']
-allheaders.extend(ourheaders)
-clubcol = headers.index('club')
-for row in r:
-    try:
-        row = [unicode(x, 'UTF8') for x in row]
-    except UnicodeDecodeError:
-        row = [unicode(x, 'CP1252') for x in row]
-
-    try:
-        row[clubcol] = Club.fixcn(row[clubcol])
-        clubnum = row[clubcol]
-        if clubnum:
-            try:
-                clubs[clubnum].addinfo(row, headers, ourheaders)
-            except KeyError:
-                print 'areaperf:', clubnum, ' not in clubs'
-                print row
-    except IndexError:
-        pass
-
-csvfile.close()
-
-allheaders.append('color')
-# Now, some cleanup
-for c in clubs.values():
-    try:
-        c.setcolor()
-    except:
-        c.color = 'Red'
-    el = c.clubstatus.lower()
-    if el.startswith('none') or el.startswith('open'):
-        c.clubstatus = 'Open'
-    else:
-        c.clubstatus = 'Restricted'
 
 
 # Now, onward to the alignment.  All we care about is the new area and new division, if any.
@@ -229,7 +179,7 @@ csvfile.close()
 
 # Add the new information to the file...at the front
 finalheaders = ['newdistrict', 'newdivision', 'newarea']
-finalheaders.extend(allheaders)
+finalheaders.extend(Club.fieldnames)
 
 # Swap order
 areacol = finalheaders.index('area')
@@ -268,6 +218,7 @@ for c in sorted(clubs.values(), key=lambda x:getkey(x)):
             row.append(c.__dict__[it])
         except KeyError:
             row.append('')
+    row = ['%s' % x for x in row]
     w.writerow(row)
 
 outfile.close()
