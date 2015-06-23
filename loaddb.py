@@ -213,13 +213,16 @@ def doDailyDistrictPerformance(infile, conn, cdate):
     renames = (('club', 'clubnumber'),
                ('new', 'newmembers'),('lateren', 'laterenewals'),('octren', 'octrenewals'),
                ('aprren', 'aprrenewals'),('totalren', 'totalrenewals'),('totalchart', 'totalcharter'),
-               ('distinguishedstatus', 'dist'), ('charterdatesuspenddate', 'action'))
+               ('distinguishedstatus', 'dist'))
     for (old, new) in renames:
         try:
             index = headers.index(old)
             headers[index] = new
         except:
             pass
+    # Now, replace "charterdatesuspenddate" with one field for each.
+    cdsdcol = headers.index('charterdatesuspenddate')
+    headers = headers[:cdsdcol] + 'charterdate' + 'suspenddate' + headers[cdsdcol+1:]
     try:
         clubcol = headers.index('clubnumber')    
     except ValueError:
@@ -235,19 +238,33 @@ def doDailyDistrictPerformance(infile, conn, cdate):
     for row in reader:
         if row[0].startswith("Month"):
             break
-        action = row[-1].split()  # For later...
         row.append(cdate)
         row[areacol] = cleanitem(row[areacol])
         row[clubcol] = cleanitem(row[clubcol])
         row[districtcol] = cleanitem(row[districtcol])
+        
+        # Break the "charterdatesuspenddate" column up
+        action = row[cdsdcol].split()
+        clubnumber = row[clubcol]
+        try:
+            charterpos = action.index('Charter')
+            charterdate = action[charterpos+1]
+        except IndexError:
+            charterdate = ''  
+        try:
+            susppos = action.index('Susp')
+            suspdate = action[susppos+1]
+        except IndexError:
+            suspdate = ''
+        row = row[:cdsdcol] + charterdate + suspdate + row[cdsdcol+1:]
+            
+        
         curs.execute('INSERT IGNORE INTO distperf (' + headstr + ') VALUES (' + valstr + ')', row)
         
         
         # If this item represents a suspended club, and it's the first time we've seen this suspension,
         # add it to the clubchanges database
-        if 'Susp' in action:
-            clubnumber = row[clubcol]
-            suspdate = cleandate(action[action.index('Susp') + 1])
+        if suspdate:
             curs.execute('SELECT * FROM clubchanges WHERE clubnumber=%s and item="Suspended" and new=%s', (clubnumber, suspdate))
             if not curs.fetchone():
                 # Add this suspension
@@ -382,6 +399,10 @@ def doDailyAreaPerformance(infile, conn, cdate):
     print "loading areaperf for", cdate
     areacol = headers.index('area')
     districtcol = headers.index('district')
+    
+    # Now, replace "charterdatesuspenddate" with one field for each.
+    cdsdcol = headers.index('charterdatesuspenddate')
+    headers = headers[:cdsdcol] + 'charterdate' + 'suspenddate' + headers[cdsdcol+1:]
 
     # We're going to use the last column for the effective date of the data
     headers.append('asof')
@@ -397,6 +418,20 @@ def doDailyAreaPerformance(infile, conn, cdate):
         row[districtcol] = cleanitem(row[districtcol])
         clubnumber = row[clubcol]        
        
+        # Break the "charterdatesuspenddate" column up
+        action = row[cdsdcol].split()
+        clubnumber = row[clubcol]
+        try:
+            charterpos = action.index('Charter')
+            charterdate = action[charterpos+1]
+        except IndexError:
+            charterdate = ''  
+        try:
+            susppos = action.index('Susp')
+            suspdate = action[susppos+1]
+        except IndexError:
+            suspdate = ''
+        row = row[:cdsdcol] + charterdate + suspdate + row[cdsdcol+1:]
         
         curs.execute('INSERT IGNORE INTO areaperf (' + headstr + ') VALUES (' + valstr + ')', row)
         

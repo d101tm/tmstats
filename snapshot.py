@@ -82,19 +82,11 @@ for info in curs.fetchall():
         clubs[clubnum] = Club(info, perffields)
         clubs[clubnum].charterdate = ''
         
-# Now, for any clubs which are suspended, add their suspend data from distperf
-# TODO:  Separate "action" (in distperf) and "charterdatesuspenddate" (in areaperf)
-# TODO:       into different fields for chartering and suspension.  Requires changes to
-# TODO:       loaddb.  DO BEFORE CHANGING ANY OTHER ROUTINES!
+# Now patch in suspension dates
 
-curs.execute("SELECT clubnumber, action FROM distperf")
-for (clubnum, action) in curs.fetchall():
+curs.execute("SELECT clubnumber, suspdate FROM distperf WHERE asof = %s", (parms.date,))
+for (clubnum, suspdate) in curs.fetchall():
     if clubnum in clubs:
-        action = action.lower().split()
-        if 'susp' in action:
-            suspdate = action[1+action.index('susp')]
-        else:
-            suspdate = ''
         clubs[clubnum].addvalues(['suspended'],[suspdate])
       
            

@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS distperf (
     dist CHAR(1),
     month VARCHAR(12),
     asof date,
-    action VARCHAR(40),
+    charterdate VARCHAR(10),
+    suspenddate VARCHAR(10),
     primary key(clubnumber, asof)
 ) CHARACTER SET utf8;
         
@@ -137,7 +138,8 @@ CREATE TABLE IF NOT EXISTS areaperf (
     divisiondistclubgoalforpresdist INT,
     totaldistdivisionclubs INT,
     distinguisheddivision VARCHAR(30),
-    charterdatesuspenddate VARCHAR(20),
+    charterdate VARCHAR(10),
+    suspenddate VARCHAR(10),
     asof date,
     month VARCHAR(12),
     primary key(clubnumber, asof)
