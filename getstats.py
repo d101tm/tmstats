@@ -91,16 +91,10 @@ months = [(m, tmyear + (1 if m <= 6 else 0)) for m in months]
 
 
 
-# Now we get the performance reports for every month between the start of the TM year and today.  If we are in July,
-# we assume it's the previous TM year that matters.
+# Now we get the performance report for the months we need.
+# Since TMI doesn't let us ask for info for a month without specifying a day, we begin
+# by looking at the month end and continuing forward until we don't get any info.  
 
-
-
-
-# OK, now start getting the info.  Since TMI doesn't let us ask for info for a month without specifying a day, we begin
-# by looking at the month end and continuing forward until we don't get any info.  Is this any way to run a railroad?
-## TODO: At least do a binary search instead of sequential!
-## Note:  This is not going to be changed to read from a file.
 
 def getresponse(url):
     print url
