@@ -5,6 +5,14 @@ import datetime
 
 class Club:
     """ Keep information about a club """
+    
+    @classmethod
+    def fixcn(self, s):
+        try:
+            return('%d' % int(s))
+        except:
+            return None
+    
     @classmethod
     def setfieldnames(self, names):
         self.fieldnames = names
@@ -13,14 +21,33 @@ class Club:
         
     @classmethod
     def addfieldnames(self, goodnames, badnames=[]):
+        """ Adds fieldnames to the club class.  Returns new fieldnames, if any. """
+        newfields = []
         for name in goodnames:
             if name not in self.fieldnames:
                 self.fieldnames.append(name)
                 self.goodnames.append(name)
+                newfields.append(name)
         for name in badnames:
             if name not in self.fieldnames:
                 self.fieldnames.append(name)
                 self.badnames.append(name)
+                newfields.append(name)
+        return newfields
+        
+    @classmethod
+    def stringify(self, value):
+        """ Convert values coming out of the database to strings """
+
+        # Let's normalize everything to strings/unicode strings
+        if isinstance(value, (int, long, float, bool)):
+            value = '%s' % value
+        if isinstance(value, bool):
+            value = '1' if value else '0'
+        elif isinstance(value, (datetime.datetime, datetime.date)):
+            value = ('%s' % value)[0:10]
+
+        return value
         
     @classmethod
     def getClubsOn(self, date, curs, setfields=False):
@@ -50,13 +77,7 @@ class Club:
         if not fieldnames:
             fieldnames = self.fieldnames
         for (name, value) in zip(fieldnames, values):
-            # Let's normalize everything to strings/unicode strings
-            if isinstance(value, (int, long, float, bool)):
-                value = '%s' % value
-            if isinstance(value, bool):
-                value = '1' if value else '0'
-            elif isinstance(value, (datetime.datetime, datetime.date)):
-                value = ('%s' % value)[0:10]
+            value = self.stringify(value)
             self.__dict__[name] = value
             if name not in self.badnames:
                 self.cmp.append(value)
@@ -66,12 +87,7 @@ class Club:
         for (name, value) in zip(fieldnames, values):
             if name not in self.__dict__:
                 # Let's normalize everything to strings/unicode strings
-                if isinstance(value, (int, long, float, bool)):
-                    value = '%s' % value
-                if isinstance(value, bool):
-                    value = '1' if value else '0'
-                elif isinstance(value, (datetime.datetime, datetime.date)):
-                    value = ('%s' % value)[0:10]
+                value = self.stringify(value)
                 self.__dict__[name] = value
                 if name not in self.badnames:
                     self.cmp.append(value)
