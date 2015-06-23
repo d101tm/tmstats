@@ -222,7 +222,7 @@ def doDailyDistrictPerformance(infile, conn, cdate):
             pass
     # Now, replace "charterdatesuspenddate" with one field for each.
     cdsdcol = headers.index('charterdatesuspenddate')
-    headers = headers[:cdsdcol] + 'charterdate' + 'suspenddate' + headers[cdsdcol+1:]
+    headers = headers[:cdsdcol] + ['charterdate','suspenddate'] + headers[cdsdcol+1:]
     try:
         clubcol = headers.index('clubnumber')    
     except ValueError:
@@ -249,14 +249,14 @@ def doDailyDistrictPerformance(infile, conn, cdate):
         try:
             charterpos = action.index('Charter')
             charterdate = action[charterpos+1]
-        except IndexError:
+        except ValueError:
             charterdate = ''  
         try:
             susppos = action.index('Susp')
             suspdate = action[susppos+1]
-        except IndexError:
+        except ValueError:
             suspdate = ''
-        row = row[:cdsdcol] + charterdate + suspdate + row[cdsdcol+1:]
+        row = row[:cdsdcol] + [charterdate, suspdate] + row[cdsdcol+1:]
             
         
         curs.execute('INSERT IGNORE INTO distperf (' + headstr + ') VALUES (' + valstr + ')', row)
@@ -402,7 +402,7 @@ def doDailyAreaPerformance(infile, conn, cdate):
     
     # Now, replace "charterdatesuspenddate" with one field for each.
     cdsdcol = headers.index('charterdatesuspenddate')
-    headers = headers[:cdsdcol] + 'charterdate' + 'suspenddate' + headers[cdsdcol+1:]
+    headers = headers[:cdsdcol] + ['charterdate','suspenddate'] + headers[cdsdcol+1:]
 
     # We're going to use the last column for the effective date of the data
     headers.append('asof')
@@ -424,14 +424,14 @@ def doDailyAreaPerformance(infile, conn, cdate):
         try:
             charterpos = action.index('Charter')
             charterdate = action[charterpos+1]
-        except IndexError:
+        except ValueError:
             charterdate = ''  
         try:
             susppos = action.index('Susp')
             suspdate = action[susppos+1]
-        except IndexError:
+        except ValueError:
             suspdate = ''
-        row = row[:cdsdcol] + charterdate + suspdate + row[cdsdcol+1:]
+        row = row[:cdsdcol] + [charterdate, suspdate] + row[cdsdcol+1:]
         
         curs.execute('INSERT IGNORE INTO areaperf (' + headstr + ') VALUES (' + valstr + ')', row)
         
