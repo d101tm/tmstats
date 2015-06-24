@@ -31,7 +31,12 @@ print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 
+parms.enddate = cleandate(parms.enddate)
+parms.startdate = cleandate(parms.startdate)
+
 print 'checking from %s to %s', (parms.startdate, parms.enddate)
+friendlyenddate = daybefore(parms.enddate)[5:].replace('-','/')
+friendlystartdate = daybefore(parms.startdate)[5:].replace('-','/')
 
 # Open both output files
 divfile = open('sharethewealth.csv', 'wb')
@@ -39,7 +44,7 @@ divwriter = UnicodeWriter(divfile, delimiter=',', quotechar='"', quoting=csv.QUO
 clubfile = open('sharethewealthclubs.csv', 'wb')
 clubwriter = UnicodeWriter(clubfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 divheaders = ['Division', 'New Members']
-clubheaders = ['Division', 'Club', 'Club Name', 'New Members on %s' % daybefore(parms.startdate)[5:], 'New Members on %s' % daybefore(parms.enddate)[5:], 'Members Added']
+clubheaders = ['Division', 'Club', 'Club Name', 'New Members on %s' % friendlystartdate, 'New Members on %s' % friendlyenddate, 'Members Added']
 divwriter.writerow(divheaders)
 clubwriter.writerow(clubheaders)
 
@@ -71,13 +76,15 @@ for (clubnumber, clubname, area, division, newmembers) in curs.fetchall():
         clubwriter.writerow(['%s' % x for x in (club.division, club.clubnumber, club.clubname, 
                             club.start, club.end, club.delta)])
 
-for d in sorted(divisions.keys()):
-    if not d.startswith('0'):
-        divwriter.writerow((d, '%d' % divisions[d]))
+divs = sorted([d for d in divisions.keys() if not d.startswith('0')])
+for d in divs:
+    divwriter.writerow((d, '%d' % divisions[d]))
+    
+# @@HACK@@: The JA_Google Chart module chokes when the last line ends with a line end.  Let's remove it.
+
+divfile.seek(-2, os.SEEK_END)
+divfile.truncate()
         
 clubfile.close()
 divfile.close()
-    
-            
-        
     
