@@ -3,7 +3,7 @@
     Also create the CSS/JS and actual HTML as separate pieces for Joomla.
     And create narrow versions to be phone-friendly. """
 
-import csv, sys, re, os
+import sys, re, os
 from simpleclub import Club
 import tmparms, dbconn
 from tmutil import cleandate
