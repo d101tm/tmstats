@@ -3,13 +3,14 @@
     Also create the CSS/JS and actual HTML as separate pieces for Joomla.
     And create narrow versions to be phone-friendly. """
 
-import csv, sys, re
-from club import Club
+import csv, sys, re, os
+from simpleclub import Club
+import tmparms, dbconn
+from tmutil import cleandate
+
 
 # Create the templates
 
-
-    
 headinfo= {}
 headinfo['style'] = """
     table.clubtable {width: 100%; display: none; border-collapse: collapse;
@@ -35,7 +36,7 @@ headinfo['style'] = """
     div.locfirst {text-indent: -1em; padding-left: 1em;}
 """
 
-\
+
 
 header = """
 <html>
@@ -112,39 +113,39 @@ def normalize(s):
 
 # Main program
 
-if len(sys.argv) > 1:
-    csvfile = open(sys.argv[1],'rbU')
-else:
-    csvfile = open('data/clubs.2014-12-05.csv', 'rbU')
-r = csv.reader(csvfile, delimiter=',')
-headers = [normalize(p) for p in r.next()]
-Club.setHeaders(headers)
+# Make it easy to run under TextMate
+if 'TM_DIRECTORY' in os.environ:
+    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+        
+reload(sys).setdefaultencoding('utf8')
 
+# Handle parameters
+parms = tmparms.tmparms()
+parms.parser.add_argument("--date", dest='date', default='today')
+parms.parse()
+
+parms.date = cleandate(parms.date)
+print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
+conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
+curs = conn.cursor()
+
+# Get the club information for the specified date
+clubs = Club.getClubsOn(parms.date, curs, setfields=True)
 cities = {}
-clubs = {}
 
-clubcol = headers.index('clubnumber')    
-for row in r:
-    try:
-        row[clubcol] = Club.fixcn(row[clubcol])
-        if row[clubcol]:
-            club = Club(row)
-            club.city = club.city.title()
-            clubs[club.clubnumber] = club
-            if club.city not in cities:
-                cities[club.city] = []
-            cities[club.city].append(club)
-    except IndexError:
-        pass
+for c in clubs:
+    club = clubs[c]
+    club.city = club.city.title()
+    if club.city not in cities:
+        cities[club.city] = []
+    cities[club.city].append(club)
 
-    
-csvfile.close()
 
-outfile = open('data/clublist.html', 'wb')
-headfile = open('data/clublist.css', 'wb')
-bodyfile = open('data/clublist.body', 'wb')
-narrowfile = open('data/narrowclublist.html', 'wb')
-narrowbodyfile = open('data/narrowclublist.body', 'wb')
+outfile = open('clublist.html', 'wb')
+headfile = open('clublist.css', 'wb')
+bodyfile = open('clublist.body', 'wb')
+narrowfile = open('narrowclublist.html', 'wb')
+narrowbodyfile = open('narrowclublist.body', 'wb')
 
 headfile.write(headinfo['style'])
 outfile.write(header)
@@ -172,7 +173,7 @@ for city in sorted(cities.keys()):
             data['restrict'] = 'Club is open to all'
         else:
             data['restrict'] = 'Contact club about membership requirements'
-        if club.advanced:
+        if club.advanced == '1':
             data['restrict'] += '; Club is an Advanced Club'
         data['meetingday'] = club.meetingday.replace(' ','&nbsp;')
         data['meetingtime'] = club.meetingtime.replace(' ','&nbsp;')
@@ -187,8 +188,7 @@ for city in sorted(cities.keys()):
             data['contact'].append('Phone: %s' % (club.phone))
         data['lcontact'] = '<br />'.join(data['contact'])
         data['scontact'] = ' | '.join(data['contact'])
-        # It looks like Toastmasters uses two consecutive blanks to encode a linebreak in the address info
-        address = club.address1.split('  ') + club.address2.split('  ')
+        address = club.address.split('\n')
         data['location'] = '<div class="locfirst">' + \
                            address[0] + \
                            '</div>' + \
