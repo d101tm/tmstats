@@ -113,9 +113,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         #print row[addrcol1]
         #print row[addrcol2]
         # Now, clean up the address:
-        address = ';'.join([x.strip() for x in row[addrcol1].split('  ') + row[addrcol2].split('  ')])
-        address = ';'.join([x.strip() for x in address.split(',')])
-        address = ', '.join(address.split(';'))
+        address = '\n'.join([x.strip() for x in row[addrcol1].split('  ') + row[addrcol2].split('  ')])
+        #address = ';'.join([x.strip() for x in address.split(',')])
+        #address = ', '.join(address.split(';'))
         row[addrcol1] = address
         del row[addrcol2]
         
