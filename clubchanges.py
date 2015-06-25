@@ -38,10 +38,13 @@ if __name__ == "__main__":
     oldclubs = Club.getClubsOn(fromdate, curs, setfields=True)
     newclubs = {}   # Where clubs created during the period go
     changedclubs = {}  # Where clubs changed during the period go
+    
+    
 
     
     # And compare to the the list of clubs at the end of the period
-    for club in Club.getClubsOn(todate, curs).values():
+    allclubs = Club.getClubsOn(todate, curs)
+    for club in allclubs.values():
         if club.clubnumber not in oldclubs:
             club.info = 'New Club'
             newclubs[club.clubnumber] = club
@@ -54,29 +57,75 @@ if __name__ == "__main__":
                 oldclubs[club.clubnumber].delta(club))
             del oldclubs[club.clubnumber]  # And we're done with the old club
             
-    # And print results
+    # And create results
+    outfile = open('clubchanges.html', 'w')
+    
     
     if oldclubs or newclubs or changedclubs:
-        print "Club changes from %s to %s\n" % (fromdate, todate)
+        outfile.write("<html>\n")
+        outfile.write("""<head>
+        <style type="text/css">
+
+
+                html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
+                      font-size: 75%;}
+      
+                table {width: 75%; font-size: 14px; border-width: 1px; border-spacing: 1px; border-collapse: collapse; border-style: solid;}
+                td, th {border-color: black; border-width: 1px;  vertical-align: middle;
+                    padding: 2px; padding-right: 5px; padding-left: 5px; border-style: solid;}
+
+                .name {text-align: left; font-weight: bold; width: 40%;}
+                .number {text-align: right; width: 5%;}
+        
+                .bold {font-weight: bold;}
+                .italic {font-style: italic;}
+                .leader {background-color: aqua;}
+        
+        
+                </style>
+        </head>""")
+        outfile.write("<body>\n")
+        outfile.write("<h2>Club changes from %s to %s</h2>\n" % (fromdate, todate))
     
     if oldclubs:
-        print "Clubs which have vanished:"
+        outfile.write("<h3>Clubs removed from the listing</h3>\n")
+        outfile.write("<table><thead><tr><th>")
+        outfile.write("</th><th>".join(('Division', 'Area', 'Club Number', 'Club Name')))
+        outfile.write("</th></tr></thead>\n")
+        outfile.write("<tbody>")
         for k in oldclubs:
-            print k, oldclubs[k].clubname
+            club = oldclubs[k]
+            outfile.write("<tr><td>")
+            outfile.write("</td><td>".join((club.division, club.area, club.clubnumber, club.clubname)))
+            outfile.write("</td></tr>\n")
+        outfile.write("</tbody></table>\n")
          
-    if newclubs:   
-        print "-------------------------------------------------------"
-        print "New clubs:"
+    if newclubs: 
+        outfile.write("<h3>New clubs</h3>\n")
         for k in newclubs:
-            print newclubs[k]
+            club = newclubs[k]
+            outfile.write("<h4>%s (%s), Area %s%s</h4>\n" % (club.clubname, club.clubnumber, club.division, club.area))
+            outfile.write("<table><thead>\n<tr>")
+            outfile.write("<th>Item</th><th>Value</th></tr></thead>\n")
+            outfile.write("<tbody>\n")
+            omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp']
+            for item in club.__dict__:
+                if item not in omit and club.__dict__[item]:
+                    outfile.write("<tr><td>%s</td><td>%s</td></tr>\n" % (item, club.__dict__[item].replace('\n', '<br />')))
+            outfile.write("</tbody></table>\n")
+              
+
         
     if changedclubs:
-        print "-------------------------------------------------------"
-        print "Changes:"
+        outfile.write("<h3>Changed clubs</h3>\n")
         for k in changedclubs:
-            print k, changedclubs[k][0]
+            club = allclubs[k]
+            outfile.write("<h4>%s (%s), Area %s%s</h4>\n" % (club.clubname, club.clubnumber, club.division, club.area))
+            outfile.write("<table><thead>\n<tr>")
+            outfile.write("<th>Item</th><th>Old</th><th>New</th></tr></thead>\n")
+            outfile.write("<tbody>\n")
             for (item, old, new) in changedclubs[k][1]:
-                print item, old, new
-            print    
-
+                outfile.write("<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (item, old.replace('\n','<br />'), new.replace('\n', '<br />')))
+            outfile.write("</tbody></table>\n")
+        
 
