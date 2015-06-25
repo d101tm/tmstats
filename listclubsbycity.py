@@ -58,7 +58,7 @@ footer = """
 
 citytemplate = """
 <div class="fullcity" id="%(cityid)s">
-<h3 class="cityname title pane-toggler" onclick='jQ ( "#%(cityid)sclubs" ).toggle();'>%(cityname)s</h3>
+<h3 class="cityname title pane-toggler" onclick='jQ ( "#%(cityid)sclubs, #%(cityid)sopen, #%(cityid)sclosed" ).toggle();'><span id="%(cityid)sopen" style="display:none;">&#x25be;</span><span id="%(cityid)sclosed">&#x25b8;</span> %(cityname)s</h3>
 <table class="clubtable" id="%(cityid)sclubs">
 <colgroup>
 <col class="c1"><col class="c2"><col class="c3">
@@ -83,7 +83,7 @@ clubtemplate = """
  
 narrowcitytemplate = """
 <div class="fullcity" id="n%(cityid)s">
-<h3 class="cityname title pane-toggler" onclick='jQ ( "#n%(cityid)sclubs" ).toggle();'>%(cityname)s</h3>
+<h3 class="cityname title pane-toggler" onclick='jQ ( "#n%(cityid)sclubs, #n%(cityid)sopen, #n%(cityid)sclosed" ).toggle();'><span id="n%(cityid)sopen" style="display:none;">&#x25be;</span><span id="n%(cityid)sclosed">&#x25b8;</span>%(cityname)s</h3>
 <table class="clubtable" id="n%(cityid)sclubs">
 %(narrowclubs)s
 </table>
