@@ -3,7 +3,20 @@ from simpleclub import Club
 import os, sys
 from tmutil import cleandate
 
+def combine(club):
+    keys = [k for k in club.__dict__ if k not in omit]
+    keys.sort()
+    for k in keys:
+        if k in fieldgroups:
+            (fg, fmtstr) = fieldgroups[k]
 
+            val = [club.__dict__[what] for what in fg]
+
+            club.__dict__[k] = fmtstr % tuple([club.__dict__[what] for what in fg])
+            for what in fg[1:]:
+                del club.__dict__[what] 
+                del keys[keys.index(what)]
+    return keys
 
 
 if __name__ == "__main__":
@@ -57,11 +70,20 @@ if __name__ == "__main__":
                 oldclubs[club.clubnumber].delta(club))
             del oldclubs[club.clubnumber]  # And we're done with the old club
             
-    # And create results
-    outfile = open('clubchanges.html', 'w')
+    # And create results if anything has changed
     
     
     if oldclubs or newclubs or changedclubs:
+        # Create groups of items which go together
+        
+        namegroups = ((('address', 'city', 'state', 'zip'),'%s\n%s, %s %s'), (('meetingday', 'meetingtime'), '%s at %s'))
+        fieldgroups = {}
+
+        for (group, fmtstr) in namegroups:
+            for item in group:
+                fieldgroups[item] = (group, fmtstr)
+                
+        outfile = open('clubchanges.html', 'w')
         outfile.write("<html>\n")
         outfile.write("""<head>
         <style type="text/css">
@@ -108,8 +130,11 @@ if __name__ == "__main__":
             outfile.write("<table><thead>\n<tr>")
             outfile.write("<th>Item</th><th>Value</th></tr></thead>\n")
             outfile.write("<tbody>\n")
+            outfile.write("<tr><td>Link</td><td><a href='%s'>%s</a></td></tr>" % (club.getLink(), club.getLink()))
             omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp']
-            for item in club.__dict__:
+            keys = combine(club)
+
+            for item in keys:
                 if item not in omit and club.__dict__[item]:
                     outfile.write("<tr><td>%s</td><td>%s</td></tr>\n" % (item, club.__dict__[item].replace('\n', '<br />')))
             outfile.write("</tbody></table>\n")
@@ -124,8 +149,12 @@ if __name__ == "__main__":
             outfile.write("<table><thead>\n<tr>")
             outfile.write("<th>Item</th><th>Old</th><th>New</th></tr></thead>\n")
             outfile.write("<tbody>\n")
+            outfile.write("<tr><td>Link</td><td colspan='2'><a href='%s'>%s</a></td></tr>" % (club.getLink(), club.getLink()))
+            keys = combine(club)
+            changedclubs[k][1].sort()
             for (item, old, new) in changedclubs[k][1]:
-                outfile.write("<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (item, old.replace('\n','<br />'), new.replace('\n', '<br />')))
+                if item in keys:
+                    outfile.write("<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (item, old.replace('\n','<br />'), new.replace('\n', '<br />')))
             outfile.write("</tbody></table>\n")
         
 

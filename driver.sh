@@ -202,7 +202,9 @@ echo "</body></html>" >> $data/allnet.html
 
 # Now, create the clublisting
 echo "Creating clubs by city"
-./listclubsbycity.py "$data/clubs.$today.csv"
+cd "$data"
+"$savedir"/listclubsbycity.py 
+cd "$savedir"
 
 rc=$?
 if [[ "$rc" != 0 ]] ; then

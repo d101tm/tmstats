@@ -1,7 +1,7 @@
 """ Simple class to maintain information about a club.
 """
 
-import datetime
+import datetime, re
 
 class Club:
     """ Keep information about a club """
@@ -108,3 +108,8 @@ class Club:
         
     def __repr__(self):
         return '; '.join(['%s = "%s"' % (name, self.__dict__[name]) for name in self.__dict__])
+        
+    def getLink(self):
+        """ Create the link to Toastmasters' web page for this club """
+        namepart = re.sub(r'[^a-z0-9 ]','',self.clubname.lower()).replace(' ','-')
+        return 'http://www.toastmasters.org/Find-a-Club/%s-%s' % (self.clubnumber.rjust(8,'0'), namepart)
