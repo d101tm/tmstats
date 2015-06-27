@@ -39,7 +39,7 @@ class tmparms(Singleton):
 
         # Parameters are put directly into this object, based on their name in the YML file
         #   or the command line.
-        # NOTE:  Parameters with defaults in the parser will ALWAYS override the file!
+        # NOTE:  Parameters with default values which evaluate to TRUE will ALWAYS override the file!
         # 
         # self.ymlvalues is the result of reading the YML file
         # self.args is the result from the parser
@@ -53,14 +53,15 @@ class tmparms(Singleton):
             self.__dict__[name] = self.ymlvalues[name]
             
             
-        # Override with values from the command line:
+        # Override with non-false values from the command line (or the default).  
+        # If no value is in the YMLfile, use the command line or default whether it's true or false.
         args = vars(self.args)
         for name in args.keys():
-            if args[name]:
+            if args[name] or name not in self.__dict__:
                 self.__dict__[name] = args[name]
                 
         # And handle dbhost specially to make sure it exists:
-        if 'dbhost' not in self.__dict__:
+        if 'dbhost' not in self.__dict__ or not self.dbhost:
             self.dbhost = 'localhost'
  
 
