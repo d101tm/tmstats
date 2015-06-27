@@ -3,19 +3,35 @@ from simpleclub import Club
 import os, sys
 from tmutil import cleandate
 
+# Create groups of items which go together
+
+namegroups = ((('address', 'city', 'state', 'zip'),'%s\n%s, %s %s'), (('meetingday', 'meetingtime'), '%s at %s'))
+fieldgroups = {}
+
+for (group, fmtstr) in namegroups:
+    for item in group:
+        fieldgroups[item] = (group, fmtstr)
+        
+        
+def sortclubs(what):
+    return sorted(what.keys(), key=lambda x:'%s%s%s' % (what[x].division, what[x].area, what[x].clubnumber.zfill(8)))
+
 def combine(club):
+    omit = ['cmp']
     keys = [k for k in club.__dict__ if k not in omit]
     keys.sort()
     for k in keys:
         if k in fieldgroups:
             (fg, fmtstr) = fieldgroups[k]
 
-            val = [club.__dict__[what] for what in fg]
+            val = [club.__dict__.get(what, '') for what in fg]
 
-            club.__dict__[k] = fmtstr % tuple([club.__dict__[what] for what in fg])
+            club.__dict__[k] = fmtstr % tuple(val)
             for what in fg[1:]:
-                del club.__dict__[what] 
-                del keys[keys.index(what)]
+                if what in club.__dict__:
+                    del club.__dict__[what] 
+                if what in keys:
+                    del keys[keys.index(what)]
     return keys
 
 
@@ -41,7 +57,6 @@ if __name__ == "__main__":
     fromdate = cleandate(parms.fromdate)
     todate = cleandate(parms.todate)
     
-    
     # print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
@@ -66,6 +81,9 @@ if __name__ == "__main__":
             del oldclubs[club.clubnumber]
         else:
             # Club has changed.  Get the list of changes as a tuple (item, old, new)
+            # Merge fields that go together 
+            combine(oldclubs[club.clubnumber])
+            combine(allclubs[club.clubnumber])
             changedclubs[club.clubnumber] = (oldclubs[club.clubnumber].clubname, 
                 oldclubs[club.clubnumber].delta(club))
             del oldclubs[club.clubnumber]  # And we're done with the old club
@@ -74,14 +92,7 @@ if __name__ == "__main__":
     
     
     if oldclubs or newclubs or changedclubs:
-        # Create groups of items which go together
-        
-        namegroups = ((('address', 'city', 'state', 'zip'),'%s\n%s, %s %s'), (('meetingday', 'meetingtime'), '%s at %s'))
-        fieldgroups = {}
 
-        for (group, fmtstr) in namegroups:
-            for item in group:
-                fieldgroups[item] = (group, fmtstr)
                 
         outfile = open('clubchanges.html', 'w')
         outfile.write("<html>\n")
@@ -108,6 +119,7 @@ if __name__ == "__main__":
         </head>""")
         outfile.write("<body>\n")
         outfile.write("<h2>Club changes from %s to %s</h2>\n" % (fromdate, todate))
+
     
     if oldclubs:
         outfile.write("<h3>Clubs removed from the listing</h3>\n")
@@ -115,7 +127,7 @@ if __name__ == "__main__":
         outfile.write("</th><th>".join(('Division', 'Area', 'Club Number', 'Club Name')))
         outfile.write("</th></tr></thead>\n")
         outfile.write("<tbody>")
-        for k in oldclubs:
+        for k in sortclubs(oldclubs):
             club = oldclubs[k]
             outfile.write("<tr><td>")
             outfile.write("</td><td>".join((club.division, club.area, club.clubnumber, club.clubname)))
@@ -124,16 +136,15 @@ if __name__ == "__main__":
          
     if newclubs: 
         outfile.write("<h3>New clubs</h3>\n")
-        for k in newclubs:
+        for k in sortclubs(newclubs):
             club = newclubs[k]
             outfile.write("<h4>%s (%s), Area %s%s</h4>\n" % (club.clubname, club.clubnumber, club.division, club.area))
             outfile.write("<table><thead>\n<tr>")
             outfile.write("<th>Item</th><th>Value</th></tr></thead>\n")
             outfile.write("<tbody>\n")
             outfile.write("<tr><td>Link</td><td><a href='%s'>%s</a></td></tr>" % (club.getLink(), club.getLink()))
-            omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp']
             keys = combine(club)
-
+            omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp']
             for item in keys:
                 if item not in omit and club.__dict__[item]:
                     outfile.write("<tr><td>%s</td><td>%s</td></tr>\n" % (item, club.__dict__[item].replace('\n', '<br />')))
@@ -143,8 +154,11 @@ if __name__ == "__main__":
         
     if changedclubs:
         outfile.write("<h3>Changed clubs</h3>\n")
-        for k in changedclubs:
-            club = allclubs[k]
+        interestingclubs = {}
+        for club in changedclubs:
+            interestingclubs[club] = allclubs[club]
+        for k in sortclubs(interestingclubs):
+            club = interestingclubs[k]
             outfile.write("<h4>%s (%s), Area %s%s</h4>\n" % (club.clubname, club.clubnumber, club.division, club.area))
             outfile.write("<table><thead>\n<tr>")
             outfile.write("<th>Item</th><th>Old</th><th>New</th></tr></thead>\n")

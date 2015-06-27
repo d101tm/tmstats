@@ -102,8 +102,10 @@ class Club:
         """ Return tuples of (name, self, other) for any values which have changed """
         res = []
         for name in self.goodnames:
-            if self.__dict__[name] != other.__dict__[name]:
-                res.append((name, self.__dict__[name], other.__dict__[name]))
+            mine = self.__dict__.get(name,'')
+            his = other.__dict__.get(name,'')
+            if mine != his:
+                res.append((name, mine, his))
         return res
         
     def __repr__(self):
