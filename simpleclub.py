@@ -2,6 +2,7 @@
 """
 
 import datetime, re
+from copy import deepcopy
 
 class Club:
     """ Keep information about a club """
@@ -125,19 +126,21 @@ class Club:
             
         res = []
         namelist = sorted(self.goodnames)
+        myng = deepcopy(self.namegroups)
         
         for name in namelist:
-            if name in self.namegroups:
+            if name in myng:
                 # Handle a field which gets a combined value
-                fn = self.namegroups[name][1]
-                mine = fn(self)   # Get the combined result for me
-                his = fn(other)   # And for the other instance
-                # Now, remove the rest of the items from the list of desired fields
-                for n in self.namegroups[name][0]:
-                    try:
-                        del namelist[namelist.index(n)]
-                    except ValueError:
-                        pass
+                fn = myng[name][1]
+                if fn:
+                    mine = fn(self)   # Get the combined result for me
+                    his = fn(other)   # And for the other instance
+                else:
+                    mine = None
+                    his = None
+                # Now, inactivate the rest of the items from the list of desired fields
+                for n in myng[name][0]:
+                    myng[n][1] = None
             else:
                 # Just a normal single value
                 mine = self.__dict__.get(name,'')
@@ -168,7 +171,7 @@ class Club:
         
     addrgroup = ('address', 'city', 'state', 'zip', 'country')
     for n in addrgroup:
-        namegroups[n] = (addrgroup, makeaddress)
+        namegroups[n] = [addrgroup, makeaddress]
     meetgroup = ('meetingtime', 'meetingday')
     for n in meetgroup:
-        namegroups[n] = (meetgroup, makemeeting)
+        namegroups[n] = [meetgroup, makemeeting]
