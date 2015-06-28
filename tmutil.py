@@ -17,6 +17,8 @@ def cleandate(indate):
         return (date.today() - timedelta(int(indate))).strftime('%Y-%m-%d')
     except ValueError:
         pass
+    except TypeError:
+        pass
     if len(indate[0]) == 2:
         indate[0] = "20" + indate[0]
     if len(indate[1]) == 1:
