@@ -114,8 +114,6 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         #print row[addrcol2]
         # Now, clean up the address:
         address = '\n'.join([x.strip() for x in row[addrcol1].split('  ') + row[addrcol2].split('  ')])
-        #address = ';'.join([x.strip() for x in address.split(',')])
-        #address = ', '.join(address.split(';'))
         row[addrcol1] = address
         del row[addrcol2]
         
@@ -127,6 +125,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         
         # And create the object
         club = Club(row)
+        
+        # Encode linebreaks in the address as ';;' for the database
+        club.address = club.address.replace('\n',';;')
 
         
         # Now, clean up things coming from Toastmasters
