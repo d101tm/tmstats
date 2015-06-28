@@ -6,6 +6,9 @@ import datetime, re
 class Club:
     """ Keep information about a club """
     
+    namegroups = {}
+
+    
     @classmethod
     def fixcn(self, s):
         try:
@@ -18,6 +21,20 @@ class Club:
         self.fieldnames = names
         self.badnames = ['firstdate', 'lastdate']
         self.goodnames = [n for n in names if n not in self.badnames]
+        
+    @classmethod
+    def setgoodnames(self, names):
+        """ Replace the set of "good" names and "bad" names (used in comparisons).
+            Does NOT recompute the compare value for previously-defined clubs. """
+        self.badnames = []
+        self.goodnames = []
+        for n in self.fieldnames:
+            if n in names:
+                self.goodnames.append(n)
+            else:
+                self.badnames.append(n)
+
+        
         
     @classmethod
     def addfieldnames(self, goodnames, badnames=[]):
@@ -50,7 +67,7 @@ class Club:
         return value
         
     @classmethod
-    def getClubsOn(self, date, curs, setfields=False):
+    def getClubsOn(self, date, curs, setfields=False, goodnames=[]):
         """ Get the clubs which were in existence on a specified date 
             or the most recent occurrence of each club if date=None """
         if date:
@@ -61,6 +78,8 @@ class Club:
         fieldnames = [f[0] for f in curs.description]
         if setfields:
             Club.setfieldnames(fieldnames)
+        if goodnames:
+            Club.setgoodnames(goodnames)
     
         res = {}
     
@@ -78,8 +97,10 @@ class Club:
             fieldnames = self.fieldnames
         for (name, value) in zip(fieldnames, values):
             value = self.stringify(value)
+            if name == 'address':
+                value = '\n'.join(value.split(';;'))  ## Clean up the database encoding of newlines in the address
             self.__dict__[name] = value
-            if name not in self.badnames:
+            if name in self.goodnames and name not in self.badnames:
                 self.cmp.append(value)
                 
     def addvalues(self, values, fieldnames):
@@ -99,11 +120,28 @@ class Club:
         return self.cmp != other.cmp
         
     def delta(self, other):
-        """ Return tuples of (name, self, other) for any values which have changed """
+        """ Return tuples of (name, self, other) for any values which have changed that we care about.
+            Items in 'namegroups' are grouped together into one item by the function provided. """
+            
         res = []
-        for name in self.goodnames:
-            mine = self.__dict__.get(name,'')
-            his = other.__dict__.get(name,'')
+        namelist = sorted(self.goodnames)
+        
+        for name in namelist:
+            if name in self.namegroups:
+                # Handle a field which gets a combined value
+                fn = self.namegroups[name][1]
+                mine = fn(self)   # Get the combined result for me
+                his = fn(other)   # And for the other instance
+                # Now, remove the rest of the items from the list of desired fields
+                for n in self.namegroups[name][0]:
+                    try:
+                        del namelist[namelist.index(n)]
+                    except ValueError:
+                        pass
+            else:
+                # Just a normal single value
+                mine = self.__dict__.get(name,'')
+                his = other.__dict__.get(name,'')
             if mine != his:
                 res.append((name, mine, his))
         return res
@@ -111,7 +149,26 @@ class Club:
     def __repr__(self):
         return '; '.join(['%s = "%s"' % (name, self.__dict__[name]) for name in self.__dict__])
         
+    def makeaddress(self):
+        if 'fmtaddr' not in self.__class__.__dict__:
+            self.__class__.fmtaddr = '%(address)s\n%(city)s, %(state)s  %(zip)s'
+        return self.fmtaddr % self.__dict__
+        
+    def makemeeting(self):
+        if 'fmtmeet' not in self.__class__.__dict__:
+            self.__class__.fmtmeet = '%(meetingtime)s\n%(meetingday)s'
+        return self.fmtmeet % self.__dict__
+        
     def getLink(self):
         """ Create the link to Toastmasters' web page for this club """
         namepart = re.sub(r'[^a-z0-9 ]','',self.clubname.lower()).replace(' ','-')
         return 'http://www.toastmasters.org/Find-a-Club/%s-%s' % (self.clubnumber.rjust(8,'0'), namepart)
+        
+
+        
+    addrgroup = ('address', 'city', 'state', 'zip', 'country')
+    for n in addrgroup:
+        namegroups[n] = (addrgroup, makeaddress)
+    meetgroup = ('meetingtime', 'meetingday')
+    for n in meetgroup:
+        namegroups[n] = (meetgroup, makemeeting)

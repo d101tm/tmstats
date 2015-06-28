@@ -3,15 +3,7 @@ from simpleclub import Club
 import os, sys
 from tmutil import cleandate
 
-# Create groups of items which go together
 
-namegroups = ((('address', 'city', 'state', 'zip'),'%s\n%s, %s %s'), (('meetingday', 'meetingtime'), '%s at %s'))
-fieldgroups = {}
-
-for (group, fmtstr) in namegroups:
-    for item in group:
-        fieldgroups[item] = (group, fmtstr)
-        
         
 def sortclubs(what):
     return sorted(what.keys(), key=lambda x:'%s%s%s' % (what[x].division, what[x].area, what[x].clubnumber.zfill(8)))
@@ -61,9 +53,9 @@ if __name__ == "__main__":
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
     
-   
+    namestocompare = ['address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime', 'area', 'division', 'district']
     # Get information for clubs as of the "from" date:
-    oldclubs = Club.getClubsOn(fromdate, curs, setfields=True)
+    oldclubs = Club.getClubsOn(fromdate, curs, setfields=True, goodnames=namestocompare)
     newclubs = {}   # Where clubs created during the period go
     changedclubs = {}  # Where clubs changed during the period go
     
@@ -81,9 +73,6 @@ if __name__ == "__main__":
             del oldclubs[club.clubnumber]
         else:
             # Club has changed.  Get the list of changes as a tuple (item, old, new)
-            # Merge fields that go together 
-            combine(oldclubs[club.clubnumber])
-            combine(allclubs[club.clubnumber])
             changedclubs[club.clubnumber] = (oldclubs[club.clubnumber].clubname, 
                 oldclubs[club.clubnumber].delta(club))
             del oldclubs[club.clubnumber]  # And we're done with the old club
@@ -101,14 +90,18 @@ if __name__ == "__main__":
 
 
                 html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
-                      font-size: 75%;}
+                      font-size: 77%;}
       
                 table {width: 75%; font-size: 14px; border-width: 1px; border-spacing: 1px; border-collapse: collapse; border-style: solid;}
                 td, th {border-color: black; border-width: 1px;  vertical-align: middle;
                     padding: 2px; padding-right: 5px; padding-left: 5px; border-style: solid;}
+                    
+                .item {width: 10%;}
+                .old {width: 40%;}
+                .new {width: 40%;}
 
                 .name {text-align: left; font-weight: bold; width: 40%;}
-                .number {text-align: right; width: 5%;}
+                .number {text-align: right; width: 7%;}
         
                 .bold {font-weight: bold;}
                 .italic {font-style: italic;}
@@ -140,14 +133,19 @@ if __name__ == "__main__":
             club = newclubs[k]
             outfile.write("<h4>%s (%s), Area %s%s</h4>\n" % (club.clubname, club.clubnumber, club.division, club.area))
             outfile.write("<table><thead>\n<tr>")
-            outfile.write("<th>Item</th><th>Value</th></tr></thead>\n")
+            outfile.write("<th class='item'>Item</th><th>Value</th></tr></thead>\n")
             outfile.write("<tbody>\n")
             outfile.write("<tr><td>Link</td><td><a href='%s'>%s</a></td></tr>" % (club.getLink(), club.getLink()))
-            keys = combine(club)
-            omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp']
-            for item in keys:
-                if item not in omit and club.__dict__[item]:
-                    outfile.write("<tr><td>%s</td><td>%s</td></tr>\n" % (item, club.__dict__[item].replace('\n', '<br />')))
+            #keys = combine(club)
+            
+            omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp', 'address', 'city', 'state', 'zip', 'country', 'meetingtime', 'meetingday']
+            keys = [key for key in club.__dict__.keys() if key not in omit]
+            outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % ('address', club.makeaddress()))
+            outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % ('meeting', club.makemeeting()))
+            
+            for item in sorted(keys):
+                if club.__dict__[item]:
+                    outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % (item, club.__dict__[item].replace('\n', '<br />')))
             outfile.write("</tbody></table>\n")
               
 
@@ -161,14 +159,16 @@ if __name__ == "__main__":
             club = interestingclubs[k]
             outfile.write("<h4>%s (%s), Area %s%s</h4>\n" % (club.clubname, club.clubnumber, club.division, club.area))
             outfile.write("<table><thead>\n<tr>")
-            outfile.write("<th>Item</th><th>Old</th><th>New</th></tr></thead>\n")
+            outfile.write("<th class='item'>Item</th><th class='old'>Old</th><th class='new'>New</th></tr></thead>\n")
             outfile.write("<tbody>\n")
             outfile.write("<tr><td>Link</td><td colspan='2'><a href='%s'>%s</a></td></tr>" % (club.getLink(), club.getLink()))
-            keys = combine(club)
+            keys = [key for key in club.__dict__.keys() if key not in ['cmp']]
             changedclubs[k][1].sort()
             for (item, old, new) in changedclubs[k][1]:
                 if item in keys:
-                    outfile.write("<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (item, old.replace('\n','<br />'), new.replace('\n', '<br />')))
+                    if item.startswith('meeting'):
+                        item = 'meeting'
+                    outfile.write("<tr><td class='item'>%s</td><td class='old'>%s</td><td class='new'>%s</td></tr>\n" % (item, old.replace('\n','<br />'), new.replace('\n', '<br />')))
             outfile.write("</tbody></table>\n")
         
 
