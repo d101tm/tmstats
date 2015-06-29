@@ -35,7 +35,7 @@ class tmparms(Singleton):
             self.parser = argparse.ArgumentParser(description=description, formatter_class=formatter_class)
         else:
             self.parser = argparse.ArgumentParser(description=description)
-        self.parser.add_argument('YMLfile', help="YML file with information such as database, user, etc...", default=YMLfile, nargs='?')
+        self.parser.add_argument('YMLfile', help="YML file with information for this program", default=YMLfile, nargs='?')
         if includedbparms:
             self.parser.add_argument('--dbname', help="MySQL database to use", dest='dbname')
             self.parser.add_argument('--dbhost', help="host for MySQL database", dest='dbhost')
