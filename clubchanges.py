@@ -1,7 +1,13 @@
 #!/usr/bin/python
+""" Find club changes. 
+
+    Exit 0 if no changes; 1 if there are changes.
+    
+"""
 from simpleclub import Club
 import os, sys
 from tmutil import cleandate
+import datetime, argparse
 
 
         
@@ -41,14 +47,21 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--fromdate', default='yesterday', dest='fromdate')
     parms.add_argument('--todate', default='today', dest='todate')
-    parms.add_argument('--notify', nargs='*', default=None, dest='notify', action='append')
-    parms.add_argument('--mailpw', default=None, dest='mailpw')
-    parms.add_argument('--mailserver', default=None, dest='mailserver')
-    parms.add_argument('--mailfrom', default=None, dest='mailfrom')
+    parms.add_argument('--runon', default=None, dest='runon', nargs='+', 
+                        help='Day of the week (Mon, Tue...) on which to run.  Runs daily if omitted.')
+    parms.add_argument('--outfile', default='-', dest='outfile', type=argparse.FileType('w'))
     parms.parse()
     fromdate = cleandate(parms.fromdate)
     todate = cleandate(parms.todate)
     
+    # Let's see if we're supposed to run today.
+    if parms.runon:
+        weekday = datetime.datetime.today().strftime('%A')
+        run = [True for w in parms.runon if weekday.startswith(w)]  # Note:  T means Tuesday OR Thursday; S is Saturday OR Sunday
+        if not run:
+            sys.stderr.write('Not running because today is %s but --runon=%s was specified\n' % (weekday, ' '.join(parms.runon)))
+            sys.exit(0)  # Not running is a normal exit.
+      
     # print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
@@ -79,11 +92,11 @@ if __name__ == "__main__":
             
     # And create results if anything has changed
     
-    
-    if oldclubs or newclubs or changedclubs:
+    rc = 1 if oldclubs or newclubs or changedclubs else 0  
+    if rc == 1:
 
                 
-        outfile = open('clubchanges.html', 'w')
+        outfile = parms.outfile
         outfile.write("<html>\n")
         outfile.write("""<head>
         <style type="text/css">
@@ -171,4 +184,4 @@ if __name__ == "__main__":
                     outfile.write("<tr><td class='item'>%s</td><td class='old'>%s</td><td class='new'>%s</td></tr>\n" % (item, old.replace('\n','<br />'), new.replace('\n', '<br />')))
             outfile.write("</tbody></table>\n")
         
-
+sys.exit(rc)
