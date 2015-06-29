@@ -130,14 +130,12 @@ cd "$savedir"
 echo "Checking for club changes"
    
 cd "$data"
-"$savedir"/clubchanges.py 
+"$savedir"/clubchanges.py --outfile clubchanges.$today.html
+if [[ "$rc" == 0 ]] ; then
+    rm clubchanges.$today.html
+fi
 cd "$savedir"
 
-rc=$?
-if [[ "$rc" != 0 ]] ; then
-   echo "return code: $rc, exiting"
-   exit $rc
-fi
 
 
 # Next, run the reformation report
