@@ -21,9 +21,7 @@ if 'TM_DIRECTORY' in os.environ:
 reload(sys).setdefaultencoding('utf8')
 
 # Handle parameters
-parms = tmparms.tmparms()
-parms.parser = argparse.ArgumentParser(description="Process parameters for sendmail.py")   # We want the useful functions, but not the default parms
-parms.parser.add_argument('YMLfile', help="YML file with information such as mail user, mail server...", default="tmmail.yml", nargs='?')
+parms = tmparms.tmparms(description=__doc__, YMLfile="tmmail.yml", includedbparms=False)
 parms.parser.add_argument("--htmlfile", dest='htmlfile')
 parms.parser.add_argument("--textfile", dest='textfile')
 parms.parser.add_argument("--mailserver", dest='mailserver')
@@ -49,7 +47,6 @@ msg['From'] = parms.sender
 parms.to = list(flatten(parms.to))
 parms.cc = list(flatten(parms.cc))
 parms.bcc = list(flatten(parms.bcc))
-print 'to:', parms.to
 msg['To'] = ', '.join(parms.to)
 msg['cc'] = ', '.join(parms.cc)
 
