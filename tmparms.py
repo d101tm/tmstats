@@ -11,23 +11,36 @@
 
 import argparse, yaml, os
 
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    pass
+
 
 class Singleton(object):
-    def __new__(type):
+    def __new__(type, *args, **kwargs):
         if not '_the_instance' in type.__dict__:
             type._the_instance = object.__new__(type)
         return type._the_instance
     
 class tmparms(Singleton):
-    def __init__(self):
+    def __init__(self, description='A program in the TMSTATS suite.', YMLfile='tmstats.yml', includedbparms=True, customformatter=True):
         if self.__dict__.get('parms', False):
             return
-        self.parser = argparse.ArgumentParser(description="Process parameters for the TMSTATS suite of programs.")
-        self.parser.add_argument('YMLfile', help="YML file with information such as database, user, etc...", default="tmstats.yml", nargs='?')
-        self.parser.add_argument('--dbname', help="MySQL database to use", dest='dbname')
-        self.parser.add_argument('--dbhost', help="host for MySQL database", dest='dbhost')
-        self.parser.add_argument('--dbuser', help="user for MySQL database", dest='dbuser')
-        self.parser.add_argument('--dbpass', help="password for MySQL database", dest='dbpass')
+        if customformatter is True:
+            formatter_class = CustomFormatter
+        elif customformatter:
+            formatter_class = customformatter
+        else:
+            formatter_class = None
+        if formatter_class:
+            self.parser = argparse.ArgumentParser(description=description, formatter_class=formatter_class)
+        else:
+            self.parser = argparse.ArgumentParser(description=description)
+        self.parser.add_argument('YMLfile', help="YML file with information such as database, user, etc...", default=YMLfile, nargs='?')
+        if includedbparms:
+            self.parser.add_argument('--dbname', help="MySQL database to use", dest='dbname')
+            self.parser.add_argument('--dbhost', help="host for MySQL database", dest='dbhost')
+            self.parser.add_argument('--dbuser', help="user for MySQL database", dest='dbuser')
+            self.parser.add_argument('--dbpass', help="password for MySQL database", dest='dbpass')
         
     def __repr__(self):
         return '\n'.join(['%s: "%s"' % (k, self.__dict__[k]) for k in self.__dict__ if k != 'parser'])
