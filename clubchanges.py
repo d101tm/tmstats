@@ -1,6 +1,13 @@
 #!/usr/bin/python
 """ Find club changes. 
 
+    Create an HTML file with changes in club information between two dates, based on Toastmasters' Find-a-Club data.
+    There are up to three sections in the report:
+    
+        * Clubs which are no longer in the list from Toastmasters
+        * Clubs which have been added to the list (with detailed infomation about each club)
+        * Clubs whose information has been changed (by default, only the area, division, address, and meeting information is checked or displayed.)
+
     Exit 0 if no changes; 1 if there are changes.
     
 """
@@ -44,12 +51,12 @@ if __name__ == "__main__":
     reload(sys).setdefaultencoding('utf8')
     
     # Define args and parse command line
-    parms = tmparms.tmparms()
-    parms.add_argument('--fromdate', default='yesterday', dest='fromdate')
-    parms.add_argument('--todate', default='today', dest='todate')
+    parms = tmparms.tmparms(description=__doc__)
+    parms.add_argument('--fromdate', default='yesterday', dest='fromdate', help="Base date for club status (or status this many days ago, if an integer).")
+    parms.add_argument('--todate', default='today', dest='todate', help="Show changes through this date.")
     parms.add_argument('--runon', default=None, dest='runon', nargs='+', 
                         help='Day of the week (Mon, Tue...) on which to run.  Runs daily if omitted.')
-    parms.add_argument('--outfile', default='-', dest='outfile', type=argparse.FileType('w'))
+    parms.add_argument('--outfile', default='-', dest='outfile', type=argparse.FileType('w'), help="Output file.")
     parms.parse()
     fromdate = cleandate(parms.fromdate)
     todate = cleandate(parms.todate)
