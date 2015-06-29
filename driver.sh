@@ -126,16 +126,6 @@ fi
 cd "$savedir"
 
 
-# Check for changes, and if there are any, notify the Webmaster.
-echo "Checking for club changes"
-   
-cd "$data"
-"$savedir"/clubchanges.py --outfile clubchanges.$today.html
-if [[ "$rc" == 0 ]] ; then
-    rm clubchanges.$today.html
-fi
-cd "$savedir"
-
 
 
 # Next, run the reformation report
