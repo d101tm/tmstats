@@ -11,6 +11,8 @@ class Division():
     divisions = {}
     @classmethod
     def find(self, division):
+        if division == '0D':
+            division = 'New'
         if division not in self.divisions:
             self.divisions[division] = Division(division)
         return self.divisions[division]
@@ -38,6 +40,8 @@ class Division():
         res.append('  <tr><th style="background-color: #f2df74;" colspan="2"><strong>Division %s</strong></th></tr>' % self.name.upper())
         if self.director:
             res.append('  %s' % self.director.html())
+        else:
+            res.append('<tr><td></td><td>Division Director Position is Vacant</td><tr>')
         for a in sorted(self.areas):
             res.append('  %s' % self.areas[a].html())
         res.append('  </tbody>\n</table>')
@@ -57,6 +61,8 @@ class Area():
         self.clubs = []
         self.name = division + area
         self.director = None
+        self.division = division
+        self.area = area
         self.parent.addarea(self)
         
     def addclub(self, club):
@@ -73,6 +79,8 @@ class Area():
         return '\n'.join(res)
         
     def html(self):
+        if self.area == '0A':
+            return ''
         res = []
         res.append('<tr><td style="background-color: #f2df74;" colspan="2"><strong>Area %s</strong></td></tr>' % self.name)
         if self.director:
@@ -121,7 +129,7 @@ def makestring(x):
 # Make it easy to run under TextMate
 if 'TM_DIRECTORY' in os.environ:
     os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-    clubfile = '/Users/david/Downloads/District042015-2016Alignment-r2.xlsx'
+    clubfile = '/Users/david/Downloads/District042015-2016Alignment-r4.xlsx'
 else:
     clubfile = None
     
@@ -130,6 +138,7 @@ reload(sys).setdefaultencoding('utf8')
 
 
 parms = tmparms.tmparms(description=__doc__)
+parms.add_argument('--outfile', dest='outfile', default='areasanddivisions.html')
 parms.add_argument('--clubfile', dest='clubfile', default=clubfile, help='Overrides area/division data from the CLUBS table.')
 parms.parse()
 
@@ -219,8 +228,10 @@ for row in wks.get_all_values():
         Director(position, first, last, email)
         
 # And now we go through the Divisions and Areas.
+outfile = open(parms.outfile, 'w')
 for d in sorted(Division.divisions):
     div = Division.divisions[d]
-    print div.html()
+    outfile.write(div.html())
+    outfile.write('\n')
     
 
