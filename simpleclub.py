@@ -77,7 +77,7 @@ class Club:
             curs.execute("SELECT clubs.* FROM clubs INNER JOIN (SELECT clubnumber, MAX(lastdate) AS m FROM clubs GROUP BY clubnumber) lasts ON lasts.m = clubs.lastdate AND lasts.clubnumber = clubs.clubnumber;")
         # Get the fieldnames before we get anything else:
         fieldnames = [f[0] for f in curs.description]
-        if setfields:
+        if setfields or 'fieldnames' not in self.__dict__:
             Club.setfieldnames(fieldnames)
         if goodnames:
             Club.setgoodnames(goodnames)
