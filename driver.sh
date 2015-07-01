@@ -156,12 +156,6 @@ if [[ "$rc" != 0 ]] ; then
    exit $rc
 fi
 
-# Run ShareTheWealth
-echo "Running Share the Wealth"
-cd "$data"
-$savedir/sharethewealth.py
-cd "$savedir"
-
 # Run Distinguished Clubs
 echo "Running Distinguished Clubs"
 ./distclubs.py "$data/distclubs.html" "$ymlfile"
