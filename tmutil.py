@@ -27,6 +27,20 @@ def cleandate(indate):
         indate[2] = "0" + indate[2]
     return '-'.join(indate)
     
+
+def stringify(value):
+    """ Convert values to strings """
+    # Let's normalize everything to strings/unicode strings
+    if isinstance(value, (int, long, float, bool)):
+        value = '%s' % value
+    if isinstance(value, bool):
+        value = '1' if value else '0'
+    elif isinstance(value, (datetime, date)):
+        value = ('%s' % value)[0:10]
+
+    return value
+
+        
 def daybefore(indate):
     """ Toastmasters data is for the day BEFORE the file was created. """
     return (datetime.strptime(cleandate(indate), '%Y-%m-%d') - timedelta(1)).strftime('%Y-%m-%d') 
