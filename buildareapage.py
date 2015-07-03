@@ -74,6 +74,8 @@ class Area():
             res.append("""  %s""" % self.director.__repr__())
         elif self.parent.director:
             res.append("""  *** Acting: %s """ % self.parent.director.__repr__())
+        else:
+            res.append("""  Area Director Position is Vacant""")
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append("""    %s: %s %s""" % (c.clubnumber, c.clubname, c.getLink()))
         return '\n'.join(res)
@@ -87,6 +89,8 @@ class Area():
             res.append(self.director.html())
         elif self.parent.director:
             res.append(self.parent.director.html(isacting=True))
+        else:
+            res.append('<tr><td></td><td>Area Director Position is Vacant</td></tr>')
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append('<tr><td align="right">%s</td><td><a href="%s" target="_blank">%s</a></td></tr>' % (c.clubnumber, c.getLink(), c.clubname))
         return '\n'.join(res)
@@ -105,7 +109,8 @@ class Director():
         self.first = first
         self.last = last
         self.email = email
-        self.position = ' '.join(part)
+        self.position = part[0] + ' ' + part[1] + ' Director'
+
         
     def html(self, isacting=False):
         return """<tr>
@@ -232,5 +237,4 @@ for d in sorted(Division.divisions):
     div = Division.divisions[d]
     outfile.write(div.html())
     outfile.write('\n')
-    
 
