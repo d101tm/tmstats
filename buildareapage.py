@@ -3,8 +3,8 @@
 
 
 
-import dbconn, tmparms, xlrd
-import os, sys
+import dbconn, tmparms, xlrd, csv
+import os, sys, urllib2
 from simpleclub import Club
 
 class Division():
@@ -129,9 +129,7 @@ def makestring(x):
 # Make it easy to run under TextMate
 if 'TM_DIRECTORY' in os.environ:
     os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-    clubfile = '/Users/david/Downloads/District042015-2016Alignment-r4.xlsx'
-else:
-    clubfile = None
+
     
 # Get around unicode problems
 reload(sys).setdefaultencoding('utf8')
@@ -139,7 +137,7 @@ reload(sys).setdefaultencoding('utf8')
 
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument('--outfile', dest='outfile', default='areasanddivisions.html')
-parms.add_argument('--clubfile', dest='clubfile', default=clubfile, help='Overrides area/division data from the CLUBS table.')
+parms.add_argument('--clubfile', dest='clubfile', default=None, help='Overrides area/division data from the CLUBS table.')
 parms.parse()
 
 # Connect to the database
@@ -215,21 +213,17 @@ for c in sorted(clubs):
     
 
 
-# OK, now we have the info.  Let's get the Area Director/Division Director sheet
-import gspread
-from oauth2client.client import SignedJwtAssertionCredentials
-scope = ['https://spreadsheets.google.com/feeds']
-credentials = SignedJwtAssertionCredentials(parms.googleauthemail, parms.googleauthkey, scope)
-gc = gspread.authorize(credentials)
-wks = gc.open_by_url('https://docs.google.com/spreadsheets/d/1xIm1TJERnr_3up7BIxZkk9T9pqPYPb4Ek02ITVMQ_Zs/edit#gid=0').get_worksheet(0)
+
+# OK, now we have the club info.  Let's get the Area Director/Division Director information.
+officers = urllib2.urlopen(parms.officers)
+reader = csv.DictReader(officers)
+for row in reader:
+    if row['Title'] and row['First']:
+        Director(row['Title'], row['First'], row['Last'], row['Email'])
 
 
-for row in wks.get_all_values():
-    (position, first, last, email) = [v.strip() for v in row[0:4]]
-    if position and first:
-        Director(position, first, last, email)
-        
-# And now we go through the Divisions and Areas.
+
+# And now we go through the Divisions and Areas and build the output.
 outfile = open(parms.outfile, 'w')
 for d in sorted(Division.divisions):
     div = Division.divisions[d]
