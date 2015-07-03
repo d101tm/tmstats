@@ -149,6 +149,8 @@ curs = conn.cursor()
 # Get all clubs
 clubs = Club.getClubsOn(None, curs)
 
+if not parms.clubfile:
+    sys.stderr.write('Did you forget to override the club alignment?\n')
 # Override assignments as required
 if parms.clubfile:
     book = xlrd.open_workbook(parms.clubfile)
