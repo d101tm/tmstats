@@ -126,19 +126,6 @@ fi
 cd "$savedir"
 
 
-
-
-# Next, run the reformation report
-echo "Running reformation analysis"
-
-./reformation.py "$ymlfile"
-
-rc=$?
-if [[ "$rc" != 0 ]] ; then
-   echo "return code: $rc, exiting"
-   exit $rc
-fi
-
 # Next, run the statistics.  
 echo "Running allstats"
 
