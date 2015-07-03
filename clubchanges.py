@@ -75,7 +75,7 @@ if __name__ == "__main__":
     
     namestocompare = ['address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime', 'area', 'division', 'district']
     # Get information for clubs as of the "from" date:
-    oldclubs = Club.getClubsOn(curs, date=fromdate, setfields=True, goodnames=namestocompare)
+    oldclubs = Club.getClubsOn(curs, date=fromdate, goodnames=namestocompare)
     newclubs = {}   # Where clubs created during the period go
     changedclubs = {}  # Where clubs changed during the period go
     

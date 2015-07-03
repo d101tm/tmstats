@@ -68,7 +68,7 @@ class Club:
         return value
         
     @classmethod
-    def getClubsOn(self, curs, date=None, setfields=False, goodnames=[]):
+    def getClubsOn(self, curs, date=None, goodnames=[]):
         """ Get the clubs which were in existence on a specified date 
             or the most recent occurrence of each club if date=None """
         if date:
@@ -77,7 +77,7 @@ class Club:
             curs.execute("SELECT clubs.* FROM clubs INNER JOIN (SELECT clubnumber, MAX(lastdate) AS m FROM clubs GROUP BY clubnumber) lasts ON lasts.m = clubs.lastdate AND lasts.clubnumber = clubs.clubnumber;")
         # Get the fieldnames before we get anything else:
         fieldnames = [f[0] for f in curs.description]
-        if setfields or 'fieldnames' not in self.__dict__:
+        if 'fieldnames' not in self.__dict__:
             Club.setfieldnames(fieldnames)
         if goodnames:
             Club.setgoodnames(goodnames)
