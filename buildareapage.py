@@ -25,12 +25,12 @@ class Division():
     def addarea(self, area):
         self.areas[area.name] = area
         
-    def __info__(self):
+    def __repr__(self):
         res = []
         if self.director:
-            res.append(["""%s""" % self.director.info()])
+            res.append("""%s""" % self.director.__repr__())
         for a in sorted(self.areas):
-            res.append(self.areas[a].info())
+            res.append(self.areas[a].__repr__())
         return '\n'.join(res)
         
     def html(self):
@@ -68,12 +68,12 @@ class Area():
     def addclub(self, club):
         self.clubs.append(club)
         
-    def info(self):
+    def __repr__(self):
         res = []
         if self.director:
-            res.append("""  %s""" % self.director.info())
+            res.append("""  %s""" % self.director.__repr__())
         elif self.parent.director:
-            res.append("""  *** Acting: %s """ % self.parent.director.info())
+            res.append("""  *** Acting: %s """ % self.parent.director.__repr__())
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append("""    %s: %s %s""" % (c.clubnumber, c.clubname, c.getLink()))
         return '\n'.join(res)
@@ -114,7 +114,7 @@ class Director():
 </tr>
 """ % ( self.email, '<strong>Acting: </strong>' if isacting else '',self.position, self.first, self.last)
 
-    def info(self):
+    def __repr__(self):
         return "%s %s %s: %s" % (self.position, self.first, self.last, self.email)
        
     
@@ -218,8 +218,11 @@ for c in sorted(clubs):
 officers = urllib2.urlopen(parms.officers)
 reader = csv.DictReader(officers)
 for row in reader:
+    for k in row:
+        row[k] = ' '.join(row[k].split()).strip()
     if row['Title'] and row['First']:
         Director(row['Title'], row['First'], row['Last'], row['Email'])
+        
 
 
 
