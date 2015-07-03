@@ -150,7 +150,7 @@ conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
     
 # Get all clubs
-clubs = Club.getClubsOn(None, curs)
+clubs = Club.getClubsOn(curs)
 
 if not parms.clubfile:
     sys.stderr.write('Did you forget to override the club alignment?\n')

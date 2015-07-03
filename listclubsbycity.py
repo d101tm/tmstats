@@ -130,7 +130,7 @@ conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 
 # Get the club information for the specified date
-clubs = Club.getClubsOn(parms.date, curs, setfields=True)
+clubs = Club.getClubsOn(curs, parms.date)
 cities = {}
 
 for c in clubs:

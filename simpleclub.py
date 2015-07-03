@@ -68,7 +68,7 @@ class Club:
         return value
         
     @classmethod
-    def getClubsOn(self, date, curs, setfields=False, goodnames=[]):
+    def getClubsOn(self, curs, date=None, setfields=False, goodnames=[]):
         """ Get the clubs which were in existence on a specified date 
             or the most recent occurrence of each club if date=None """
         if date:

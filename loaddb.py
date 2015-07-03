@@ -93,7 +93,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     # We need to get clubs for the most recent update so we know whether to update an entry 
     #   or start a new one.
     #yesterday = datetime.strftime(datetime.strptime(cdate, '%Y-%m-%d') - timedelta(1),'%Y-%m-%d')
-    clubhist = Club.getClubsOn(None, curs)
+    clubhist = Club.getClubsOn(curs)
    
     for row in reader:
         if len(row) < 20:

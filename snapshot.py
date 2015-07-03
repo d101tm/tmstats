@@ -61,7 +61,7 @@ conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 
 # Get club information from the database as of the date requested (or today)
-clubs = Club.getClubsOn(parms.date, curs, setfields=True)
+clubs = Club.getClubsOn(curs, setfields=True)
 
 # Now, add relevant club performance information.  If there are clubs in the 
 # performance data which aren't in the master list from TMI, note it and add
