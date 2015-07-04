@@ -7,35 +7,7 @@ import urllib, tmparms, os, sys
 from tmutil import cleandate
 from datetime import datetime, timedelta
 
-        
-class Dateinfo:
-    """ Information relative to a Toastmasters date """
-    lasts = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-    def __init__(self, m, y):
-
-
-        if (m == 2) and (0 == y % 4):
-            eom = (2, 29, y)
-        else:
-            eom = (m, self.lasts[m-1], y)
-            
-        self.monthend = '%d/%d/%d' % eom
-        if (m == 12):
-            self.nextday = [1, 1, y+1]
-        else:
-            self.nextday = [m+1, 1, y]
-        self.lastday = self.lasts[self.nextday[0]-1]
-        if (m == 1) and (0 == y % 4):
-            self.lastday = 29
-        
-    def next(self):
-        while (self.nextday[1] <= self.lastday):
-            yield '%d/%d/%d' % (self.nextday[0], self.nextday[1], self.nextday[2])
-            self.nextday[1] += 1
-   
-            
-    def __iter__(self):
-        return self
+    
         
 def monthend(m, y):
     lasts = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
@@ -54,13 +26,7 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
         return baseurl + "~~~" + tmyearpiece
     else:
         return baseurl + "~" + monthend + "~" + asof + "~" + tmyearpiece
-        
 
-def opener(what, parms):
-    if what.startswith('http'):
-        return urllib.urlopen(what % parms)
-    else:
-        return open(what, 'rbU')
         
 def getresponse(url):
     clubinfo = urllib.urlopen(url).readlines()
@@ -75,48 +41,6 @@ def getreportfromWHQ(report, district, tmyearpiece, month, date):
     return getresponse(url)
     
 
-    
-def findlastformonth(mm, yy, report, tmyearpiece, district):
-    info = Dateinfo(mm, yy)
-    url = makeurl(report, district, tmyearpiece, info.monthend, info.monthend)
-    good = info.monthend
-    clubinfo = getresponse(url)
-    for asof in info.next():
-        print "getting %s for %s" %(report, asof)
-        url = makeurl(report, district, tmyearpiece, info.monthend, asof)
-        newinfo = getresponse(url)
-        if not newinfo:
-            break
-        clubinfo = newinfo
-        good = asof
-    print '%s kept for %s' % (report, good)
-    return (clubinfo, good, info.monthend)
-    
-    
-def doareport(report, filename, months, tmyearpiece, district):    
-    for (mm, yy) in months:
-        (clubinfo, asof) = findlastformonth(mm, yy, report, tmyearpiece, district)
-        # At this point, clubinfo has the last valid information for the month we care about
-        if clubinfo: 
-            open('%s.%s.csv' % (filename, cleandate(asof)),'w').write(''.join(clubinfo).replace('\r','')) 
-            
-def doreports(months, tmyearpiece, district):
-    reports = {'clubperformance':'clubperf', 'districtperformance':'distperf','areaperformance':'areaperf'}
-    for (mm, yy) in months:
-        lastdate = None
-        for r in reports:
-            if not lastdate:
-                (info, lastdate, monthend) = findlastformonth(mm, yy, r, tmyearpiece, district)
-            else:
-                info = getresponse(makeurl(r, district, tmyearpiece, monthend, monthend))
-            if info:
-                outfilename = '%s.%s.csv' % (reports[r], cleandate(lastdate))
-                print 'Writing', outfilename
-                with open(outfilename,'w') as outfile:
-                    outfile.write(''.join(info).replace('\r',''))
-                
-        
-            
 
 def makefilename(reportname, date):
     return '%s.%s.csv' % (reportname, date.strftime('%Y-%m-%d'))
@@ -137,12 +61,10 @@ def dolatest(district):
                                 ('divisionperformance', 'areaperf'),
                                 ('districtperformance', 'distperf')):
         url = makeurl(urlpart, district)
-        print url
         data = getresponse(url)
         if data:
             date = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d')  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
             with open(makefilename(filepart, date), 'w') as f:
-                print 'writing', filepart
                 f.write(''.join(data).replace('\r',''))
 
 if __name__ == "__main__":
