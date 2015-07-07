@@ -69,9 +69,13 @@ class Club:
         
     @classmethod
     def getClubsOn(self, curs, date=None, goodnames=[]):
-        """ Get the clubs which were in existence on a specified date 
-            or the most recent occurrence of each club if date=None """
+        """ Get the clubs which were in existence on a specified date (or the last date in the database)
+            or the most recent occurrence of each club if date=None (which includes suspended clubs) """
         if date:
+            # Make sure it's not past the end of the data
+            curs.execute("SELECT MAX(lastdate) from clubs")
+            lastdate = self.stringify(curs.fetchone()[0])
+            date = min(date, lastdate)
             curs.execute("SELECT * FROM clubs WHERE firstdate <= %s AND lastdate >= %s", (date, date))
         else:
             curs.execute("SELECT clubs.* FROM clubs INNER JOIN (SELECT clubnumber, MAX(lastdate) AS m FROM clubs GROUP BY clubnumber) lasts ON lasts.m = clubs.lastdate AND lasts.clubnumber = clubs.clubnumber;")
