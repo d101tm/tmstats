@@ -6,6 +6,7 @@
 import dbconn, tmparms, xlrd, csv
 import os, sys, urllib2
 from simpleclub import Club
+from tmutil import overrideClubs
 
 class Division():
     divisions = {}
@@ -125,11 +126,6 @@ class Director():
     
 
 
-def makestring(x):
-    try:
-        return '%s' % int(x)
-    except ValueError:
-        return ''
 
 # Make it easy to run under TextMate
 if 'TM_DIRECTORY' in os.environ:
@@ -142,7 +138,7 @@ reload(sys).setdefaultencoding('utf8')
 
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument('--outfile', dest='outfile', default='areasanddivisions.html')
-parms.add_argument('--clubfile', dest='clubfile', default=None, help='Overrides area/division data from the CLUBS table.')
+parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
 parms.parse()
 
 # Connect to the database
@@ -152,62 +148,10 @@ curs = conn.cursor()
 # Get all clubs
 clubs = Club.getClubsOn(curs)
 
-if not parms.clubfile:
-    sys.stderr.write('Did you forget to override the club alignment?\n')
-# Override assignments as required
-if parms.clubfile:
-    book = xlrd.open_workbook(parms.clubfile)
-    
+if parms.newAlignment:
+    overrideClubs(clubs, parms.newAlignment)
 
-    # Start with the Alignment sheet
-    align = book.sheet_by_name('Alignment')
-    # The spreadsheet is more human-readable than computer-friendly;
-    #   in particular, there are no real headings, so we go by column number.
-    clubcol = 5  # ('F')
-    namecol = 6
-    distcol = 7
-    areacol = 8
-    divcol = 9
-    
-    # Walk down looking for a valid club number
-    rownum = 0
 
-    while rownum < align.nrows:
-        values = align.row_values(rownum)
-        clubnum = makestring(values[clubcol])
-        if clubnum in clubs:
-            club = clubs[clubnum]
-            was = 'District %s, Area %s%s' % (club.district, club.division, club.area)
-            if values[areacol]:
-                club.area = makestring(values[areacol])
-            if values[divcol]:
-                club.division = values[divcol]
-            if values[distcol]:
-                clubs.district = makestring(values[distcol])
-            now = 'District %s, Area %s%s' % (club.district, club.division, club.area)
-            if (was != now):
-                #print 'Change: %s (%s) from %s to %s' % (club.clubname, club.clubnumber, was, now)
-                pass
-        rownum += 1
-        
-    # Now, handle the suspended club list
-    # Find the first sheet which starts with 'Suspended' 
-    names = book.sheet_names()
-    sheetnum = 0
-    while not names[sheetnum].startswith('Suspended'):
-        sheetnum += 1
-        
-    if sheetnum <= len(names):
-        susp = book.sheet_by_index(sheetnum)
-        rownum = 0
-        while rownum < susp.nrows:
-            values = susp.row_values(rownum)
-            clubnum = makestring(values[clubcol])
-            if clubnum in clubs:
-                #print 'Suspended: %s (%s)' % (clubs[clubnum].clubname, clubs[clubnum].clubnumber)
-                del clubs[clubnum]
-            rownum += 1
-            
 # Now, assign clubs to Areas and Divisions
 
         

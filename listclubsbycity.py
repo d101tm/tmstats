@@ -6,7 +6,7 @@
 import sys, re, os
 from simpleclub import Club
 import tmparms, dbconn
-from tmutil import cleandate
+from tmutil import cleandate, overrideClubs
 
 
 # Create the templates
@@ -122,6 +122,7 @@ reload(sys).setdefaultencoding('utf8')
 # Handle parameters
 parms = tmparms.tmparms()
 parms.parser.add_argument("--date", dest='date', default='today')
+parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
 parms.parse()
 
 parms.date = cleandate(parms.date)
@@ -131,6 +132,11 @@ curs = conn.cursor()
 
 # Get the club information for the specified date
 clubs = Club.getClubsOn(curs, parms.date)
+
+# And override it if needed.
+if parms.newAlignment:
+    overrideClubs(clubs, parms.newAlignment)
+    
 cities = {}
 
 for c in clubs:
