@@ -69,10 +69,11 @@ clubfile.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 </head>
 <body>
 <h1>Share The Wealth Report</h1>
-<p>Clubs receive $5 in District 4 Credit for every new member added May 20 - June 30.  The club or clubs in each division which adds the most new membes in the division will receive an additional $25 Credit; current leaders are highlighted in the table below.</p>
+<p>Clubs receive $5 in District 4 Credit for every new member added May 20 - June 30.  These statistics will continue to be updated until Toastmasters finalizes the June 30th membership numbers in late July.</p>
+<p>The club or clubs in each division which adds the most new members in that division will receive an additional $25 Credit; current leaders are highlighted in the table below.</p>
 """)
 divheaders = ['Division', 'New Members']
-clubheaders = ['Division', 'Area', 'Club', 'Club Name', 'New Members on %s' % friendlystartdate, 'New Members on %s' % friendlyenddate, 'Members Added']
+clubheaders = ['Division', 'Area', 'Club', 'Club Name', 'New Members on %s' % friendlystartdate, 'New Members reported on %s' % friendlyenddate, 'Members Added']
 divwriter.writerow(divheaders)
 
 
