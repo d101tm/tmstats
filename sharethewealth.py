@@ -3,7 +3,7 @@
  
 import xlsxwriter, csv, sys, os, codecs, cStringIO, re
 import dbconn, tmparms
-from tmutil import cleandate, UnicodeWriter, daybefore
+from tmutil import cleandate, UnicodeWriter, daybefore, stringify
 
 class clubinfo:
     def __init__(self, clubnumber, clubname):
@@ -22,9 +22,9 @@ if 'TM_DIRECTORY' in os.environ:
 reload(sys).setdefaultencoding('utf8')
 
 # Handle parameters
-enddate = min('2015-07-01', cleandate('today'))
+enddate = min('2015-06-30', cleandate('today'))
 parms = tmparms.tmparms()
-parms.parser.add_argument("--startdate", dest='startdate', default='2015-05-20')
+parms.parser.add_argument("--startdate", dest='startdate', default='2015-05-19')
 parms.parser.add_argument("--enddate", dest='enddate', default=enddate)
 parms.parse()
 print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
@@ -34,9 +34,13 @@ curs = conn.cursor()
 parms.enddate = cleandate(parms.enddate)
 parms.startdate = cleandate(parms.startdate)
 
+curs.execute("SELECT max(loadedfor) FROM loaded WHERE tablename='distperf'")
+latest = stringify(curs.fetchone()[0])
+parms.enddate = min(parms.enddate, latest)
+
 print 'checking from %s to %s' % (parms.startdate, parms.enddate)
-friendlyenddate = daybefore(parms.enddate)[5:].replace('-','/')
-friendlystartdate = daybefore(parms.startdate)[5:].replace('-','/')
+friendlyenddate = parms.enddate[5:].replace('-','/')
+friendlystartdate = parms.startdate[5:].replace('-','/')
 
 # Open both output files
 divfile = open('sharethewealth.csv', 'wb')
