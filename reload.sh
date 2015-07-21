@@ -8,5 +8,5 @@ cd ..
 mysql --user=$dbuser --password=$dbpass $dbname <emptytables.sql
 cd data
 unzip -n history.zip   
-../loaddb.py
+../loaddb.py --silent
 

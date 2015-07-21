@@ -41,6 +41,9 @@ def cleanitem(item):
     except ValueError:
         pass
     return item
+    
+def inform(*args):
+    print ' '.join(args)
         
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
@@ -78,7 +81,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         if not hline[0].startswith('{"Message"'):
             print "'clubnumber' not in '%s'" % hline
         return
-    print "loading clubs for", cdate
+    inform("clubs for", cdate)
     dbheaders = [p for p in headers]
     addrcol1 = dbheaders.index('address1')
     addrcol2 = dbheaders.index('address2')
@@ -113,7 +116,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         #print row[addrcol1]
         #print row[addrcol2]
         # Now, clean up the address:
-        address = ';;'.join([x.strip() for x in row[addrcol1].split('  ') + row[addrcol2].split('  ')])
+        # Address line 1 is "place" information and can be multiple lines.
+        # Address line 2 is the real address and should be treated as one line, with spaces normalized.
+        address = '\n'.join([x.strip() for x in row[addrcol1].split('  ')]) + '\n' + normalize(row[addrcol2])
         row[addrcol1] = address
         del row[addrcol2]
         
@@ -125,6 +130,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         
         # And create the object
         club = Club(row)
+
 
 
         
@@ -156,12 +162,18 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         else:
             changes = []
         
-        if changes:
-            if not firsttime:
-                curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, "New Club", "", "")', (club.clubnumber, cdate))
+        if club.clubnumber not in clubhist and not firsttime:
+            # This is a new (or reinstated) club; note it in the changes database.
+            curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, "New Club", "", "")', (club.clubnumber, cdate))
+                
         if club.clubnumber not in clubhist or changes:
             club.firstdate = club.lastdate
+            # Encode newlines in the address as double-semicolons for the database
+            club.address = club.address.replace('\n',';;')
             values = [club.__dict__[x] for x in dbheaders]
+            
+            # And then put the address back into normal form
+            club.address = club.address.replace(';;','\n')
         
             thestr = 'INSERT IGNORE INTO clubs (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
             try:
@@ -170,6 +182,10 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
                 print e
             # Capture changes
             for (item, old, new) in changes:
+                if (item == 'address'):
+                    # Clean up the address (old and new) for the database
+                    old = old.replace('\n', ';;')
+                    new = new.replace('\n', ';;')
                 try:
                     curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
                 except Exception, e:
@@ -184,24 +200,55 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     
     # If all the files were processed, today's work is done.    
     curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
-        
 
-def doHistoricalDistrictPerformance(conn):
-    perffiles = glob.glob("distperf.*.csv")
+
+def getasof(infile):
+    """ Gets the "as of" information from a Toastmasters' report.  
+        Returns a tuple: (month, date).
+        If there is no "as of" information, returns False.
+        Seeks the file back to the current position.
+        """
+    retval = False
+    filepos = infile.tell()
+    for line in infile:
+        if not line:
+            break
+        if not line.startswith("Month of"):
+            continue
+        (mpart, dpart) = line.split(',')
+        month = mpart.split()[-1]
+        date = cleandate(dpart.split()[-1])
+        retval = (month, date)
+        break
+    infile.seek(filepos)
+    return retval
+    
+def doHistorical(conn, name):
+    perffiles = glob.glob(name + '.*.csv')
     perffiles.sort()
     curs = conn.cursor()
-
     for c in perffiles:
-        cdate = c.split('.')[1]
-        curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="distperf" AND loadedfor=%s', (cdate,))
-        if curs.fetchone()[0] > 0:
-            continue
         infile = open(c, 'rU')
-        doDailyDistrictPerformance(infile, conn, cdate)
+        (month, cdate) = getasof(infile)
+        # Table names can't be dynamically substituted by the MySQLdb module, so we do that ourselves.
+        # We let MySQLdb substitute the date, since that comes from outside sources and needs to be sandboxed.
+        curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="%s" AND loadedfor=%%s' % name, (cdate,))
+        if curs.fetchone()[0] == 0:
+            # Don't have data for this date; call the appropriate routine.
+            if name == 'distperf':
+                doDailyDistrictPerformance(infile, conn, cdate)
+            elif name == 'areaperf':
+                doDailyAreaPerformance(infile, conn, cdate)
+            elif name == 'clubperf':
+                doDailyClubPerformance(infile, conn, cdate)
+            else:
+                sys.stderr.write("'%s' is not a valid name for historical performance requests.")
+                sys.exit(1)
         infile.close()
-
-    # Commit all changes    
     conn.commit()
+    
+    
+
     
 def doDailyDistrictPerformance(infile, conn, cdate):
     curs = conn.cursor()
@@ -227,7 +274,7 @@ def doDailyDistrictPerformance(infile, conn, cdate):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
-    print "loading distperf for", cdate    
+    inform("distperf for", cdate)
     areacol = headers.index('area')
     districtcol = headers.index('district')
     # We're going to use the last column for the effective date of the data
@@ -277,23 +324,7 @@ def doDailyDistrictPerformance(infile, conn, cdate):
     conn.commit() 
 
     
-def doHistoricalClubPerformance(conn):
-    perffiles = glob.glob("clubperf.*.csv")
-    perffiles.sort()
-    curs = conn.cursor()
 
-    for c in perffiles:
-        cdate = c.split('.')[1]
-        curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="clubperf" AND loadedfor=%s', (cdate,))
-        if curs.fetchone()[0] > 0:
-            continue
-        infile = open(c, 'rU')
-        doDailyClubPerformance(infile, conn, cdate)
-        infile.close()
-
-    # Commit all changes    
-    conn.commit()
-    
 def doDailyClubPerformance(infile, conn, cdate):
     curs = conn.cursor()
     reader = csv.reader(infile)
@@ -304,7 +335,7 @@ def doDailyClubPerformance(infile, conn, cdate):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
-    print "loading clubperf for", cdate
+    inform("clubperf for", cdate)
     areacol = headers.index('area')
     districtcol = headers.index('district')
     memcol = headers.index('activemembers')
@@ -367,23 +398,7 @@ def doDailyClubPerformance(infile, conn, cdate):
     curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubperf", %s)', (cdate,))
     conn.commit()
     
-def doHistoricalAreaPerformance(conn):
-    perffiles = glob.glob("areaperf.*.csv")
-    perffiles.sort()
-    curs = conn.cursor()
 
-    for c in perffiles:
-        cdate = c.split('.')[1]
-        curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="areaperf" AND loadedfor=%s', (cdate,))
-        if curs.fetchone()[0] > 0:
-            continue
-        infile = open(c, 'rU')
-        doDailyAreaPerformance(infile, conn, cdate)
-        infile.close()
-
-    # Commit all changes    
-    conn.commit()
-    
 def doDailyAreaPerformance(infile, conn, cdate):
     curs = conn.cursor()
     reader = csv.reader(infile)
@@ -395,7 +410,7 @@ def doDailyAreaPerformance(infile, conn, cdate):
     except ValueError:
         print "'club' not in '%s'" % hline
         return
-    print "loading areaperf for", cdate
+    inform("areaperf for", cdate)
     areacol = headers.index('area')
     districtcol = headers.index('district')
     
@@ -453,14 +468,20 @@ if __name__ == "__main__":
     
     # Handle parameters
     parms = tmparms.tmparms()
+    parms.add_argument('--silent', action='store_true')
     parms.parse()
-    print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
+    if parms.silent:
+        def inform(*args):
+            return
+            
+    inform('Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser))
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
         
     doHistoricalClubs(conn)
-    doHistoricalDistrictPerformance(conn)
-    doHistoricalClubPerformance(conn)
-    doHistoricalAreaPerformance(conn)
+    doHistorical(conn, "distperf")
+    doHistorical(conn, "clubperf")
+    doHistorical(conn, "areaperf")
+
 
     conn.close()
     
