@@ -3,7 +3,7 @@
     the 'loaded' table.  
 
 """
-import tmparms, dbconn, os, sys, tmutil
+import tmparms, dbconn, os, sys, tmutil, MySQLdb
 
 
 
@@ -13,9 +13,13 @@ def getlatest(table, conn):
     # The MySQLdb library doesn't allow interpolating the table name, so we do
     # it via normal Python.
     statement = 'select t.month, l.latest FROM %s t INNER JOIN (select max(loadedfor) as latest FROM loaded WHERE tablename="%s") l ON t.asof = l.latest GROUP BY t.month, l.latest' % (table, table)
-    curs.execute(statement)
-    ans = curs.fetchone()
-    ans = [tmutil.stringify(x) for x in ans]
+    try:
+        curs.execute(statement)
+        ans = curs.fetchone()
+        ans = [tmutil.stringify(x) for x in ans]
+    except (MySQLdb.Error, TypeError), e:
+        sys.stderr.write(repr(e))
+        ans = ('', '')
     return ans
 
 if __name__ == '__main__':
