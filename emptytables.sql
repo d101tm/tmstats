@@ -1,8 +1,8 @@
 # Drop all the tmstats tables
-drop table clubs;
-drop table clubperf;
-drop table clubchanges;
-drop table distperf;
-drop table areaperf;
-drop table loaded;
+drop table if exists clubs;
+drop table if exists clubperf;
+drop table if exists clubchanges;
+drop table if exists distperf;
+drop table if exists areaperf;
+drop table if exists loaded;
 source tmstats.sql;
