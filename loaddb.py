@@ -149,6 +149,12 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         club.district = cleanitem(club.district)
         club.area = cleanitem(club.area)
 
+        
+        # If a club is partially unassigned, mark it as completely unassigned.
+        if (club.area == '0A') or (club.division == '0D'):
+            club.area = '0A'
+            club.division = '0D'
+
     
         # Clean up the charter date
         club.charterdate = cleandate(club.charterdate)
