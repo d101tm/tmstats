@@ -6,7 +6,6 @@
 import urllib, tmparms, os, sys
 from tmutil import cleandate
 from datetime import datetime, timedelta
-
     
         
 def monthend(m, y):
@@ -79,22 +78,41 @@ if __name__ == "__main__":
             
     parms = tmparms.tmparms()
     parms.add_argument('--district', type=int)
-    parms.add_argument('--startdate', default='today')
+    parms.add_argument('--startdate', default=None)
     parms.add_argument('--enddate', default='today')
     parms.parse()
 
     district = "%0.2d" % parms.district
     enddate = datetime.strptime(cleandate(parms.enddate), '%Y-%m-%d')
-    startdate = datetime.strptime(cleandate(parms.startdate), '%Y-%m-%d')
+    if parms.startdate:
+        startdate = datetime.strptime(cleandate(parms.startdate), '%Y-%m-%d')
+    else:
+        # If nothing was specified, start with the latest date in the database.
+        import dbconn, latest
+        conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
+        last = latest.getlatest('clubperf', conn)[1]
+        if last:
+            startdate = datetime.strptime(last, '%Y-%m-%d') + timedelta(1)
+        else:
+            startdate = False
+        conn.close()
 
     # Figure out what months we need info for:
 
 
     tmmonths = (7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6)
     # If it's January-July, we care about the TM year which started the previous July 1; otherwise, it's this year.
-    if (startdate.month <= 7):
-        tmyear = startdate.year - 1 
+    if startdate:
+        if (startdate.month <= 7):
+            tmyear = startdate.year - 1 
+        else:
+            tmyear = startdate.year
     else:
+        today = datetime.today()
+        if (today.month <= 7):
+            startdate = datetime(today.year-1, 7, 1)
+        else:
+            startdate = datetime(today.year, 7, 1)
         tmyear = startdate.year
 
     tmyearpiece = '%d-%d' % (tmyear, tmyear+1)  # For the URLs
@@ -116,7 +134,7 @@ if __name__ == "__main__":
     date = startdate
     report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], date)
     while not report and date <= enddate:
-        print 'No report for %s' % date.strftime('%Y-%m-%d')
+        print 'No report available for %s' % date.strftime('%Y-%m-%d')
         date += timedelta(1)
         report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], date)
     
