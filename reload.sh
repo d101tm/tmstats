@@ -7,6 +7,6 @@ foo=$(grep 'dbname:' tmstats.yml);export dbname=${foo##* }
 cd ..
 mysql --user=$dbuser --password=$dbpass $dbname <emptytables.sql
 cd data
-unzip -n history.zip   
-../loaddb.py --silent
+#unzip -n history.zip   
+../loaddb.py -q
 

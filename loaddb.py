@@ -44,6 +44,9 @@ def cleanitem(item):
     
 def inform(*args):
     print ' '.join(args)
+    
+def progress(*args):
+    print ' '.join(args)
         
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
@@ -224,6 +227,7 @@ def getasof(infile):
     return retval
     
 def doHistorical(conn, name):
+    progress("Processing", name)
     perffiles = glob.glob(name + '.*.csv')
     perffiles.sort()
     curs = conn.cursor()
@@ -468,15 +472,20 @@ if __name__ == "__main__":
     
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--silent', action='store_true')
+    parms.add_argument('--quiet', '-q', action='count')
     parms.parse()
-    if parms.silent:
+    if parms.quiet >= 1:
         def inform(*args):
+            return
+            
+    if parms.quiet >= 2:
+        def progress(*args):
             return
             
     inform('Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser))
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
         
+    progress("Processing Clubs")
     doHistoricalClubs(conn)
     doHistorical(conn, "distperf")
     doHistorical(conn, "clubperf")
