@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS clubs (
     clubname VARCHAR(100) ,
     charterdate date,
     suspenddate date,
+    place VARCHAR(200),
     address VARCHAR(200) ,
     city VARCHAR(100) ,
     state VARCHAR(100) ,
@@ -144,3 +145,25 @@ CREATE TABLE IF NOT EXISTS areaperf (
     month VARCHAR(12),
     primary key(clubnumber, asof)
 ) CHARACTER SET utf8;
+
+CREATE TABLE IF NOT EXISTS geo (
+    id INT UNSIGNED AUTO_INCREMENT,
+    clubnumber INT,
+    clubname VARCHAR(100),
+    place VARCHAR(200),
+    address VARCHAR(200),
+    city VARCHAR(50),
+    state VARCHAR(10),
+    zip VARCHAR(10),
+    latitude REAL,
+    longitude REAL,
+    locationtype VARCHAR(30),
+    partialmatch BOOL,
+    nelat REAL,
+    nelong REAL,
+    swlat REAL,
+    swlong REAL,
+    formatted VARCHAR(200),
+    types VARCHAR(100),
+    INDEX(id)
+);
