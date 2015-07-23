@@ -194,7 +194,8 @@ for city in sorted(cities.keys()):
             data['contact'].append('Phone: %s' % (club.phone))
         data['lcontact'] = '<br />'.join(data['contact'])
         data['scontact'] = ' | '.join(data['contact'])
-        address = club.address.split('\n')
+        address = club.place.split('\n')
+        address.append(club.address)
         data['location'] = '<div class="locfirst">' + \
                            address[0] + \
                            '</div>' + \

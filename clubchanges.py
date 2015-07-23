@@ -6,7 +6,7 @@
     
         * Clubs which are no longer in the list from Toastmasters
         * Clubs which have been added to the list (with detailed infomation about each club)
-        * Clubs whose information has been changed (by default, only the area, division, address, and meeting information is checked or displayed.)
+        * Clubs whose information has been changed (by default, only the area, division, place, address, and meeting information is checked or displayed.)
 
     Exit 0 if no changes; 1 if there are changes.
     
@@ -21,23 +21,6 @@ import datetime, argparse
 def sortclubs(what):
     return sorted(what.keys(), key=lambda x:'%s%s%s' % (what[x].division, what[x].area, what[x].clubnumber.zfill(8)))
 
-def combine(club):
-    omit = ['cmp']
-    keys = [k for k in club.__dict__ if k not in omit]
-    keys.sort()
-    for k in keys:
-        if k in fieldgroups:
-            (fg, fmtstr) = fieldgroups[k]
-
-            val = [club.__dict__.get(what, '') for what in fg]
-
-            club.__dict__[k] = fmtstr % tuple(val)
-            for what in fg[1:]:
-                if what in club.__dict__:
-                    del club.__dict__[what] 
-                if what in keys:
-                    del keys[keys.index(what)]
-    return keys
 
 
 if __name__ == "__main__":
@@ -73,13 +56,11 @@ if __name__ == "__main__":
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
     
-    namestocompare = ['address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime', 'area', 'division', 'district']
+    namestocompare = ['place', 'address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime', 'area', 'division', 'district']
     # Get information for clubs as of the "from" date:
     oldclubs = Club.getClubsOn(curs, date=fromdate, goodnames=namestocompare)
     newclubs = {}   # Where clubs created during the period go
     changedclubs = {}  # Where clubs changed during the period go
-    
-    
 
     
     # And compare to the the list of clubs at the end of the period
@@ -95,6 +76,7 @@ if __name__ == "__main__":
             # Club has changed.  Get the list of changes as a tuple (item, old, new)
             changedclubs[club.clubnumber] = (oldclubs[club.clubnumber].clubname, 
                 oldclubs[club.clubnumber].delta(club))
+            ct = changedclubs[club.clubnumber]
             del oldclubs[club.clubnumber]  # And we're done with the old club
             
     # And create results if anything has changed
@@ -156,10 +138,10 @@ if __name__ == "__main__":
             outfile.write("<th class='item'>Item</th><th>Value</th></tr></thead>\n")
             outfile.write("<tbody>\n")
             outfile.write("<tr><td>Link</td><td><a href='%s'>%s</a></td></tr>" % (club.getLink(), club.getLink()))
-            #keys = combine(club)
             
-            omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp', 'address', 'city', 'state', 'zip', 'country', 'meetingtime', 'meetingday']
+            omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp', 'place', 'address', 'city', 'state', 'zip', 'country', 'meetingtime', 'meetingday']
             keys = [key for key in club.__dict__.keys() if key not in omit]
+            outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % ('place', club.place))
             outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % ('address', club.makeaddress()))
             outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % ('meeting', club.makemeeting()))
             
@@ -188,6 +170,9 @@ if __name__ == "__main__":
                 if item in keys:
                     if item.startswith('meeting'):
                         item = 'meeting'
+                    if item == 'place':
+                        old = old.replace(';;', '<br />')
+                        new = new.replace(';;', '<br />')
                     outfile.write("<tr><td class='item'>%s</td><td class='old'>%s</td><td class='new'>%s</td></tr>\n" % (item, old.replace('\n','<br />'), new.replace('\n', '<br />')))
             outfile.write("</tbody></table>\n")
         

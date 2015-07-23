@@ -88,8 +88,8 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     dbheaders = [p for p in headers]
     addrcol1 = dbheaders.index('address1')
     addrcol2 = dbheaders.index('address2')
-    dbheaders[addrcol1] = 'address'
-    del dbheaders[addrcol2]   # I know there's a more Pythonic way.
+    dbheaders[addrcol1] = 'place'
+    dbheaders[addrcol2] = 'address'
     dbheaders.append('firstdate')
     dbheaders.append('lastdate')     # For now...
 
@@ -121,9 +121,10 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         # Now, clean up the address:
         # Address line 1 is "place" information and can be multiple lines.
         # Address line 2 is the real address and should be treated as one line, with spaces normalized.
-        address = '\n'.join([x.strip() for x in row[addrcol1].split('  ')]) + '\n' + normalize(row[addrcol2])
-        row[addrcol1] = address
-        del row[addrcol2]
+        place = '\n'.join([x.strip() for x in row[addrcol1].split('  ')]) 
+        row[addrcol1] = place
+        address = normalize(row[addrcol2])
+        row[addrcol2] = address
         
             
         # Get the right number of items into the row by setting today as the 
@@ -177,12 +178,12 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
                 
         if club.clubnumber not in clubhist or changes:
             club.firstdate = club.lastdate
-            # Encode newlines in the address as double-semicolons for the database
-            club.address = club.address.replace('\n',';;')
+            # Encode newlines in the place as double-semicolons for the database
+            club.place = club.place.replace('\n',';;')
             values = [club.__dict__[x] for x in dbheaders]
             
-            # And then put the address back into normal form
-            club.address = club.address.replace(';;','\n')
+            # And then put the place back into normal form
+            club.place = club.place.replace(';;','\n')
         
             thestr = 'INSERT IGNORE INTO clubs (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
             try:
@@ -191,8 +192,8 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
                 print e
             # Capture changes
             for (item, old, new) in changes:
-                if (item == 'address'):
-                    # Clean up the address (old and new) for the database
+                if (item == 'place'):
+                    # Clean up the place (old and new) for the database
                     old = old.replace('\n', ';;')
                     new = new.replace('\n', ';;')
                 try:

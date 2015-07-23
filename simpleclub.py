@@ -102,7 +102,7 @@ class Club:
             fieldnames = self.fieldnames
         for (name, value) in zip(fieldnames, values):
             value = self.stringify(value)
-            if name == 'address':
+            if name == 'place':
                 value = '\n'.join(value.split(';;'))  ## Clean up the database encoding of newlines in the address
             self.__dict__[name] = value
             if name in self.goodnames and name not in self.badnames:
