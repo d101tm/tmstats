@@ -178,7 +178,8 @@ for row in reader:
 # And now we go through the Divisions and Areas and build the output.
 outfile = open(parms.outfile, 'w')
 for d in sorted(Division.divisions):
-    div = Division.divisions[d]
-    outfile.write(div.html())
-    outfile.write('\n')
+    if d.lower() != 'new':
+        div = Division.divisions[d]
+        outfile.write(div.html())
+        outfile.write('\n')
 
