@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS clubs (
 
 CREATE TABLE IF NOT EXISTS loaded (
     tablename VARCHAR(8),
-    loadedfor date,
+    loadedfor DATE,
+    monthstart DATE,
     primary key(tablename, loadedfor)
 );
         
@@ -65,7 +66,7 @@ CREATE TABLE IF NOT EXISTS distperf (
     totalcharter INT,
     totaltodate INT,
     dist CHAR(1),
-    month VARCHAR(12),
+    monthstart DATE,
     asof date,
     charterdate VARCHAR(10),
     suspenddate VARCHAR(10),
@@ -101,7 +102,7 @@ CREATE TABLE IF NOT EXISTS clubperf (
     goal9 INT,
     goal10 INT,
     asof date,
-    month VARCHAR(12),
+    monthstart DATE,
     primary key(clubnumber, asof)
 ) CHARACTER SET utf8;
 
@@ -142,7 +143,7 @@ CREATE TABLE IF NOT EXISTS areaperf (
     charterdate VARCHAR(10),
     suspenddate VARCHAR(10),
     asof date,
-    month VARCHAR(12),
+    monthstart DATE,
     primary key(clubnumber, asof)
 ) CHARACTER SET utf8;
 
@@ -163,6 +164,7 @@ CREATE TABLE IF NOT EXISTS geo (
     nelong REAL,
     swlat REAL,
     swlong REAL,
+    area REAL,
     formatted VARCHAR(200),
     types VARCHAR(100),
     INDEX(id)

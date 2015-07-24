@@ -214,7 +214,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
 
 def getasof(infile):
     """ Gets the "as of" information from a Toastmasters' report.  
-        Returns a tuple: (month, date).
+        Returns a tuple: (monthstart, date) (both as characters)
         If there is no "as of" information, returns False.
         Seeks the file back to the current position.
         """
@@ -226,9 +226,15 @@ def getasof(infile):
         if not line.startswith("Month of"):
             continue
         (mpart, dpart) = line.split(',')
-        month = mpart.split()[-1]
+        month = 1+ ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].index(mpart.split()[-1].lower()[0:3])
         date = cleandate(dpart.split()[-1])
-        retval = (month, date)
+        asofyear = int(date[0:4])
+        asofmon = int(date[5:7])
+        if month == 12 and asofmon == 1:
+            asofyear = asofyear - 1
+        monthstart = '%04d-%02d-%02d' % (asofyear, month, 1)
+        
+        retval = (monthstart, date)
         break
     infile.seek(filepos)
     return retval
@@ -240,18 +246,18 @@ def doHistorical(conn, name):
     curs = conn.cursor()
     for c in perffiles:
         infile = open(c, 'rU')
-        (month, cdate) = getasof(infile)
+        (monthstart, cdate) = getasof(infile)
         # Table names can't be dynamically substituted by the MySQLdb module, so we do that ourselves.
         # We let MySQLdb substitute the date, since that comes from outside sources and needs to be sandboxed.
         curs.execute('SELECT COUNT(*) FROM loaded WHERE tablename="%s" AND loadedfor=%%s' % name, (cdate,))
         if curs.fetchone()[0] == 0:
             # Don't have data for this date; call the appropriate routine.
             if name == 'distperf':
-                doDailyDistrictPerformance(infile, conn, cdate)
+                doDailyDistrictPerformance(infile, conn, cdate, monthstart)
             elif name == 'areaperf':
-                doDailyAreaPerformance(infile, conn, cdate)
+                doDailyAreaPerformance(infile, conn, cdate, monthstart)
             elif name == 'clubperf':
-                doDailyClubPerformance(infile, conn, cdate)
+                doDailyClubPerformance(infile, conn, cdate, monthstart)
             else:
                 sys.stderr.write("'%s' is not a valid name for historical performance requests.")
                 sys.exit(1)
@@ -261,7 +267,7 @@ def doHistorical(conn, name):
     
 
     
-def doDailyDistrictPerformance(infile, conn, cdate):
+def doDailyDistrictPerformance(infile, conn, cdate, monthstart):
     curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
@@ -329,14 +335,13 @@ def doDailyDistrictPerformance(infile, conn, cdate):
                 
     conn.commit()
     # Now, insert the month into all of today's entries
-    month = row[0].split()[-1]  # Month of Apr, for example
-    curs.execute('UPDATE distperf SET month = %s WHERE asof = %s', (month, cdate))
-    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("distperf", %s)', (cdate,))
+    curs.execute('UPDATE distperf SET monthstart = %s WHERE asof = %s', (monthstart, cdate))
+    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor, monthstart) VALUES ("distperf", %s, %s)', (cdate, monthstart))
     conn.commit() 
 
     
 
-def doDailyClubPerformance(infile, conn, cdate):
+def doDailyClubPerformance(infile, conn, cdate, monthstart):
     curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
@@ -404,13 +409,12 @@ def doDailyClubPerformance(infile, conn, cdate):
         
     conn.commit()
     # Now, insert the month into all of today's entries
-    month = row[0].split()[-1]  # Month of Apr, for example
-    curs.execute('UPDATE clubperf SET month = %s WHERE asof = %s', (month, cdate))
-    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubperf", %s)', (cdate,))
+    curs.execute('UPDATE clubperf SET monthstart = %s WHERE asof = %s', (monthstart, cdate))
+    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor, monthstart) VALUES ("clubperf", %s, %s)', (cdate, monthstart))
     conn.commit()
     
 
-def doDailyAreaPerformance(infile, conn, cdate):
+def doDailyAreaPerformance(infile, conn, cdate, monthstart):
     curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
@@ -463,9 +467,8 @@ def doDailyAreaPerformance(infile, conn, cdate):
        
     conn.commit()
     # Now, insert the month into all of today's entries
-    month = row[0].split()[-1]  # Month of Apr, for example
-    curs.execute('UPDATE areaperf SET month = %s WHERE asof = %s', (month, cdate))
-    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("areaperf", %s)', (cdate,))
+    curs.execute('UPDATE areaperf SET monthstart = %s WHERE asof = %s', (monthstart, cdate))
+    curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor, monthstart) VALUES ("areaperf", %s, %s)', (cdate, monthstart))
     conn.commit()
  
 if __name__ == "__main__":
