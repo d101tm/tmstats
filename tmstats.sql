@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS clubs (
     state VARCHAR(100) ,
     zip VARCHAR(20) ,
     country VARCHAR(100) ,
-    phone VARCHAR(40) ,
+    phone VARCHAR(100) ,
     meetingtime VARCHAR(100) ,
     meetingday VARCHAR(100) ,
     clubstatus VARCHAR(100) ,
@@ -166,6 +166,9 @@ CREATE TABLE IF NOT EXISTS geo (
     swlong REAL,
     area REAL,
     formatted VARCHAR(200),
+    outcity VARCHAR(50),
+    outstate VARCHAR(10),
+    outzip VARCHAR(10),
     types VARCHAR(100),
     INDEX(id)
 );
