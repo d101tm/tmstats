@@ -13,6 +13,7 @@ clubs = {}
 class myclub():
     
     fieldnames = 'clubnumber, clubname, place, address, city, state, zip, latitude, longitude, locationtype, partialmatch, nelat, nelong, swlat, swlong, area, formatted, types'
+    fieldnames += ', outcity, outstate, outzip'
     fields = [k.strip() for k in fieldnames.replace(',',' ').split()]
     values = ('%s,' * len(fields))[:-1]
     
@@ -35,6 +36,9 @@ class myclub():
         self.formatted = ''
         self.types = ''
         self.area = 0.0
+        self.outcity = ''
+        self.outstate = ''
+        self.outzip = ''
         
     def update(self, results, curs):
         if isinstance(results, basestring):
@@ -106,6 +110,19 @@ class myclub():
                     print('best choice (bounding box %d square feet)' % (self.area * 5280.0 * 5280.0), self.locationtype, file=sys.stderr)
                 print(self.formatted, file=sys.stderr)
                 print('-----------------------------', file=sys.stderr)
+                
+            # Now, disassemble the address components
+            # We only care about city, state, and zip
+            ac = r['address_components']
+            for each in ac:
+                if 'locality' in each['types']:
+                    self.outcity = each['long_name']
+                elif 'administrative_area_level_1' in each['types']:
+                    self.outstate = each['short_name']
+                elif 'postal_code' in each['types']:
+                    self.outzip = each['short_name']
+                    
+            # Finally, update the database
             curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
                     ([self.__dict__[k] for k in self.fields]))
             
