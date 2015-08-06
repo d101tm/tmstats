@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS clubchanges (
 
 CREATE TABLE IF NOT EXISTS distperf (
     # This table is derived from the daily "District Performance" report. 
+    id INT UNSIGNED AUTO_INCREMENT,
     district INT,
     division CHAR(2),
     area CHAR(2),
@@ -70,11 +71,14 @@ CREATE TABLE IF NOT EXISTS distperf (
     asof date,
     charterdate VARCHAR(10),
     suspenddate VARCHAR(10),
-    primary key(clubnumber, asof)
+    entrytype enum ('M', 'D') DEFAULT 'D',
+    PRIMARY KEY (id),
+    CONSTRAINT UNIQUE INDEX (clubnumber, asof)
 ) CHARACTER SET utf8;
         
 CREATE TABLE IF NOT EXISTS clubperf (
     # This table is derived from the daily "Club Performance" report.
+    id INT UNSIGNED AUTO_INCREMENT,
     district INT,
     division CHAR(2),
     area CHAR(2),
@@ -103,11 +107,14 @@ CREATE TABLE IF NOT EXISTS clubperf (
     goal10 INT,
     asof date,
     monthstart DATE,
-    primary key(clubnumber, asof)
+    entrytype enum ('M', 'D') DEFAULT 'D',
+    PRIMARY KEY (id),
+    CONSTRAINT UNIQUE INDEX (clubnumber, asof)
 ) CHARACTER SET utf8;
 
 CREATE TABLE IF NOT EXISTS areaperf (
     # This table is derived from the daily "Area/Division Performance" report.
+    id INT UNSIGNED AUTO_INCREMENT,
     district INT,
     division CHAR(2),
     area CHAR(2),
@@ -144,7 +151,9 @@ CREATE TABLE IF NOT EXISTS areaperf (
     suspenddate VARCHAR(10),
     asof date,
     monthstart DATE,
-    primary key(clubnumber, asof)
+    entrytype enum ('M', 'D') DEFAULT 'D',
+    PRIMARY KEY (id),
+    CONSTRAINT UNIQUE INDEX (clubnumber, asof)
 ) CHARACTER SET utf8;
 
 CREATE TABLE IF NOT EXISTS geo (

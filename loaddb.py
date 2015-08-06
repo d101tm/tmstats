@@ -262,6 +262,18 @@ def doHistorical(conn, name):
                 sys.stderr.write("'%s' is not a valid name for historical performance requests.")
                 sys.exit(1)
         infile.close()
+        
+    # Finally, set 'final for month' indications for the appropriate items:
+    #   For each club, set the indicator for the last entry for a month OTHER than the most recent month
+    
+    curs.execute("""update %s set entrytype = 'M' where id in 
+                      (select id from 
+                         (select cand.id from 
+                            (select id, clubnumber, monthstart, max(asof) from %s where monthstart != 
+                               (select max(monthstart) from %s) group by clubnumber, monthstart  order by clubnumber) cand
+                            inner join %s dp on cand.id=dp.id where dp.entrytype = 'D') 
+                          ok)""" % (name, name, name, name))
+  
     conn.commit()
     
     
