@@ -5,7 +5,7 @@
 
 import urllib, tmparms, os, sys
 from tmutil import cleandate
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
     
         
 def monthend(m, y):
@@ -35,24 +35,24 @@ def getresponse(url):
     return clubinfo
         
         
-def getreportfromWHQ(report, district, tmyearpiece, month, date):
-    url = makeurl(report, district, tmyearpiece, monthend(month[0],month[1]), datetime.strftime(date, '%m/%d/%Y'))
+def getreportfromWHQ(report, district, tmyearpiece, month, thedate):
+    url = makeurl(report, district, tmyearpiece, monthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
     return getresponse(url)
     
 
 
-def makefilename(reportname, date):
-    return '%s.%s.csv' % (reportname, date.strftime('%Y-%m-%d'))
+def makefilename(reportname, thedate):
+    return '%s.%s.csv' % (reportname, thedate.strftime('%Y-%m-%d'))
     
-def writedailyreports(data, district, tmyearpiece, month, date):
-    print 'writing Month of %s reports for %s' % ('/'.join(['%02d' % m for m in month]), date.strftime('%Y-%m-%d'))
-    with open(makefilename('clubperf', date), 'w') as f:
+def writedailyreports(data, district, tmyearpiece, month, thedate):
+    print 'writing Month of %s reports for %s' % ('/'.join(['%02d' % m for m in month]), thedate.strftime('%Y-%m-%d'))
+    with open(makefilename('clubperf', thedate), 'w') as f:
         f.write(''.join(data).replace('\r',''))
-    data = getreportfromWHQ('divisionperformance', district, tmyearpiece, month, date)
-    with open(makefilename('areaperf', date), 'w') as f:
+    data = getreportfromWHQ('divisionperformance', district, tmyearpiece, month, thedate)
+    with open(makefilename('areaperf', thedate), 'w') as f:
         f.write(''.join(data).replace('\r',''))
-    data = getreportfromWHQ('districtperformance', district, tmyearpiece, month, date)
-    with open(makefilename('distperf', date), 'w') as f:
+    data = getreportfromWHQ('districtperformance', district, tmyearpiece, month, thedate)
+    with open(makefilename('distperf', thedate), 'w') as f:
         f.write(''.join(data).replace('\r',''))
     
 def dolatest(district):
@@ -62,8 +62,8 @@ def dolatest(district):
         url = makeurl(urlpart, district)
         data = getresponse(url)
         if data:
-            date = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d')  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
-            with open(makefilename(filepart, date), 'w') as f:
+            thedate = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d').date()  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
+            with open(makefilename(filepart, thedate), 'w') as f:
                 f.write(''.join(data).replace('\r',''))
 
 if __name__ == "__main__":
@@ -80,26 +80,31 @@ if __name__ == "__main__":
     parms.add_argument('--district', type=int)
     parms.add_argument('--startdate', default=None)
     parms.add_argument('--enddate', default='today')
+    parms.add_argument('--skipclubs', action='store_true',
+     help='Do not get latest club information.')
     parms.parse()
 
     district = "%0.2d" % parms.district
-    enddate = datetime.strptime(cleandate(parms.enddate), '%Y-%m-%d')
+    enddate = datetime.strptime(cleandate(parms.enddate), '%Y-%m-%d').date()
     if parms.startdate:
-        startdate = datetime.strptime(cleandate(parms.startdate), '%Y-%m-%d')
+        startdate = datetime.strptime(cleandate(parms.startdate), '%Y-%m-%d').date()
     else:
         # If nothing was specified, start with the latest date in the database.
         import dbconn, latest
         conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
         last = latest.getlatest('clubperf', conn)[1]
         if last:
-            startdate = datetime.strptime(last, '%Y-%m-%d') + timedelta(1)
+            startdate = datetime.strptime(last, '%Y-%m-%d').date() + timedelta(1)
         else:
             startdate = False
         conn.close()
 
+    # To avoid needless chatter, figure out today and yesterday:
+    today = date.today()
+    yesterday = today - timedelta(1)
+
+    
     # Figure out what months we need info for:
-
-
     tmmonths = (7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6)
     # If it's January-July, we care about the TM year which started the previous July 1; otherwise, it's this year.
     if startdate:
@@ -108,7 +113,6 @@ if __name__ == "__main__":
         else:
             tmyear = startdate.year
     else:
-        today = datetime.today()
         if (today.month <= 7):
             startdate = datetime(today.year-1, 7, 1)
         else:
@@ -131,38 +135,51 @@ if __name__ == "__main__":
 
     # Find the first available club performance report (we assume all reports have identical availabilities)
     
-    date = startdate
-    report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], date)
-    while not report and date <= enddate:
-        print 'No report available for %s' % date.strftime('%Y-%m-%d')
-        date += timedelta(1)
-        report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], date)
     
-    while (months and date <= enddate):
+    thedate = startdate
+    report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
+    while not report and thedate <= enddate:
+        if (thedate < yesterday):     # We don't expect a report for today or yesterday
+            print 'No report available for %s' % thedate.strftime('%Y-%m-%d')
+            thedate += timedelta(1)
+            report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
+        else:
+            break
+    
+    while (months and thedate <= enddate):
         if report:
-            writedailyreports(report, district, tmyearpiece, months[0], date)
-        date += timedelta(1)
-        report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], date)
+            writedailyreports(report, district, tmyearpiece, months[0], thedate)
+        thedate += timedelta(1)
+        report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
         if not report:
             # We might have found the end of the data for the previous month
-            print 'months[0][0] = %s, date.month = %s' % (months[0][0], date.month)
-            if months[0][0] != date.month:
-                print "Checking next month"
+            # print 'months[0][0] = %s, thedate.month = %s' % (months[0][0], thedate.month)
+            if months[0][0] != thedate.month:
                 months = months[1:]
                 if not months:
                     break
-                report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], date)
-            if not report:
-                print 'No data available for %s' % (date.strftime('%Y-%m-%d'))
-                
+                if thedate < yesterday:
+                    print "Checking %d/%d" %  months[0]
+                report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
+            if not report and (thedate < yesterday):
+                # Don't complain about missing data for today or yesterday; that's to be expected.
+                print 'No data available for %s' % (thedate.strftime('%Y-%m-%d'))
                 
 
         
-    # Finally, if the enddate is today, get today's information and write it by the appropriate 'asof' date
-    today = datetime.today()
+    # If the enddate is today, get today's information and write it by the appropriate 'asof' thedate
+
     if enddate.year == today.year and enddate.month == today.month and enddate.day == today.day:
         dolatest(district)
         
+        
+    # And get and write current club data unless told not to
+    if not parms.skipclubs:
+        url = "https://www.toastmasters.org/api/club/exportclubs?format=text%2Fcsv&district=" + district
+        clubdata = getresponse(url)
+        if clubdata:
+            with open(makefilename('clubs', today), 'w') as f:
+                        f.write(''.join(clubdata).replace('\r',''))
      
 
 
