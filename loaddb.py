@@ -1,9 +1,17 @@
 #!/usr/bin/python
-""" Load the performance information already gathered into a database. """
-""" We assume we care about the data directory underneath us. """
+""" Load the performance information already gathered into a database. 
+    Run from the directory containing the YML file for parms and the CSV files 
+       (but in TextMate, run from the source directory).
+    Return code:
+       0 if changes were made to the database
+       1 if no changes were made """
 
 import csv, dbconn, sys, os, glob
 from simpleclub import Club
+
+# Global variable to see how many entries got changed.  All we really care about is zero/nonzero.
+global changecount
+changecount = 0
 
 def normalize(str):
     if str:
@@ -70,6 +78,7 @@ def doHistoricalClubs(conn):
 
 def doDailyClubs(infile, conn, cdate, firsttime=False):
     """ infile is a file-like object """
+    global changecount
     from datetime import datetime, timedelta
     
     curs = conn.cursor()
@@ -187,7 +196,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         
             thestr = 'INSERT IGNORE INTO clubs (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
             try:
-                curs.execute(thestr, values)
+                changecount += curs.execute(thestr, values)
             except Exception, e:
                 print e
             # Capture changes
@@ -206,7 +215,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
                 sys.exit(3) 
         else:
             # update the lastdate
-            curs.execute('UPDATE clubs SET lastdate = %s WHERE clubnumber = %s AND lastdate = %s;', (cdate, club.clubnumber, clubhist[club.clubnumber].lastdate))
+            changecount += curs.execute('UPDATE clubs SET lastdate = %s WHERE clubnumber = %s AND lastdate = %s;', (cdate, club.clubnumber, clubhist[club.clubnumber].lastdate))
     
     # If all the files were processed, today's work is done.    
     curs.execute('INSERT IGNORE INTO loaded (tablename, loadedfor) VALUES ("clubs", %s)', (cdate,))
@@ -280,6 +289,7 @@ def doHistorical(conn, name):
 
     
 def doDailyDistrictPerformance(infile, conn, cdate, monthstart):
+    global changecount
     curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
@@ -334,7 +344,7 @@ def doDailyDistrictPerformance(infile, conn, cdate, monthstart):
         row = row[:cdsdcol] + [charterdate, suspdate] + row[cdsdcol+1:]
             
         
-        curs.execute('INSERT IGNORE INTO distperf (' + headstr + ') VALUES (' + valstr + ')', row)
+        changecount += curs.execute('INSERT IGNORE INTO distperf (' + headstr + ') VALUES (' + valstr + ')', row)
         
         
         # If this item represents a suspended club, and it's the first time we've seen this suspension,
@@ -354,6 +364,7 @@ def doDailyDistrictPerformance(infile, conn, cdate, monthstart):
     
 
 def doDailyClubPerformance(infile, conn, cdate, monthstart):
+    global changecount
     curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
@@ -409,7 +420,7 @@ def doDailyClubPerformance(infile, conn, cdate, monthstart):
         else:
             row.append(0)
         
-        curs.execute('INSERT IGNORE INTO clubperf (' + headstr + ') VALUES (' + valstr + ')', row)
+        changecount += curs.execute('INSERT IGNORE INTO clubperf (' + headstr + ') VALUES (' + valstr + ')', row)
         
         # Let's see if the club status has changed; if so, indicate that in the clubchanges table.
         curs.execute('SELECT clubstatus, asof FROM clubperf WHERE clubnumber=%s ORDER BY ASOF DESC LIMIT 2 ', (clubnumber,) )
@@ -427,6 +438,7 @@ def doDailyClubPerformance(infile, conn, cdate, monthstart):
     
 
 def doDailyAreaPerformance(infile, conn, cdate, monthstart):
+    global changecount
     curs = conn.cursor()
     reader = csv.reader(infile)
     hline = reader.next()
@@ -474,7 +486,7 @@ def doDailyAreaPerformance(infile, conn, cdate, monthstart):
             suspdate = ''
         row = row[:cdsdcol] + [charterdate, suspdate] + row[cdsdcol+1:]
         
-        curs.execute('INSERT IGNORE INTO areaperf (' + headstr + ') VALUES (' + valstr + ')', row)
+        changecount += curs.execute('INSERT IGNORE INTO areaperf (' + headstr + ') VALUES (' + valstr + ')', row)
         
        
     conn.commit()
@@ -515,4 +527,7 @@ if __name__ == "__main__":
 
 
     conn.close()
+    
+    if changecount == 0:
+        sys.exit(1)
     
