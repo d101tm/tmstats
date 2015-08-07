@@ -1,31 +1,27 @@
 #!/usr/bin/python
 """ Generate the "Distinguished Clubs" report based on the current club statistics. """
 
-import csv, sys, yaml, urllib, re, os.path
-from club import Club
+import sys,  os.path
+import tmutil, dbconn
 
-def normalize(s):
-    if s:
-        return re.sub('\W\W*', '', s).strip().lower()
-    else:
-        return ''
-    
-def opener(what, parms):
-    if what.startswith('http'):
-        return urllib.urlopen(what % parms)
-    else:
-        return open(what, 'rbU')
 
+
+class Myclub():
+    def __init__(self, division, area, clubname, dstat):
+        self.division = division
+        self.area = area
+        self.clubname = clubname
+        self.clubdistinguishedstatus = dstat
         
 def writeheader(outfile):    
-	outfile.write('''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-	   ''')
-	outfile.write('<html>\n')
-	outfile.write('<head>\n')
-	outfile.write('<meta http-equiv="Content-Style-Type" content="text/css">\n')
-	outfile.write('<title>Distinguished Club Report</title>\n')
-	outfile.write('<style type="text/css">\n')
-	outfile.write("""
+
+	outfile.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+    <html>
+    <head>
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Distinguished Club Report</title>
+    <style type="text/css">
+    
 
 	html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
 	      font-size: 75%;}
@@ -77,119 +73,102 @@ def writeheader(outfile):
 	@media print { 
 	    body {-webkit-print-color-adjust: exact !important;}
 			td {padding: 1px !important;}}
-	""")
-        outfile.write('</style>\n')
-        outfile.write('</head>\n')
-        outfile.write('<body>\n')
+	</style>
+    </head>
+    <body>
+""")
 
-clubs = {}
-resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
-     'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s",
-     'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
-     'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
-     
-outfile = open(sys.argv[1],'w')
-
-if len(sys.argv) > 2:
-    resources = yaml.load(open(sys.argv[2],'r'))['files']
-    parms = {}
-else:
-    parms = {'district':'04'}  
-
-# Get the clubs and assign them to divisions
-csvfile = opener(resources['current'], parms)
-r = csv.reader(csvfile, delimiter=',')
-headers = [normalize(p) for p in r.next()]
-Club.setHeaders(headers)
-
-
-
-clubcol = headers.index('clubnumber')    
-for row in r:
-    try:
-        row[clubcol] = Club.fixcn(row[clubcol])
-        if row[clubcol]:
-            club = Club(row)
-            clubs[club.clubnumber] = club
-    except IndexError:
-        pass
-
-
+if __name__ == "__main__":
+    import tmparms
+    # Make it easy to run under TextMate
+    if 'TM_DIRECTORY' in os.environ:
+        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+        
+    reload(sys).setdefaultencoding('utf8')
     
-csvfile.close()
-
-# Now, get the club performance report and find the distinguished or better clubs
-
-pclubs = []
-sclubs = []
-dclubs = []
-perffile = opener(resources['current'], parms)
-r = csv.reader(perffile, delimiter=',')
-headers = [normalize(p) for p in r.next()]
-clubcol = headers.index('clubnumber')
-aprcol = headers.index('clubdistinguishedstatus')
-only = ['clubdistinguishedstatus']
-
-for row in r:
-    try:
-        row[clubcol] = Club.fixcn(row[clubcol])
-    except IndexError:
-        continue
-    clubs[row[clubcol]].addinfo(row, headers, only)
-    club = clubs[row[clubcol]]
-    if club.clubdistinguishedstatus == 'D':
-        dclubs.append(club)
-    elif club.clubdistinguishedstatus == 'S':
-        sclubs.append(club)
-    elif club.clubdistinguishedstatus == 'P':
-        pclubs.append(club)
-    clubs[row[clubcol]] = club    
+    # Handle parameters
+    parms = tmparms.tmparms()
+    parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--date', dest='date', default='today')
+    parms.add_argument('--outfile', dest='outfile', default='distclubs.html')
+    parms.parse()
+    if parms.quiet >= 1:
+        def inform(*args):
+            return
+            
+    # Connect to the database
+    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
+    curs = conn.cursor()
+    thedate = tmutil.cleandate(parms.date)
+    curs.execute("""SELECT division, area, clubname, clubdistinguishedstatus FROM clubperf WHERE
+                    clubdistinguishedstatus <> "" AND asof = %s""", (thedate,))
+    r = curs.fetchall()     
+    outfile = open(parms.outfile, 'w')           
+    
     
 
 
-# Sort the clubs by division and area:
-pclubs.sort(key=lambda c: c.division + c.area)
-sclubs.sort(key=lambda c: c.division + c.area)
-dclubs.sort(key=lambda c: c.division + c.area)
 
-winners = [pclubs, sclubs, dclubs]
-names = ['President\'s Distinguished Clubs', 'Select Distinguished Clubs',
-         'Distinguished Clubs']
+    pclubs = []
+    sclubs = []
+    dclubs = []
 
-for (qualifiers, level) in zip(winners, names):
-    outfile.write('<h4 id="%sclubs">%s</h4>\n' % (level[0],level))
 
-    # And create the fragment
-    outfile.write("""<table style="margin-left: auto; margin-right: auto; padding: 4px;">
-      <tbody>
-        <tr valign="top">
-          <td><strong>Area</strong></td>
-          <td><strong>Club</strong></td>
-          <td><strong>&nbsp;</strong></td>
-          <td><strong>Area</strong></td>
-          <td><strong>Club</strong></td>
-      </tr>
-    """)
-# But now we want to go down, not across...
-    incol1 = (1 + len(qualifiers)) / 2# Number of items in the first column.  
-    left = 0  # Start with the zero'th item
-    for i in range(incol1):
-		club = qualifiers[i]
-		outfile.write('<tr>\n')
-		outfile.write('  <td>%s%s</td><td>%s</td>\n' % (club.division, club.area, club.clubname))
-		outfile.write('  <td>&nbsp;</td>\n')
-		try:
-			club = qualifiers[i+incol1]   # For the right column
-		except IndexError:
-			outfile.write('<td>&nbsp;</td><td>&nbsp;</td>\n')    # Close up the row neatly
-			outfile.write('</tr>\n')
-			break
-		outfile.write('  <td>%s%s</td><td>%s</td>\n' % (club.division, club.area, club.clubname))
-		outfile.write('</tr>\n')
+    for row in r:
+        club = Myclub(*row)
+
+        if club.clubdistinguishedstatus == 'D':
+            dclubs.append(club)
+        elif club.clubdistinguishedstatus == 'S':
+            sclubs.append(club)
+        elif club.clubdistinguishedstatus == 'P':
+            pclubs.append(club)
+    
+
+
+    # Sort the clubs by division and area:
+    pclubs.sort(key=lambda c: c.division + c.area)
+    sclubs.sort(key=lambda c: c.division + c.area)
+    dclubs.sort(key=lambda c: c.division + c.area)
+
+    winners = [pclubs, sclubs, dclubs]
+    names = ['President\'s Distinguished Clubs', 'Select Distinguished Clubs',
+             'Distinguished Clubs']
+
+    for (qualifiers, level) in zip(winners, names):
+        outfile.write('<h4 id="%sclubs">%s</h4>\n' % (level[0],level))
+
+        # And create the fragment
+        outfile.write("""<table style="margin-left: auto; margin-right: auto; padding: 4px;">
+          <tbody>
+            <tr valign="top">
+              <td><strong>Area</strong></td>
+              <td><strong>Club</strong></td>
+              <td><strong>&nbsp;</strong></td>
+              <td><strong>Area</strong></td>
+              <td><strong>Club</strong></td>
+          </tr>
+        """)
+    # But now we want to go down, not across...
+        incol1 = (1 + len(qualifiers)) / 2# Number of items in the first column.  
+        left = 0  # Start with the zero'th item
+        for i in range(incol1):
+    		club = qualifiers[i]
+    		outfile.write('<tr>\n')
+    		outfile.write('  <td>%s%s</td><td>%s</td>\n' % (club.division, club.area, club.clubname))
+    		outfile.write('  <td>&nbsp;</td>\n')
+    		try:
+    			club = qualifiers[i+incol1]   # For the right column
+    		except IndexError:
+    			outfile.write('<td>&nbsp;</td><td>&nbsp;</td>\n')    # Close up the row neatly
+    			outfile.write('</tr>\n')
+    			break
+    		outfile.write('  <td>%s%s</td><td>%s</td>\n' % (club.division, club.area, club.clubname))
+    		outfile.write('</tr>\n')
 		
-    outfile.write("""  </tbody>
-    </table>
-    """)
+        outfile.write("""  </tbody>
+        </table>
+        """)
 
-outfile.close()
+    outfile.close()
 
