@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS distperf (
     asof date,
     charterdate VARCHAR(10),
     suspenddate VARCHAR(10),
-    entrytype enum ('M', 'D') DEFAULT 'D',
+    entrytype enum ('M', 'D', 'L') DEFAULT 'D',
     PRIMARY KEY (id),
     CONSTRAINT UNIQUE INDEX (clubnumber, asof)
 ) CHARACTER SET utf8;
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS clubperf (
     goal10 INT,
     asof date,
     monthstart DATE,
-    entrytype enum ('M', 'D') DEFAULT 'D',
+    entrytype enum ('M', 'D', 'L') DEFAULT 'D',
     PRIMARY KEY (id),
     CONSTRAINT UNIQUE INDEX (clubnumber, asof)
 ) CHARACTER SET utf8;
@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS areaperf (
     suspenddate VARCHAR(10),
     asof date,
     monthstart DATE,
-    entrytype enum ('M', 'D') DEFAULT 'D',
+    entrytype enum ('M', 'D', 'L') DEFAULT 'D',
     PRIMARY KEY (id),
     CONSTRAINT UNIQUE INDEX (clubnumber, asof)
 ) CHARACTER SET utf8;

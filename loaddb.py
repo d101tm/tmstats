@@ -272,7 +272,7 @@ def doHistorical(conn, name):
                 sys.exit(1)
         infile.close()
         
-    # Finally, set 'final for month' indications for the appropriate items:
+    # Set 'final for month' indications for the appropriate items:
     #   For each club, set the indicator for the last entry for a month OTHER than the most recent month
     
     curs.execute("""update %s set entrytype = 'M' where id in 
@@ -282,6 +282,12 @@ def doHistorical(conn, name):
                                (select max(monthstart) from %s) group by clubnumber, monthstart  order by clubnumber) cand
                             inner join %s dp on cand.id=dp.id where dp.entrytype = 'D') 
                           ok)""" % (name, name, name, name))
+                          
+    # Now, mark the latest daily entry
+    curs.execute("UPDATE %s SET entrytype = 'D' WHERE entrytype = 'L'" % name)
+    curs.execute("SELECT max(asof) FROM %s" % name)
+    maxasof = curs.fetchone()[0]
+    curs.execute("UPDATE %s SET entrytype = 'L' WHERE entrytype = 'D' AND asof = %%s" % name, (maxasof,))
   
     conn.commit()
     
@@ -507,7 +513,7 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
-    parms.parse()
+    parms.parse() 
     if parms.quiet >= 1:
         def inform(*args):
             return
