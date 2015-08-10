@@ -37,6 +37,7 @@ def getresponse(url):
         
 def getreportfromWHQ(report, district, tmyearpiece, month, thedate):
     url = makeurl(report, district, tmyearpiece, monthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
+    print url
     return getresponse(url)
     
 
@@ -133,20 +134,38 @@ if __name__ == "__main__":
                 break
     months = [(m, tmyear + (1 if m <= 6 else 0)) for m in months]
 
-    # Find the first available club performance report (we assume all reports have identical availabilities)
+    # We assume all reports have identical availabilities, so we
+    #    use the clubperf report to find the first available report
+    #    on or after our startdate.
     
-    
+    # Try to get the obvious first candidate report
     thedate = startdate
-    report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
-    while not report and thedate <= enddate:
-        if (thedate < yesterday):     # We don't expect a report for today or yesterday
-            print 'No report available for %s' % thedate.strftime('%Y-%m-%d')
-            thedate += timedelta(1)
-            report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
-        else:
-            break
+    if (thedate < yesterday):
+        report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
+    else:
+        report = None       # We'll get the latest data instead.
+
+  
+    # If we didn't get data and we're looking at the past,
+    #   we may have gone past a month boundary.
+    while not report and thedate <= min(yesterday, enddate):
+        
+        # See if there's data for "thedate" in the next month
+        report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[1], thedate)
+        if report:
+             # All is well; we're in a new month of data
+             months = months[1:]
+             break
+            
+        print 'No report available for month %d on %s' % (months[0], thedate.strftime('%Y-%m-%d'))
+        # Try the next day
+        
+        thedate += timedelta(1)
+        report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
+
     
-    while (months and thedate <= enddate):
+    # OK, now we should have a report in hand.
+    while (months and thedate <= min(yesterday, enddate)):
         if report:
             writedailyreports(report, district, tmyearpiece, months[0], thedate)
         thedate += timedelta(1)
