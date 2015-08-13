@@ -77,7 +77,7 @@ let ret=$ret+$?
 # Move old files to history unless otherwise requested
 if [[ "$zip" = "zip" ]]
 then
-    zip history.zip clubs.*.csv clubperf.*.csv areaperf.*.csv distperf.*.csv -x clubs.$today.csv *perf.$yday.csv
+    zip -mT history.zip clubs.*.csv clubperf.*.csv areaperf.*.csv distperf.*.csv -x clubs.$today.csv *perf.$yday.csv
 fi
 
 # And exit
