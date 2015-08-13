@@ -157,7 +157,7 @@ if __name__ == "__main__":
              months = months[1:]
              break
             
-        print 'No report available for month %d on %s' % (months[0], thedate.strftime('%Y-%m-%d'))
+        print 'No report available for month %d on %s' % (months[0][0], thedate.strftime('%Y-%m-%d'))
         # Try the next day
         
         thedate += timedelta(1)
