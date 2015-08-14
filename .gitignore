@@ -1,7 +1,6 @@
 *.csv
 *.yml
 *.pyc
-gator.sh
 runclubchanges.sh
 bluehost.sh
 clearcache.sh
