@@ -146,15 +146,16 @@ if [[ "$dorun" = "yes" ]] ; then
     
     # Figure out target directories
     if [ -d ~/www/files/stats ] ; then
-        maindir="~/www/files/stats/"
+        maindir=~/www/files/stats
     else
         maindir=""
     fi
     if [ -d ~/www/test/files/stats ] ; then
-        testdir="~/www/test/files/stats/"
+        testdir=~/www/test/files/stats
     else
         testdir=""
     fi
+
 
     sleep 1   # Make sure that the marker file has an older timestamp
    
@@ -197,19 +198,20 @@ if [[ "$dorun" = "yes" ]] ; then
     fi
     
     ## Now, copy files created in this process to the appropriate directories
+    finder="find . -maxdepth 1 -mindepth 1 -newer marker"
     echo "Files to copy:"
-    find . -newer marker -depth 1 -exec ls -la {} \;
+    $finder | sort
     
     
     if [[ "$maindir" != "" ]] ; then
         echo "copying to $maindir"
-        find . -newer marker -depth 1 -exec cp {} \; "$maindir"
+        $finder -exec cp {} "$maindir" \;
         cp "clubs.$today.csv" "$maindir/clubs.csv"
         
     fi
     if [[ "$testdir" != "" ]] ; then
         echo "copying to $testdir"
-        find . -newer marker -depth 1 -exec cp {} \; "$testdir"
+        $finder -exec cp {} "$testdir" \;
         cp "clubs.$today.csv" "$testdir/clubs.csv"       
     fi
     
