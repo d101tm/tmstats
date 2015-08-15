@@ -21,7 +21,7 @@ class myclub:
 def showclubs(clubs, outfile):
     """ Outputs the clubs in a 2-column table. """
     
-    outfile.write("""<table class="ctable">
+    outfile.write("""<table class="DSSctable">
   <thead>
   <tr>
     <th>Area</th><th>Club</th><th>Goals</th>
@@ -42,8 +42,6 @@ def showclubs(clubs, outfile):
         try:
             club = clubs[i+incol1]   # For the right column
         except IndexError:
-            outfile.write('    ')
-            outfile.write(3*'<td>&nbsp;</td>')    # Close up the row neatly
             outfile.write('\n  </tr>\n')
             break
         outfile.write(club.tablepart())
@@ -94,7 +92,7 @@ almost = [c for c in clubs if c.goalsmet == 4]
 
 outfile.write("""<h3>Early Achievers</h3>
 <p>
-Clubs achieving 5 or more Distinguished Club Program (DCP) goals by October 31 earn $100 in District Credit.</p>
+Clubs achieving 5 or more Distinguished Club Program (DCP) goals by October 31 earn $100 in District Credit.  This report is updated daily.</p>
 """)
 
 if len(winners) > 0:

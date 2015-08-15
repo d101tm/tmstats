@@ -22,7 +22,7 @@ class myclub:
 def showclubs(clubs, outfile):
     """ Outputs the clubs in a 2-column table. """
     
-    outfile.write("""<table class="ctable">
+    outfile.write("""<table class="DSSctable">
   <thead>
   <tr>
     <th>Area</th><th>Club</th><th>Added</th>
@@ -43,8 +43,6 @@ def showclubs(clubs, outfile):
         try:
             club = clubs[i+incol1]   # For the right column
         except IndexError:
-            outfile.write('    ')
-            outfile.write(3*'<td>&nbsp;</td>')    # Close up the row neatly
             outfile.write('\n  </tr>\n')
             break
         outfile.write(club.tablepart())
@@ -98,7 +96,7 @@ awards = [c for c in clubs if not c.stretch]
 
 outfile.write("""<h3>Smedley Stretch and Smedley Award</h3>
 <p>
-Clubs adding 5 or more new, reinstated, or dual members between August 1 and September 30 receive the <q>Smedley Award</q> from Toastmasters International.  Clubs which add 7 or more new, reinstated, or dual members during that time also complete the <q>Smedley Stretch</q> and earn $50 in District Credit.</p>
+Clubs adding 5 or more new, reinstated, or dual members between August 1 and September 30 receive the <q>Smedley Award</q> from Toastmasters International.  Clubs which add 7 or more new, reinstated, or dual members during that time also complete the <q>Smedley Stretch</q> and earn $50 in District Credit.  This report is updated daily.</p>
 """)
 
 if len(stretchers) > 0:
