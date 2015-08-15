@@ -90,7 +90,7 @@ for c in curs.fetchall():
 winners = [c for c in clubs if c.goalsmet >= 5]
 almost = [c for c in clubs if c.goalsmet == 4]
 
-outfile.write("""<h3>Early Achievers</h3>
+outfile.write("""<h3 id="early">Early Achievers</h3>
 <p>
 Clubs achieving 5 or more Distinguished Club Program (DCP) goals by October 31 earn $100 in District Credit.  This report is updated daily.</p>
 """)

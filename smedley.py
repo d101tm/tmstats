@@ -94,7 +94,7 @@ for c in curs.fetchall():
 stretchers = [c for c in clubs if c.stretch]
 awards = [c for c in clubs if not c.stretch]
 
-outfile.write("""<h3>Smedley Stretch and Smedley Award</h3>
+outfile.write("""<h3 id="smedley">Smedley Stretch and Smedley Award</h3>
 <p>
 Clubs adding 5 or more new, reinstated, or dual members between August 1 and September 30 receive the <q>Smedley Award</q> from Toastmasters International.  Clubs which add 7 or more new, reinstated, or dual members during that time also complete the <q>Smedley Stretch</q> and earn $50 in District Credit.  This report is updated daily.</p>
 """)
