@@ -22,7 +22,7 @@ class myclub:
 def showclubs(clubs, outfile):
     """ Outputs the clubs in a 2-column table. """
     
-    outfile.write("""<table class="DSSbtable">
+    outfile.write("""<table class="DSSctable">
   <thead>
   <tr>
     <th>Area</th><th>Club</th><th>Added</th>
