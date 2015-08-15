@@ -21,7 +21,7 @@ class myclub:
 def showclubs(clubs, outfile):
     """ Outputs the clubs in a 2-column table. """
     
-    outfile.write("""<table class="DSSctable">
+    outfile.write("""<table class="DSSbtable">
   <thead>
   <tr>
     <th>Area</th><th>Club</th><th>Goals</th>
@@ -38,12 +38,12 @@ def showclubs(clubs, outfile):
         club = clubs[i]
         outfile.write('  <tr>\n')
         outfile.write(club.tablepart())
-        outfile.write('\n    <td>&nbsp;</td>\n')
         try:
             club = clubs[i+incol1]   # For the right column
         except IndexError:
             outfile.write('\n  </tr>\n')
             break
+        outfile.write('\n    <td>&nbsp;</td>\n')    
         outfile.write(club.tablepart())
         outfile.write('\n  </tr>\n')
         
