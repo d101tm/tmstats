@@ -46,7 +46,7 @@ else
 fi
 
 # If we have today's club file and all of yesterday's performance files,
-#   exit with RC=1 (unless forced to run
+#   exit with RC=1 (no changes) (unless forced to run).
 
 if [[ -z "$force" && -e "clubs.$today.csv" && -e "clubperf.$yday.csv" && -e "areaperf.$yday.csv" && -e "distperf.$yday.csv" ]]
 then

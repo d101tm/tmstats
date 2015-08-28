@@ -115,11 +115,14 @@ if [[ "$dorun" = "yes" ]] ; then
     let haveperf=$(($urc & 2))   # 0 if we got the info
     let changed=$(($urc & 1))   # 0 if changes found
     let haveboth=$(($urc & 6))  # 0 if we have both sets
+    
+    echo "Updateit RC = $urc"
 
     
   
-    if (( ! $changed )) && [[ "$force" = "" ]]    ; then
+    if (( $changed != 0 )) && [[ "$force" = "" ]]    ; then
         # No changes detected and not forced, so just leave
+        echo "Exiting - no changes"
         exit 2
     fi
     
