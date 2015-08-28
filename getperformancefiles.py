@@ -32,13 +32,20 @@ def getresponse(url):
     if len(clubinfo) < 10:
         # We didn't get anything of value
         clubinfo = False
+    elif clubinfo[0][0] in ['{', '<']:
+        # This isn't a naked CSV
+        clubinfo = False
+    
     return clubinfo
         
         
 def getreportfromWHQ(report, district, tmyearpiece, month, thedate):
     url = makeurl(report, district, tmyearpiece, monthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
     print url
-    return getresponse(url)
+    resp = getresponse(url)
+    if not resp:
+        print "No valid response received"
+    return resp
     
 
 
@@ -93,7 +100,7 @@ if __name__ == "__main__":
         # If nothing was specified, start with the latest date in the database.
         import dbconn, latest
         conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-        last = latest.getlatest('clubperf', conn)[1]
+        (lastmonth, last) = latest.getlatest('clubperf', conn)
         if last:
             startdate = datetime.strptime(last, '%Y-%m-%d').date() + timedelta(1)
         else:
@@ -138,7 +145,8 @@ if __name__ == "__main__":
     #    use the clubperf report to find the first available report
     #    on or after our startdate.
     
-    # Try to get the obvious first candidate report
+    # Try to get the obvious first candidate report if we're not looking at the most recent data
+
     thedate = startdate
     if (thedate < yesterday):
         report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[0], thedate)
@@ -148,7 +156,7 @@ if __name__ == "__main__":
   
     # If we didn't get data and we're looking at the past,
     #   we may have gone past a month boundary.
-    while not report and thedate <= min(yesterday, enddate):
+    while not report and thedate <= enddate and thedate < yesterday:
         
         # See if there's data for "thedate" in the next month
         report = getreportfromWHQ('clubperformance', district, tmyearpiece, months[1], thedate)
@@ -165,7 +173,7 @@ if __name__ == "__main__":
 
     
     # OK, now we should have a report in hand.
-    while (months and thedate <= min(yesterday, enddate)):
+    while (months and thedate <= enddate and thedate < yesterday):
         if report:
             writedailyreports(report, district, tmyearpiece, months[0], thedate)
         thedate += timedelta(1)
@@ -189,6 +197,7 @@ if __name__ == "__main__":
     # If the enddate is today, get today's information and write it by the appropriate 'asof' thedate
 
     if enddate.year == today.year and enddate.month == today.month and enddate.day == today.day:
+        print "Getting the latest performance info"
         dolatest(district)
         
         
