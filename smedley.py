@@ -2,6 +2,7 @@
 import dbconn, tmparms, os, sys
 from datetime import date, datetime
 import argparse
+from tmutil import showclubswithvalues
 
 class myclub:
     """ Just enough club info to sort the list nicely """
@@ -19,38 +20,6 @@ class myclub:
     def key(self):
         return (self.area, self.clubnumber)
 
-def showclubs(clubs, outfile):
-    """ Outputs the clubs in a 2-column table. """
-    
-    outfile.write("""<table class="DSSctable">
-  <thead>
-  <tr>
-    <th>Area</th><th>Club</th><th>Added</th>
-    <th>&nbsp;
-    <th>Area</th><th>Club</th><th>Added</th>
-  </tr>
-  </thead>
-  <tbody>
-""")
-
-    incol1 = (1 + len(clubs)) / 2 # Number of items in the first column.
-    left = 0  # Start with the zero'th item
-    for i in range(incol1):
-        club = clubs[i]
-        outfile.write('  <tr>\n')
-        outfile.write(club.tablepart())
-        try:
-            club = clubs[i+incol1]   # For the right column
-        except IndexError:
-            outfile.write('\n  </tr>\n')
-            break
-        outfile.write('\n    <td>&nbsp;</td>\n')    
-        outfile.write(club.tablepart())
-        outfile.write('\n  </tr>\n')
-        
-    outfile.write("""  </tbody>
-</table>
-""")
 
 
 # Make it easy to run under TextMate
@@ -101,10 +70,10 @@ Clubs adding 5 or more new, reinstated, or dual members between August 1 and Sep
 
 if len(stretchers) > 0:
     outfile.write("<h4>Smedley Stretchers</h4>\n")
-    showclubs(stretchers, outfile)
+    showclubswithvalues(stretchers, "Added", outfile)
 
 if len(awards) > 0:
     outfile.write("<h4>Smedley Award Winners</h4>\n")
-    showclubs(awards, outfile)
+    showclubswithvalues(awards, "Added", outfile)
     
 
