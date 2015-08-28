@@ -7,6 +7,7 @@ import xlrd
 
 def cleandate(indate):
     if '/' in indate:
+        indate = indate + '/' + date.today().strftime("%Y")  # Default to this year
         indate = indate.split('/')
         indate = [indate[2], indate[0], indate[1]]
     elif '-' in indate:
