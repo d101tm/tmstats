@@ -100,6 +100,7 @@ if len(winners) > 0:
     showclubs(winners, outfile)
     
 if len(almost) > 0:
+    outfile.write("<p>&nbsp;</p>")
     outfile.write("<p>These clubs have achieved 4 of the 5 DCP goals needed to join the Early Achievers.</p>")
     showclubs(almost, outfile)
 
