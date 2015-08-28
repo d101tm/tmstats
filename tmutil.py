@@ -182,3 +182,42 @@ def showclubswithvalues(clubs, valuename, outfile):
 </table>
 """)
 
+def showclubswithoutvalues(clubs, outfile):
+    """ Outputs clubs in a 2-column table. """
+    
+    outfile.write("""<table class="DSSbtable">
+  <thead>
+  <tr>
+    <th>Area</th><th>Club</th>""")
+    if len(clubs) > 1:
+        outfile.write("""
+    <th>&nbsp;
+    <th>Area</th><th>Club</th><th>""")
+    else:
+        outfile.write("""
+    <th style="visibility: hidden">&nbsp;
+    <th style="visibility: hidden">Area</th><th style="visibility: hidden">Club</th>""")
+    outfile.write("""
+  </tr>
+  </thead>
+  <tbody>
+""")
+
+    incol1 = (1 + len(clubs)) / 2 # Number of items in the first column.
+    left = 0  # Start with the zero'th item
+    for i in range(incol1):
+        club = clubs[i]
+        outfile.write('  <tr>\n')
+        outfile.write(club.tablepart())
+        try:
+            club = clubs[i+incol1]   # For the right column
+        except IndexError:
+            outfile.write('\n  </tr>\n')
+            break
+        outfile.write('\n    <td>&nbsp;</td>\n')    
+        outfile.write(club.tablepart())
+        outfile.write('\n  </tr>\n')
+        
+    outfile.write("""  </tbody>
+</table>
+""")
