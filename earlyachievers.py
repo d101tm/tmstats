@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import dbconn, tmparms, os, sys
 from datetime import date, datetime
+from tmutil import showclubswithvalues
 import argparse
 
 class myclub:
@@ -18,38 +19,6 @@ class myclub:
     def key(self):
         return (self.area, self.clubnumber)
 
-def showclubs(clubs, outfile):
-    """ Outputs the clubs in a 2-column table. """
-    
-    outfile.write("""<table class="DSSctable">
-  <thead>
-  <tr>
-    <th>Area</th><th>Club</th><th>Goals</th>
-    <th>&nbsp;
-    <th>Area</th><th>Club</th><th>Goals</th>
-  </tr>
-  </thead>
-  <tbody>
-""")
-
-    incol1 = (1 + len(clubs)) / 2 # Number of items in the first column.
-    left = 0  # Start with the zero'th item
-    for i in range(incol1):
-        club = clubs[i]
-        outfile.write('  <tr>\n')
-        outfile.write(club.tablepart())
-        try:
-            club = clubs[i+incol1]   # For the right column
-        except IndexError:
-            outfile.write('\n  </tr>\n')
-            break
-        outfile.write('\n    <td>&nbsp;</td>\n')    
-        outfile.write(club.tablepart())
-        outfile.write('\n  </tr>\n')
-        
-    outfile.write("""  </tbody>
-</table>
-""")
 
 
 # Make it easy to run under TextMate
@@ -97,12 +66,12 @@ Clubs achieving 5 or more Distinguished Club Program (DCP) goals by October 31 e
 
 if len(winners) > 0:
     outfile.write("<h4>Early Achievers</h4>\n")
-    showclubs(winners, outfile)
+    showclubswithvalues(winners, "Goals", outfile)
     
 if len(almost) > 0:
     outfile.write("<p>&nbsp;</p>")
     outfile.write("<p>These clubs have achieved 4 of the 5 DCP goals needed to join the Early Achievers.</p>")
-    showclubs(almost, outfile)
+    showclubswithvalues(almost, "Goals", outfile)
 
     
 
