@@ -57,7 +57,7 @@ if __name__ == "__main__":
         
     parms.outfile.write('<h3 id="sanity">September Sanity</h3>\n')
     parms.outfile.write('<p>Clubs renewing at least 75% of their base membership by September 15 receive $50 in District Credit.\n')
-    parms.outfile.write('This data is for %s.</p>\n' % asofnice)
+    parms.outfile.write('This report is for %s.</p>\n' % asofnice)
     showclubswithvalues(clubs, 'Renewed', parms.outfile)
     
     
