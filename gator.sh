@@ -171,7 +171,6 @@ if [[ "$dorun" = "yes" ]] ; then
     
     ### Run programs in support of District special offerings
     
-    # Run September Sanity (TODO: Add it)
     # Run March Madness (TODO: Add it)
     # Run Nothin' but Net (TODO: Add it)
     # Run Share the Wealth when the time comes
@@ -184,6 +183,11 @@ if [[ "$dorun" = "yes" ]] ; then
     if (( $haveperf == 0 )) ; then
         echo "Running Smedley"
         ../smedley.py
+    fi
+    
+    if (( $haveperf == 0 )) ; then
+        echo "Running September Sanity"
+        ../sanity.py
     fi
     
     ### Run daily housekeeping
