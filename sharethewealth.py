@@ -27,7 +27,7 @@ parms = tmparms.tmparms()
 parms.parser.add_argument("--startdate", dest='startdate', default='2015-05-19')
 parms.parser.add_argument("--enddate", dest='enddate', default=enddate)
 parms.parse()
-print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
+#print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 

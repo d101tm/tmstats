@@ -49,7 +49,7 @@ if __name__ == "__main__":
         weekday = datetime.datetime.today().strftime('%A')
         run = [True for w in parms.runon if weekday.startswith(w)]  # Note:  T means Tuesday OR Thursday; S is Saturday OR Sunday
         if not run:
-            sys.stderr.write('Not running because today is %s but --runon=%s was specified\n' % (weekday, ' '.join(parms.runon)))
+            #sys.stderr.write('Not running because today is %s but --runon=%s was specified\n' % (weekday, ' '.join(parms.runon)))
             sys.exit(0)  # Not running is a normal exit.
       
     # print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)

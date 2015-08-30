@@ -126,7 +126,7 @@ parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Ov
 parms.parse()
 
 parms.date = cleandate(parms.date)
-print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
+#print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 

@@ -56,7 +56,7 @@ reload(sys).setdefaultencoding('utf8')
 parms = tmparms.tmparms()
 parms.parser.add_argument("--date", dest='date', default=datetime.today().strftime('%Y-%m-%d'))
 parms.parse()
-print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
+#print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 
