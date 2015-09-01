@@ -275,13 +275,27 @@ def doHistorical(conn, name):
     # Set 'final for month' indications for the appropriate items:
     #   For each club, set the indicator for the last entry for a month OTHER than the most recent month
     
-    curs.execute("""update %s set entrytype = 'M' where id in 
-                      (select id from 
-                         (select cand.id from 
-                            (select id, clubnumber, monthstart, max(asof) from %s where monthstart != 
-                               (select max(monthstart) from %s) group by clubnumber, monthstart  order by clubnumber) cand
-                            inner join %s dp on cand.id=dp.id where dp.entrytype = 'D') 
-                          ok)""" % (name, name, name, name))
+    curs.execute("""
+    UPDATE %s 
+    SET    entrytype = 'M' 
+    WHERE  id IN (SELECT id 
+                  FROM   (SELECT id
+                          FROM   %s 
+                                 INNER JOIN (SELECT clubnumber, 
+                                                    monthstart, 
+                                                    Max(asof) maxasofformonth 
+                                             FROM   %s 
+                                             WHERE  monthstart != 
+                                                    (SELECT Max(monthstart) 
+                                                     FROM   %s) 
+                                             GROUP  BY clubnumber, 
+                                                       monthstart) latest 
+                                         ON %s.clubnumber = latest.clubnumber 
+                                            AND %s.asof = 
+                                                latest.maxasofformonth
+                                                AND entrytype <> 'M') 
+                         updates)"""
+     % (name, name, name, name, name, name))
                           
     # Now, mark the latest daily entry
     curs.execute("UPDATE %s SET entrytype = 'D' WHERE entrytype = 'L'" % name)
