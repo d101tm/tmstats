@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """ This program combines info about a Toastmasters District's clubs into one easy-to-read report.  """
 
-import csv, urllib, datetime, pickle, os, sys, webbrowser, math, time, yaml
+import  datetime,  os, sys,  math, time
+import dbconn, tmparms, latest, os, sys, argparse
+
 
 from operator import attrgetter
 
@@ -94,48 +96,43 @@ def td(what, *classes, **kwds):
 
 class Club:
     """ All the information about a single club """
-    initinfo = ("district", "division", "area", "number", "name", "newMembers", "lateRenewals", "octRenewals", "aprRenewals", "totalRenewals", "totalCharter", "total", "dcpStatus", "eventDate")
-    lostinfo = ("district", "division", "area", "number", "name")
-    def __init__(self, row, lostrow=None):
-        if not lostrow:
-            # row comes from Toastmasters, and we hope the order is consistent
-            for (name, value) in zip(self.initinfo, row):
-                self.__dict__[name] = value.strip()
-            self.base = None
-            self.dcpitems = []
-            self.goals = None
-            self.dcpstat = None
-        else:
-            # This is a club which was not in the division report for the current month
-            # Patch in data which makes sense for such a club.
-            for (name, value) in zip(self.lostinfo, lostrow[:len(self.lostinfo)]):
-                self.__dict__[name] = value.strip()
-            for (name) in self.initinfo[len(self.lostinfo):]:
-                self.__dict__[name] = '0'
-            self.eventDate = 'Susp earlier'
-            self.dcpStatus = ''
-            self.status = ''
-            self.base = 0
-            self.current = 0
-            self.goals = 0
-            self.dcpitems = [0 for i in range(9, 22)]
-            self.dcpstat = None
-            self.novVisit = 0
-            self.mayVisit = 0
+
+    
+    def __init__(self, clubname, clubnumber, area, division, district, suspenddate):
+        self.clubname = clubname
+        self.clubnumber = clubnumber
+        self.area = area
+        self.division = division
+        self.district = district
+        self.suspenddate = suspenddate
+        # Pre-set information in case it doesn't get filled in later (if the club only
+        #    exists part of the year, for example, or if there is no charter info)
+        self.charterdate = ''
+        if (self.division == '0D') or (self.area == '0A'):
+            # Fully unassign an unassigned club
+            self.area = '0A'
+            self.division = '0D'
             
-        self.place = self.district + " " + self.division + " " + self.area
-
+    def finishSettingUp(self):
+        """ Finish setting up the club for later additions.  Called AFTER any club overrides. """
+        self.base = None
+        self.dcpitems = []
+        self.goals = None
+        self.dcpstat = None
+        self.eventDate = ''
+        self.dcpStatus = ''
+        self.status = ''
+        self.current = 0
+        self.goals = 0
+        self.dcpitems = [0 for i in range(9, 22)]
+        self.novVisit = 0
+        self.mayVisit = 0
+        self.place = self.district + ' ' + self.division + ' ' + self.area
         self.monthly = []
+        self.key = self.place + " " + self.clubnumber
+        self.suspended = self.supenddate != ''
+        self.chartered = self.charterdate != ''
 
-        self.key = self.place + " " + self.number
-        self.suspended = self.eventDate.startswith('Susp')
-        self.chartered = self.eventDate.startswith('Charter')
-        try:
-            self.eventDate = self.eventDate.split()[-1]
-        except IndexError:
-            pass
-        
-        clubs[int(self.number)] = self
         if self.division not in divisions:
             divisions[self.division] = Division(self.division)
         
@@ -154,7 +151,7 @@ class Club:
 
             
     def __repr__(self):
-        return self.name + " " + self.number + " " + repr(self.monthly) + " " + repr(self.dcpitems)
+        return self.name + " " + self.clubnumber + " " + repr(self.monthly) + " " + repr(self.dcpitems)
         
 
 
@@ -173,7 +170,7 @@ class Club:
             ret += th(' ', docclass="sep", rowspan="2")
         else:
             ret += td(self.division + self.area.lstrip('0'))
-            ret += td(self.number.lstrip('0'), docclass="rightalign")
+            ret += td(self.clubnumber.lstrip('0'), docclass="rightalign")
             color = colorcode(self.current)
             if self.suspended:
                 color = "suspended"
@@ -453,64 +450,111 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
     else:
         return baseurl + "~" + monthend + "~" + asof + "~" + tmyearpiece
         
-        
-district = "04"
-report = "districtperformance"
 
-if len(sys.argv) == 2:
-    # Open files instead of doing our own fetches
-    resources = yaml.load(open(sys.argv[1],'r'))['files']
-else:
-    resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
-         'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s",
-         'division': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=divisionperformance~%(district)s~~~%(tmyear)s",       
-         'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
-         'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
-
-parms = {'district':'04'}
-
-def opener(what, parms):
-    if what.startswith('http'):
-        return urllib.urlopen(what % parms)
-    else:
-        return open(what, 'rbU')
-
-# Start by figuring out what months we need info for:
-
-today = datetime.date.today()
-
-tmmonths = (7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6)
-# If it's January-July, we care about the TM year which started the previous July 1; otherwise, it's this year.
-if (today.month <= 7):
-    tmyear = today.year - 1 
-else:
-    tmyear = today.year
     
-tmyearpiece = '%d-%d' % (tmyear, tmyear+1)  # For the URLs
-parms['tmyear'] = tmyearpiece
-parms['lasttmyear'] = '%d-%d'% (tmyear-1, tmyear)
+# Make it easy to run under TextMate
+if 'TM_DIRECTORY' in os.environ:
+    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+    
+# Get around unicode problems
+reload(sys).setdefaultencoding('utf8')
 
+# Define args and parse command line
+parms = tmparms.tmparms(description=__doc__)
+parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
+parms.parse()
+conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
+curs = conn.cursor()
+district = '%02d' % parms.district 
 
+# Find the latest date in the system and work backwards from there to the beginning of the TM year.
+today = datetime.date.today()
+(latestmonth, latestdate) = latest.getlatest('clubperf', conn)
+(latestyear, latestmonth) = [int(f) for f in latestmonth.split('-')[0:2]]
+# By definition, "thismonth" is NOT complete in the database.
+if latestmonth <= 6:
+    latesttmyear = latesttmyear - 1
+    
 
-# Now, define the months we're going to look for
-
-if (today.month == 7):
-    months = tmmonths
+# Let's resolve the tmyear
+if parms.tmyear:
+    if len(parms.tmyear) >= 4:
+        tmyear = int(parms.tmyear[0:4])
+    elif len(parms.tmyear) == 2:
+        tmyear = 2000 + int(parms.tmyear)
+    else:
+        sys.stderr.write('%s is not valid for tmyear.' % parms.tmyear)
+        sys.exit(1)
 else:
-    months = []
-    for m in tmmonths:
-        months.append(m)
-        if m == today.month:
-            break
-months = [(m, tmyear + (1 if m <= 6 else 0)) for m in months]
+    tmyear = latestyear
+
+
+
+if tmyear < latestyear:
+    # We assume all months are in the database.  If not, we'll find out what's missing the hard way.
+    completemonths = range(1,13)
+    thisyear = False
+else:
+    if latestmonth <= 6:
+        # We have the previous July-December, plus months up to now which are complete
+        completemonths = range(7,13)
+        completemonths.extend(range(1,latestmonth))
+        tmyear = latestyear - 1 
+    else:
+        completemonths = range(7, latestmonth)
+        tmyear = latestyear
+    thisyear = True
+# Now, get the months to ask for from the database
+complete = ['%d-%02d-01' % (tmyear + (1 if n <=6 else 0), n ) for n in completemonths]
+complete.sort()
+
+# And get the first and last months for queries:
+firstmonth = '%d-07-01' % tmyear
+lastmonth = '%d-06-01' % (tmyear + 1)
 
 
 
 freshness = []
 freshness.append(time.strftime("Report created %m/%d/%Y %H:%M %Z", time.localtime()))
 
+# Let's get basic club information for all clubs which exist or have existed for the months in
+# question.  If we're getting information for this year, we also have to add 'latest' entries.
+
+if thisyear:
+    entrytypes = ['M', 'L']
+else:
+    entrytypes = ['M']
+    
+# Get the last entry for which we have information for every club during the year.  
+    
+curs.execute("""select clubnumber, clubname, area, division, district, suspenddate from distperf where id in (select distperf.id from distperf inner join (select clubnumber, max(asof) as m from distperf where entrytype in %s and monthstart >= %s and monthstart <= %s group by clubnumber order by monthstart desc,  m desc, clubnumber) latest on distperf.clubnumber = latest.clubnumber and distperf.asof = latest.m)""", (entrytypes, firstmonth, lastmonth))
+
+# And create the master dictionary of clubs
+clubs = {}
+for info in curs.fetchall():
+    clubnumber = info[0]
+    clubs[clubnumber] = Club(*info)
+    
+# We need to get charter date info specially, because Toastmasters is not consistently posting it to
+#    the performance files.  But if there's ever a charter date in the time we care about, use it.
+curs.execute("""select clubnumber, max(charterdate) as cd from distperf group by clubnumber having cd != '' """)
+for (clubnumber, charterdate) in curs.fetchall():
+    clubs[clubnumber].charterdate = charterdate
+    
+# @TODO:  Here's where we'd process club overrides.
+
+# And now, finish setting up the structure (creating Areas and Divisions, for example)
+for club in clubs:
+    club.finishSettingUp()
+
+
+# OK, now we start fetching monthly performance information for every complete month.
+
+
+
 #Start by getting current information about all clubs in the district, though all we really care about is 
 #charter and suspension dates.  
+
 
 
 s = opener(resources['payments'], parms)
