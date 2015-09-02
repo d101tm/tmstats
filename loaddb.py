@@ -13,6 +13,8 @@ from simpleclub import Club
 global changecount
 changecount = 0
 
+headersnotinboth = []
+
 def normalize(str):
     if str:
         return ' '.join(str.split())
@@ -23,10 +25,18 @@ def different(new, old, headers):
     """ Returns a list of items which have changed, each of which is a tuple of (item, old, new)."""
     res = []
     for h in headers:
-        if new.__dict__[h] != old.__dict__[h]:
-            #print h ,'is different for club', new.clubnumber
-            #print 'old = %s, new = %s' % (old.__dict__[h], new.__dict__[h])
-            res.append((h, old.__dict__[h], new.__dict__[h]))
+        try:
+            if new.__dict__[h] != old.__dict__[h]:
+                #print h ,'is different for club', new.clubnumber
+                #print 'old = %s, new = %s' % (old.__dict__[h], new.__dict__[h])
+                res.append((h, old.__dict__[h], new.__dict__[h]))
+        except KeyError:
+            if h not in headersnotinboth:
+                if h not in new.__dict__:
+                    sys.stdout.write('%s not in new headers\n' % h)
+                else:
+                    sys.stdout.write('%s not in old headers\n' % h)
+                headersnotinboth.append(h)
     return res
     
 def cleandate(date):
@@ -99,9 +109,10 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     addrcol2 = dbheaders.index('address2')
     dbheaders[addrcol1] = 'place'
     dbheaders[addrcol2] = 'address'
+    expectedheaderscount = len(dbheaders)
     dbheaders.append('firstdate')
     dbheaders.append('lastdate')     # For now...
-
+  
     Club.setfieldnames(dbheaders)
 
     
@@ -111,7 +122,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     clubhist = Club.getClubsOn(curs)
    
     for row in reader:
-        if len(row) < 20:
+        if len(row) < expectedheaderscount:
             break     # we're finished
 
         # Convert to unicode.  Toastmasters usually uses UTF-8 but occasionally uses Windows CP1252 on the wire.
@@ -120,7 +131,8 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         except UnicodeDecodeError:
             row = [unicode(t.strip(), "CP1252") for t in row]
          
-        if len(row) > 20:
+        if len(row) > expectedheaderscount:
+            print row
             # Special case...Millbrae somehow snuck two club websites in!
             row[16] = row[16] + ',' + row[17]
             del row[17]
