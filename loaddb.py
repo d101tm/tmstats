@@ -15,6 +15,16 @@ changecount = 0
 
 headersnotinboth = []
 
+def inform(*args, **kwargs):
+    """ Print information to 'file' unless suppressed by the -quiet option.
+          suppress is the minimum number of 'quiet's that need be specified for
+          this message NOT to be printed. """
+    suppress = kwargs.get('suppress', 1)
+    file = kwargs.get('file', sys.stderr)
+    
+    if parms.quiet < suppress:
+        print >> file, ' '.join(args)
+
 def normalize(str):
     if str:
         return ' '.join(str.split())
@@ -60,11 +70,6 @@ def cleanitem(item):
         pass
     return item
     
-def inform(*args):
-    print ' '.join(args)
-    
-def progress(*args):
-    print ' '.join(args)
         
 def doHistoricalClubs(conn):
     clubfiles = glob.glob("clubs.*.csv")
@@ -103,7 +108,8 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         if not hline[0].startswith('{"Message"'):
             print "'clubnumber' not in '%s'" % hline
         return
-    inform("clubs for", cdate)
+        
+    inform("clubs for", cdate, suppress=1)
     dbheaders = [p for p in headers]
     addrcol1 = dbheaders.index('address1')
     addrcol2 = dbheaders.index('address2')
@@ -261,7 +267,7 @@ def getasof(infile):
     return retval
     
 def doHistorical(conn, name):
-    progress("Processing", name)
+    inform("Processing", name, suppress=2)
     perffiles = glob.glob(name + '.*.csv')
     perffiles.sort()
     curs = conn.cursor()
@@ -345,7 +351,7 @@ def doDailyDistrictPerformance(infile, conn, cdate, monthstart):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
-    inform("distperf for", cdate)
+    inform("distperf for", cdate, supress=1)
     areacol = headers.index('area')
     districtcol = headers.index('district')
     # We're going to use the last column for the effective date of the data
@@ -406,7 +412,7 @@ def doDailyClubPerformance(infile, conn, cdate, monthstart):
     except ValueError:
         print "'clubnumber' not in '%s'" % hline
         return
-    inform("clubperf for", cdate)
+    inform("clubperf for", cdate, supress=1)
     areacol = headers.index('area')
     districtcol = headers.index('district')
     memcol = headers.index('activemembers')
@@ -481,7 +487,7 @@ def doDailyAreaPerformance(infile, conn, cdate, monthstart):
     except ValueError:
         print "'club' not in '%s'" % hline
         return
-    inform("areaperf for", cdate)
+    inform("areaperf for", cdate, supress=1)
     areacol = headers.index('area')
     districtcol = headers.index('district')
     
@@ -540,18 +546,11 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.parse() 
-    if parms.quiet >= 1:
-        def inform(*args):
-            return
-            
-    if parms.quiet >= 2:
-        def progress(*args):
-            return
-            
-    inform('Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser))
+
+        
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
         
-    progress("Processing Clubs")
+    inform("Processing Clubs", supress=1)
     doHistoricalClubs(conn)
     doHistorical(conn, "distperf")
     doHistorical(conn, "clubperf")
