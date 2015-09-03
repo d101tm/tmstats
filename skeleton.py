@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
 import dbconn, tmutil, sys, os
