@@ -125,7 +125,10 @@ class Club:
         self.dcpitems = []
         self.goals = None
         self.dcpstat = None
-        self.eventDate = ''
+        if self.suspenddate:
+            self.eventDate = self.suspenddate
+        else:
+            self.eventDate = self.charterdate
         self.dcpStatus = ''
         self.status = ''
         self.current = 0
@@ -203,12 +206,14 @@ class Club:
         
         # Membership
         if headers:
-            ret += th('Membership', colspan=repr(3+len(self.monthly)), docclass='.memhead')
+            monthcolspan = 2+len(self.monthly) + (1 if thisyear else 0) 
+            ret += th('Membership', colspan=repr(monthcolspan), docclass='.memhead')
             row2 += th('Base', forceclass="reverse")
             months = ('Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun')
             for r in range(len(self.monthly)):
                 row2 += th(months[r], forceclass="reverse")
-            row2 += th('Curr', forceclass="reverse")
+            if thisyear:
+                row2 += th('Curr', forceclass="reverse")
 
             row2 += th('Need', forceclass="reverse")
             ret += th(' ', docclass="sep", rowspan="2")
@@ -217,7 +222,8 @@ class Club:
             for r in self.monthly:
                 ret += "\n        "
                 ret += td(r, colorcode(r))
-            ret += td(self.current, colorcode(self.current))
+            if thisyear:
+                ret += td(self.current, colorcode(self.current))
             try:
                 need = min(20, self.base + 5) - self.current
             except TypeError:
@@ -639,18 +645,23 @@ if thisyear:
     curs.execute("select %s from clubperf where entrytype = 'L'" % fields)
 else:
     curs.execute("select %s from clubperf where entrytype = 'M' and monthstart = '%s' " % (fields, complete[-1]))
+print curs.rowcount, 'rows fetched'
 
+fetched = {}
 for row in curs.fetchall():
     c = clubs[row[0]]
+    if row[0] in fetched:
+        print "club %s (%s) is already here" % (c.name, c.clubnumber)
+    fetched[row[0]] = True
     c.status = row[1]
     c.base = row[2]
     c.current = row[3]
     c.goals = row[4]
     ## Continue by assigning DCP info
     c.dcpitems = [row[i] for i in dcprange]
-    c.dcpstat = row[fieldnames.index('clubdistinguishedstatus')]
-    c.parentarea.counters[c.dcpstat] += 1
-    c.parentdiv.counters[c.dcpstat] += 1
+    c.dcpStatus = row[fieldnames.index('clubdistinguishedstatus')]
+    c.parentarea.counters[c.dcpStatus] += 1
+    c.parentdiv.counters[c.dcpStatus] += 1
 
 class Outputfiles:
     """ This should be a singleton, but I'm being lazy and promise not to instantiate it twice. """
