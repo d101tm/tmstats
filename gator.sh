@@ -24,52 +24,6 @@ success="$today.success"
 
 
 
-#### OLD program setup section
-
-# constants for old programs
-dist=04
-tmyear=2015-2016
-lastyear=2014-2015
-
-# Set up filenames
-distperf="distperf"
-areaperf="areaperf"
-clubperf="clubperf"
-historical="$lastyear.csv"
-todaytail="$today.csv"
-ydaytail="$yday.csv"
-dtoday="$distperf.$todaytail"
-dyday="$distperf.$ydaytail"
-atoday="$areaperf.$todaytail"
-ayday="$areaperf.$ydaytail"
-ctoday="$clubperf.$todaytail"
-cyday="$clubperf.$ydaytail"
-clubstoday="clubs.$today.csv"
-clubsyday="clubs.$yday.csv"
-oldclubs="oldclubs.csv"
-ymlfile="today.yml"
-
-# Get historical data, if it doesn't already exist
-if [ ! -a "$historical" ]; then
-    curl -so "$historical" "http://dashboards.toastmasters.org/$lastyear/export.aspx?type=CSV&report=clubperformance~$dist~~~$lastyear"
-fi
-
-
-# Create the YML file with all of the filenames so that the old programs can run:
-
-cat >"$ymlfile"  << EOF
-%YAML 1.1
----
-files:
-    clubs:  $clubstoday
-    payments: $dyday
-    current: $cyday
-    historical: $historical
-    division: $ayday
-EOF
-
-#### END of OLD programs setup section
-
 monthof() 
 {
   themonth=$1
@@ -162,10 +116,10 @@ if [[ "$dorun" = "yes" ]] ; then
 
     sleep 1   # Make sure that the marker file has an older timestamp
    
-    ### Run the allstats report  (TODO:  fix after updating the program)
+    ### Run the allstats report
     if (( $haveboth == 0 )) ; then
         echo "running allstats"
-        ../allstats.py "$ymlfile"
+        ../allstats.py 
         echo "allstats rc = $?"
     fi
     
