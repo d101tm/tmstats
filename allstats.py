@@ -603,11 +603,15 @@ for info in curs.fetchall():
     clubnumber = info[0]
     clubs[clubnumber] = Club(*info)
     
-# We need to get charter date info specially, because Toastmasters is not consistently posting it to
-#    the performance files.  But if there's ever a charter date in the time we care about, use it.
-curs.execute("""select clubnumber, max(charterdate) as cd from distperf where monthstart >= %s and monthstart <= %s group by clubnumber having cd != '' """, (firstmonth, lastmonth))
-for (clubnumber, charterdate) in curs.fetchall():
-    clubs[clubnumber].charterdate = charterdate
+# We need to get charter date from the clubs table because Toastmasters is not posting it consistently
+#   to the performance files.
+curs.execute("""select clubnumber, charterdate, clubname from clubs where charterdate >= %s and charterdate <= %s group by clubnumber """, ('%d-07-01' % tmyear, '%d-06-30' % (tmyear+1)))
+for (clubnumber, charterdate, clubname) in curs.fetchall():
+    try:
+        clubs[clubnumber].charterdate = charterdate.strftime('%m/%d/%y')
+    except KeyError:
+        print 'Club %s (%d) not in performance reports, ignored.' % (clubname, clubnumber)
+        
     
 # @TODO:  Here's where we'd process club overrides.
 
