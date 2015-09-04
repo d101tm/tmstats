@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """ This program combines info about a Toastmasters District's clubs into one easy-to-read report.  """
 
-import csv, urllib, datetime, pickle, os, sys, webbrowser, math, time, yaml
+import  datetime,  os, sys,  math, time
+import dbconn, tmparms, latest, os, sys, argparse
+from tmutil import stringify
 
 from operator import attrgetter
 
@@ -17,6 +19,12 @@ clubs = {}
 divisions = {}
 
 ### Utility Functions ###
+
+def monthtoindex(m):
+    if m >= 7:
+        return m - 7
+    else:
+        return m + 5
             
 def colorcode(number):
     try:
@@ -91,51 +99,138 @@ def td(what, *classes, **kwds):
         what = '&nbsp;'
     return wrap('td', what, *classes, **kwds)
 
+class Outputfiles:
+    """ This should be a singleton, but I'm being lazy and promise not to instantiate it twice. """
+    
+    def __init__(self):
+        self.files = {}
+        
+    def add(self, file):
+        self.files[file] = file
+        self.writeheader(file)
+        return file
+        
+    def close(self, file):
+        self.writefooter(file)
+        file.close()
+        del self.files[file]
+        
+    def write(self, what):
+        for f in self.files:
+            f.write(what)
+    
+
+    def writeheader(self, outfile):    
+        outfile.write('''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+           ''')
+        outfile.write('<html>\n')
+        outfile.write('<head>\n')
+        outfile.write('<meta http-equiv="Content-Style-Type" content="text/css">\n')
+        outfile.write('<title>Toastmasters Statistics</title>\n')
+        outfile.write('<style type="text/css">\n')
+        outfile.write("""
+
+        html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
+              font-size: 75%;}
+      
+        table {font-size: 12px; border-width: 1px; border-spacing: 0; border-collapse: collapse; border-style: solid;}
+        td, th {border-color: black; border-width: 1px; border-style: solid; text-align: center; vertical-align: middle;
+            padding: 2px;}
+
+        .name {text-align: left; font-weight: bold; width: 22%;}
+        .edate {border-left: none; font-weight: bold; width: 8%}
+        .belowmin {border-left: none; font-weight: bold; width: 8%;}
+        .number {text-align: right; width: 5%;}
+        .goals {border-left: none;}
+        .wide {width: 30% !important;}
+
+        .green {background-color: lightgreen; font-weight: bold;}
+        .yellow {background-color: yellow;}
+        .red {background-color: red;}
+        .rightalign {text-align: right;}
+        .sep {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
+        .greyback {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
+        
+        .madeit {background-color: lightblue; font-weight: bold;}
+        .statushead {border-right: none; }
+        .status {border-right: none; padding: 1px;}
+        .tabletop {background-color: #505050; font-weight: normal; color: white;}
+        .reverse {background-color: black; color: white;}
+        .bold {font-weight: bold;}
+        .italic {font-style: italic;}
+        .areacell {border: none;}
+        .areatable {margin-bottom: 18pt; width: 100%; page-break-inside: avoid; display: block;}
+        .suspended {text-decoration: line-through; color: red;}
+
+        .divtable {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
+
+        .divtable tfoot th {border: none;}
+        .footinfo {text-align: left;}
+        .dob {background-color: #c0c0c0;}
+        .grid {width: 2%;}
+
+        .todol {margin-top: 0;}
+        .todop {margin-bottom: 0; font-weight: bold;}
+        .status {font-weight: bold; font-size: 110%;}
+        
+        .clubcounts {margin-top: 12pt;}
+        .finale {border: none; break-after: always !important; display: block; float: none; position; relative; page-break-after: always !important; page-break-inside: avoid;}
+    
+        @media print { 
+            body {-webkit-print-color-adjust: exact !important;}
+                        td {padding: 1px !important;}}
+        """)
+        outfile.write('</style>\n')
+        outfile.write('</head>\n')
+        outfile.write('<body>\n')
+    
+    def writefooter(self, outfile):
+        outfile.write('</body>\n')
+        outfile.write('</html>\n')
+    
 
 class Club:
     """ All the information about a single club """
-    initinfo = ("district", "division", "area", "number", "name", "newMembers", "lateRenewals", "octRenewals", "aprRenewals", "totalRenewals", "totalCharter", "total", "dcpStatus", "eventDate")
-    lostinfo = ("district", "division", "area", "number", "name")
-    def __init__(self, row, lostrow=None):
-        if not lostrow:
-            # row comes from Toastmasters, and we hope the order is consistent
-            for (name, value) in zip(self.initinfo, row):
-                self.__dict__[name] = value.strip()
-            self.base = None
-            self.dcpitems = []
-            self.goals = None
-            self.dcpstat = None
-        else:
-            # This is a club which was not in the division report for the current month
-            # Patch in data which makes sense for such a club.
-            for (name, value) in zip(self.lostinfo, lostrow[:len(self.lostinfo)]):
-                self.__dict__[name] = value.strip()
-            for (name) in self.initinfo[len(self.lostinfo):]:
-                self.__dict__[name] = '0'
-            self.eventDate = 'Susp earlier'
-            self.dcpStatus = ''
-            self.status = ''
-            self.base = 0
-            self.current = 0
-            self.goals = 0
-            self.dcpitems = [0 for i in range(9, 22)]
-            self.dcpstat = None
-            self.novVisit = 0
-            self.mayVisit = 0
+
+    
+    def __init__(self, clubnumber, clubname, area, division, district, suspenddate):
+        self.name = clubname
+        self.clubnumber = stringify(clubnumber)
+        self.area = stringify(area)
+        self.division = division
+        self.district = stringify(district)
+        self.suspenddate = suspenddate
+        # Pre-set information in case it doesn't get filled in later (if the club only
+        #    exists part of the year, for example, or if there is no charter info)
+        self.charterdate = ''
+        if (self.division == '0D') or (self.area == '0A'):
+            # Fully unassign an unassigned club
+            self.area = '0A'
+            self.division = '0D'
             
-        self.place = self.district + " " + self.division + " " + self.area
+    def finishSettingUp(self):
+        """ Finish setting up the club for later additions.  Called AFTER any club overrides. """
+        self.base = None
+        self.dcpitems = []
+        self.goals = None
+        self.dcpstat = None
+        if self.suspenddate:
+            self.eventDate = self.suspenddate
+        else:
+            self.eventDate = self.charterdate
+        self.dcpStatus = ''
+        self.status = ''
+        self.current = 0
+        self.goals = 0
+        self.dcpitems = [0 for i in range(9, 22)]
+        self.novVisit = 0
+        self.mayVisit = 0
+        self.place = self.district + ' ' + self.division + ' ' + self.area
+        self.monthly = [''] * 12
+        self.key = self.place + " " + self.clubnumber
+        self.suspended = self.suspenddate != ''
+        self.chartered = self.charterdate != ''
 
-        self.monthly = []
-
-        self.key = self.place + " " + self.number
-        self.suspended = self.eventDate.startswith('Susp')
-        self.chartered = self.eventDate.startswith('Charter')
-        try:
-            self.eventDate = self.eventDate.split()[-1]
-        except IndexError:
-            pass
-        
-        clubs[int(self.number)] = self
         if self.division not in divisions:
             divisions[self.division] = Division(self.division)
         
@@ -154,7 +249,7 @@ class Club:
 
             
     def __repr__(self):
-        return self.name + " " + self.number + " " + repr(self.monthly) + " " + repr(self.dcpitems)
+        return self.name + " " + self.clubnumber + " " + repr(self.monthly) + " " + repr(self.dcpitems)
         
 
 
@@ -172,8 +267,11 @@ class Club:
             ret += th('Club Name', docclass="name wide", rowspan="2", colspan="2")
             ret += th(' ', docclass="sep", rowspan="2")
         else:
-            ret += td(self.division + self.area.lstrip('0'))
-            ret += td(self.number.lstrip('0'), docclass="rightalign")
+            if (self.division != '0D'):
+                ret += td(self.division + self.area.lstrip('0'))
+            else:
+                ret += td('&nbsp;')
+            ret += td(self.clubnumber.lstrip('0'), docclass="rightalign")
             color = colorcode(self.current)
             if self.suspended:
                 color = "suspended"
@@ -200,23 +298,24 @@ class Club:
         
         # Membership
         if headers:
-            ret += th('Membership', colspan=repr(3+len(self.monthly)), docclass='.memhead')
-            row2 += th('Base', forceclass="reverse")
+            monthcolspan = 2+len(self.monthly) 
+            ret += th('Membership', colspan=repr(monthcolspan), docclass='.memhead')
+            row2 += th('Base', forceclass="tabletop")
             months = ('Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun')
             for r in range(len(self.monthly)):
-                row2 += th(months[r], forceclass="reverse")
-            row2 += th('Curr', forceclass="reverse")
-
-            row2 += th('Need', forceclass="reverse")
+                row2 += th(months[r], forceclass="tabletop")
+            row2 += th('Need', forceclass="tabletop")
             ret += th(' ', docclass="sep", rowspan="2")
         else:
             ret += td(self.base, forceclass="bold")
             for r in self.monthly:
                 ret += "\n        "
                 ret += td(r, colorcode(r))
-            ret += td(self.current, colorcode(self.current))
-            need = min(20, self.base + 5) - self.current
-            if (need > 0) and (not self.suspended):
+            try:
+                need = min(20, self.base + 5) - self.current
+            except TypeError:
+                pass
+            if (not self.suspended) and (need > 0):
                 ret += td(need, forceclass="bold")
             else:
                 ret += td('')
@@ -250,23 +349,23 @@ class Club:
         # Specific DCP Goals
         if headers:
             ret += th('CCs', colspan="2")
-            row2 += th('1', forceclass="reverse")
-            row2 += th('2', forceclass="reverse")
+            row2 += th('1', forceclass="tabletop")
+            row2 += th('2', forceclass="tabletop")
             ret += th('ACs', colspan="2")
-            row2 += th('3', forceclass="reverse")
-            row2 += th('4', forceclass="reverse")
+            row2 += th('3', forceclass="tabletop")
+            row2 += th('4', forceclass="tabletop")
             ret += th('Lead', colspan="2")
-            row2 += th('5', forceclass="reverse")
-            row2 += th('6', forceclass="reverse")
+            row2 += th('5', forceclass="tabletop")
+            row2 += th('6', forceclass="tabletop")
             ret += th('Mem', colspan="2")
-            row2 += th('7', forceclass="reverse")
-            row2 += th('8', forceclass="reverse")
+            row2 += th('7', forceclass="tabletop")
+            row2 += th('8', forceclass="tabletop")
             ret += th('Trn', colspan="2")
-            row2 += th('9a', forceclass="reverse")
-            row2 += th('9b', forceclass="reverse")
+            row2 += th('9a', forceclass="tabletop")
+            row2 += th('9b', forceclass="tabletop")
             ret+= th('Ren|OL', colspan="2")
-            row2 += th('Ren.', forceclass="reverse")
-            row2 += th('OL', forceclass="reverse")
+            row2 += th('Ren.', forceclass="tabletop")
+            row2 += th('OL', forceclass="tabletop")
         else:
             ## CCs, ACs, Leadership, New Members
             dcpmins = (2, 2, 1, 1, 1, 1, 4, 4)
@@ -300,8 +399,8 @@ class Club:
         if headers:
             ret += th(' ', docclass="sep", rowspan="2")
             ret += th('Visits', colspan="2")
-            row2 += th('1', forceclass="reverse")
-            row2 += th('2', forceclass="reverse")
+            row2 += th('1', forceclass="tabletop")
+            row2 += th('2', forceclass="tabletop")
         else:
             ret += td(' ', docclass="sep")
             ret += td(self.novVisit, "grid", "bold madeit" if self.novVisit > 0 else "")
@@ -413,359 +512,208 @@ class Area(Aggregate):
         
         
 
-        
+# Make it easy to run under TextMate
+if 'TM_DIRECTORY' in os.environ:
+    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
     
+# Get around unicode problems
+reload(sys).setdefaultencoding('utf8')
 
-        
-class Info:
-    """ Information relative to a Toastmasters date """
-    lasts = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-    def __init__(self, m, y):
+# Define args and parse command line
+parms = tmparms.tmparms(description=__doc__)
+parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
+parms.parse()
+conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
+curs = conn.cursor()
+district = '%02d' % parms.district 
 
-
-        if (m == 2) and (0 == y % 4):
-            eom = (2, 29, y)
-        else:
-            eom = (m, self.lasts[m-1], y)
-            
-        self.monthend = '%d/%d/%d' % eom
-        if (m == 12):
-            self.nextday = [1, 1, y+1]
-        else:
-            self.nextday = [m+1, 1, y]
-        self.lastday = self.lasts[self.nextday[0]-1]
-        if (m == 1) and (0 == y % 4):
-            self.lastday = 29
-        
-    def next(self):
-        while (self.nextday[1] <= self.lastday):
-            yield '%d/%d/%d' % (self.nextday[0], self.nextday[1], self.nextday[2])
-            self.nextday[1] += 1
-   
-            
-    def __iter__(self):
-        return self
-
-def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
-    baseurl = "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=" + report + "~" + district
-    if monthend == "":
-        return baseurl + "~~~" + tmyearpiece
-    else:
-        return baseurl + "~" + monthend + "~" + asof + "~" + tmyearpiece
-        
-        
-district = "04"
-report = "districtperformance"
-
-if len(sys.argv) == 2:
-    # Open files instead of doing our own fetches
-    resources = yaml.load(open(sys.argv[1],'r'))['files']
-else:
-    resources = {'clubs': "http://reports.toastmasters.org/findaclub/csvResults.cfm?District=%(district)s",
-         'payments': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=districtperformance~%(district)s~~~%(tmyear)s",
-         'division': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=divisionperformance~%(district)s~~~%(tmyear)s",       
-         'current': "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=clubperformance~%(district)s",
-         'historical': "http://dashboards.toastmasters.org/%(lasttmyear)s/export.aspx?type=CSV&report=clubperformance~%(district)s~~~%(lasttmyear)s"}
-
-parms = {'district':'04'}
-
-def opener(what, parms):
-    if what.startswith('http'):
-        return urllib.urlopen(what % parms)
-    else:
-        return open(what, 'rbU')
-
-# Start by figuring out what months we need info for:
-
+# Find the latest date in the system and work backwards from there to the beginning of the TM year.
 today = datetime.date.today()
+(latestmonth, latestdate) = latest.getlatest('clubperf', conn)
+(latestyear, latestmonth) = [int(f) for f in latestmonth.split('-')[0:2]]
 
-tmmonths = (7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6)
-# If it's January-July, we care about the TM year which started the previous July 1; otherwise, it's this year.
-if (today.month <= 7):
-    tmyear = today.year - 1 
-else:
-    tmyear = today.year
+if latestmonth <= 6:
+    latesttmyear = latesttmyear - 1
     
-tmyearpiece = '%d-%d' % (tmyear, tmyear+1)  # For the URLs
-parms['tmyear'] = tmyearpiece
-parms['lasttmyear'] = '%d-%d'% (tmyear-1, tmyear)
 
-
-
-# Now, define the months we're going to look for
-
-if (today.month == 7):
-    months = tmmonths
+# Let's resolve the tmyear
+if parms.tmyear:
+    if len(parms.tmyear) >= 4:
+        tmyear = int(parms.tmyear[0:4])
+    elif len(parms.tmyear) == 2:
+        tmyear = 2000 + int(parms.tmyear)
+    else:
+        sys.stderr.write('%s is not valid for tmyear.' % parms.tmyear)
+        sys.exit(1)
 else:
-    months = []
-    for m in tmmonths:
-        months.append(m)
-        if m == today.month:
-            break
-months = [(m, tmyear + (1 if m <= 6 else 0)) for m in months]
+    tmyear = latestyear
 
 
+
+if tmyear < latestyear:
+    # We assume all months are in the database.  If not, we'll find out what's missing the hard way.
+    interestingmonths = range(1,13)
+    thisyear = False
+else:
+    if latestmonth <= 6:
+        # We have the previous July-December, plus months up to now.
+        interestingmonths = range(7,13)
+        interestingmonths.extend(range(1,latestmonth+1))
+        tmyear = latestyear - 1 
+    else:
+        interestingmonths = range(7, latestmonth+1)
+        tmyear = latestyear
+    thisyear = True
+# Now, get the months to ask for from the database
+interesting = ['%d-%02d-01' % (tmyear + (1 if n <=6 else 0), n ) for n in interestingmonths]
+interesting.sort()
+
+# And get the first and last months for queries:
+firstmonth = '%d-07-01' % tmyear
+lastmonth = '%d-06-01' % (tmyear + 1)
 
 freshness = []
 freshness.append(time.strftime("Report created %m/%d/%Y %H:%M %Z", time.localtime()))
 
-#Start by getting current information about all clubs in the district, though all we really care about is 
-#charter and suspension dates.  
+# Let's get basic club information for all clubs which exist or have existed for the months in
+# question.  If we're getting information for this year, we also have to add 'latest' entries.
 
-
-s = opener(resources['payments'], parms)
     
-distinfo = s.readlines()
-
-csvreader = csv.reader(distinfo[1:-1])
-for row in csvreader:
-    if not (row[0].startswith('Month of')):
-        c = Club(row)
-        
-
-for i in range(len(distinfo)):
-    if distinfo[-i].startswith('Month of'):
-        freshness.append('District Performance data: %s' % distinfo[-i].strip())
-        break
-        
-
-
-             
-s.close()        
-
-# Now we need the information from the Area/Division report:
-s = opener(resources['division'], parms)
-divinfo = s.readlines()
-csvreader = csv.reader(divinfo[1:-1])
-for row in csvreader:
-    if not (row[0].startswith('Month of')):
-        c = clubs[int(row[3])]
-        c.octRenewal = int(row[5])  # October renewal
-        c.parentdiv.octRenewal += c.octRenewal
-        c.parentarea.octRenewal += c.octRenewal
-        c.aprRenewal = int(row[6])  # May renewal
-        c.parentdiv.aprRenewal += c.aprRenewal
-        c.parentarea.aprRenewal += c.aprRenewal
-        c.novVisit = int(row[7]) # 1st series visits
-        c.parentdiv.novVisit += c.novVisit
-        c.parentarea.novVisit += c.novVisit
-        c.mayVisit = int(row[8]) # 2nd series visits
-        c.parentdiv.mayVisit += c.mayVisit
-        c.parentarea.mayVisit += c.mayVisit
-        c.parentarea.base = int(row[12])
-        c.parentarea.paidgoals = [int(row[13]), int(row[14]), int(row[15])]
-        c.parentarea.paid = int(row[16])
-        c.parentarea.distgoals = [int(row[17]), int(row[18]), int(row[19])]
-        c.parentarea.dist = int(row[20])
-        c.parentarea.status = row[21]
-        c.parentdiv.base = int(row[22])
-        c.parentdiv.paidgoals = [int(row[23]), int(row[24]), int(row[25])]
-        c.parentdiv.paid = int(row[26])
-        c.parentdiv.distgoals = [int(row[27]), int(row[28]), int(row[29])]
-        c.parentdiv.dist = int(row[30])
-        c.parentdiv.status = row[31]
-
-for i in range(len(divinfo)):
-    if divinfo[-i].startswith('Month of'):
-        freshness.append('Division/Area Performance data: %s' % divinfo[-i].strip())
-        break
-
-# Now we get the club performance report for every month between the start of the TM year and today.  If we are in July,
-# we assume it's the previous TM year that matters.
-
-
-
-
-# OK, now start getting the info.  Since TMI doesn't let us ask for info for a month without specifying a day, we begin
-# by looking at the month end and continuing forward until we don't get any info.  Is this any way to run a railroad?
-## TODO: At least do a binary search instead of sequential!
-## Note:  This is not going to be changed to read from a file.
-
-def getresponse(url):
-    clubinfo = urllib.urlopen(url).readlines()
-    if len(clubinfo) < 10:
-        # We didn't get anything of value
-        clubinfo = False
-    return clubinfo
+# Get the last entry for which we have information for every club during the year.  '
+lastdistperf = {}
+lastareaperf = {}
+lastclubperf = {}
+curs.execute("select clubnumber, distperf_id, areaperf_id, clubperf_id from lastfor where tmyear = %s", 
+             (tmyear,))
+for (clubnumber, distperf_id, areaperf_id, clubperf_id) in curs.fetchall():
+    lastdistperf[clubnumber] = '%d' % distperf_id
+    lastareaperf[clubnumber] = '%d' % areaperf_id
+    lastclubperf[clubnumber] = '%d' % clubperf_id
     
-def findlastformonth(mm, yy, last=None):
-    info = Info(mm, yy)
-    url = makeurl('clubperformance', district, tmyearpiece, info.monthend, info.monthend)
-    good = info.monthend
-    clubinfo = getresponse(url)
-    for asof in info.next():
-        if (last) and (asof != last):
-            continue
-        print "getting response for ", asof
-        url = makeurl('clubperformance', district, tmyearpiece, info.monthend, asof)
-        newinfo = getresponse(url)
-        if not newinfo:
-            break
-        clubinfo = newinfo
-        good = asof
-    return (clubinfo, asof)
+alldistperf = ','.join(lastdistperf.values())
+allareaperf = ','.join(lastareaperf.values())
 
-for (mm, yy) in months:
-    filename = 'history.%0.4d-%0.2d.pickle' % (yy, mm)
-    try:
-        pfile = open(filename, 'rb')
-        clubinfo = pickle.load(pfile)
-        asof = pickle.load(pfile)
-        
-        ## If we're checking on last month's data, make sure it hasn't changed
-        if (mm, yy) == months[-2]:
-            oldasof = asof
-            (clubinfo, asof) = findlastformonth(mm, yy, last=asof)
-            if (asof != oldasof):
-                pfile.close()
-                pfile = open(filename, 'wb')
-                pickle.dump(clubinfo, pfile)
-                pickle.dump(asof, pfile)
-        
-    except Exception, e:
-        print e
-        (clubinfo, asof) = findlastformonth(mm, yy)
-        pfile = open(filename, 'wb')
-        pickle.dump(clubinfo, pfile)
-        pickle.dump(asof, pfile)
-    pfile.close()
-    # At this point, clubinfo has the last valid information for the month we care about
-    # But all we REALLY care about is the active membership!
-    if clubinfo:
-        untouched = {}
-        for k in clubs:
-            untouched[k] = True
-        csvreader = csv.reader(clubinfo[1:-1])
-        for row in csvreader:
-            untouched[int(row[3])] = False
-            try:
-                c = clubs[int(row[3])]
-            except KeyError:
-                ### Hmmm.  This club has vanished from the current report, but it's in an
-                ###   earlier report.  Let's create it in "suspended" status without a date.
-                c = Club(None, lostrow=row)
-            c.monthly.append(int(row[7]))
-        # And for any club without info, we need to put a blank in the monthly
-        for u in untouched.keys():
-            if untouched[u]:
-                clubs[u].monthly.append('')
+# Now, get basic club information from the DISTPERF table.
     
-## Now we have to get the current info.  We want all of it.
-clubinfo = opener(resources['current'], parms).readlines()
-dataasof = clubinfo[-1].strip()
-csvreader = csv.reader(clubinfo[1:-1])
-for row in csvreader:
-    row = [it.strip() for it in row]
-    c = clubs[int(row[3])]
-    c.status = row[4]
-    c.base = int(row[6])
-    c.current = int(row[7])
-    c.goals = int(row[8])
-    ## Continue by parsing DCP info,
-    c.dcpitems = [int(row[i]) for i in range(9, 22)]
-    c.dcpstat = row[22]
-    c.parentarea.counters[c.dcpstat] += 1
-    c.parentdiv.counters[c.dcpstat] += 1
+curs.execute("""select clubnumber, clubname, area, division, district, suspenddate from distperf where id in (%s)""" % alldistperf)
+
+# And create the master dictionary of clubs from those last entries
+clubs = {}
+for info in curs.fetchall():
+    clubnumber = info[0]
+    clubs[clubnumber] = Club(*info)
     
-for i in range(len(clubinfo)):
-    if clubinfo[-i].startswith('Month of'):
-        freshness.append('Club Performance data: %s' % clubinfo[-i].strip())
-        break;
-        
-class Outputfiles:
-    """ This should be a singleton, but I'm being lazy and promise not to instantiate it twice. """
+# We need to get charter date info specially, because Toastmasters is not consistently posting it to
+#    the performance files.  But if there's ever a charter date in the time we care about, use it.
+curs.execute("""select clubnumber, max(charterdate) as cd from distperf where monthstart >= %s and monthstart <= %s group by clubnumber having cd != '' """, (firstmonth, lastmonth))
+for (clubnumber, charterdate) in curs.fetchall():
+    clubs[clubnumber].charterdate = charterdate
     
-    def __init__(self):
-        self.files = {}
-        
-    def add(self, file):
-        self.files[file] = file
-        self.writeheader(file)
-        return file
-        
-    def close(self, file):
-        self.writefooter(file)
-        file.close()
-        del self.files[file]
-        
-    def write(self, what):
-        for f in self.files:
-            f.write(what)
+# @TODO:  Here's where we'd process club overrides.
+
+# And now, finish setting up the structure (creating Areas and Divisions, for example)
+for club in clubs.values():
+    club.finishSettingUp()
+
+# Now, get information from the Area/Division performance table.  We only need the latest one.
+
+
+# Now we need the information from the latest Area/Division report for each club:
+curs.execute("""select clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward, 
+                areaclubbase,
+                areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist,
+                totalpaidareaclubs,
+                areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist,
+                totaldistareaclubs,
+                distinguishedarea,
+                divisionclubbase,
+                divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist,
+                totalpaiddivisionclubs,
+                divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist,
+                totaldistdivisionclubs,
+                distinguisheddivision
+                
+                from areaperf where id in (%s)""" % allareaperf)
+for (clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward, 
+                areaclubbase,
+                areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist,
+                totalpaidareaclubs,
+                areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist,
+                totaldistareaclubs,
+                distinguishedarea,
+                divisionclubbase,
+                divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist,
+                totalpaiddivisionclubs,
+                divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist,
+                totaldistdivisionclubs,
+                distinguisheddivision) in curs.fetchall():
+    c = clubs[clubnumber]
+    c.octRenewal = octoberrenewals  # October renewal
+    c.parentdiv.octRenewal += c.octRenewal
+    c.parentarea.octRenewal += c.octRenewal
+    c.aprRenewal = aprilrenewals  # May renewal
+    c.parentdiv.aprRenewal += c.aprRenewal
+    c.parentarea.aprRenewal += c.aprRenewal
+    c.novVisit = novvisitaward # 1st series visits
+    c.parentdiv.novVisit += c.novVisit
+    c.parentarea.novVisit += c.novVisit
+    c.mayVisit = mayvisitaward # 2nd series visits
+    c.parentdiv.mayVisit += c.mayVisit
+    c.parentarea.mayVisit += c.mayVisit
+    c.parentarea.base = areaclubbase
+    c.parentarea.paidgoals = [areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist ]
+    c.parentarea.paid = totalpaidareaclubs
+    c.parentarea.distgoals = [areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist]
+    c.parentarea.dist = totaldistareaclubs
+    c.parentarea.status = distinguishedarea
+    c.parentdiv.base = divisionclubbase
+    c.parentdiv.paidgoals = [divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist]
+    c.parentdiv.paid = totalpaiddivisionclubs
+    c.parentdiv.distgoals = [divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist]
+    c.parentdiv.dist = totaldistdivisionclubs
+    c.parentdiv.status = distinguisheddivision
+
+
+# Now get the monthly membership for each interesting month and put it in the right place in the club.
+
+curs.execute("select clubnumber, activemembers, month(monthstart) from clubperf where entrytype in ('M', 'L') and monthstart >= %s and monthstart <= %s", (interesting[0], interesting[-1]))
+       
+for (clubnumber, activemembers, month) in curs.fetchall():
+    clubs[clubnumber].monthly[monthtoindex(month)] = activemembers
     
+# Now, get the current (or end-of-year, if a past year) information for each club.
 
-    def writeheader(self, outfile):    
-        outfile.write('''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-           ''')
-        outfile.write('<html>\n')
-        outfile.write('<head>\n')
-        outfile.write('<meta http-equiv="Content-Style-Type" content="text/css">\n')
-        outfile.write('<title>Toastmasters Statistics</title>\n')
-        outfile.write('<style type="text/css">\n')
-        outfile.write("""
+fieldnames = ['clubnumber', 'clubstatus', 'membase', 'activemembers', 'goalsmet', 'ccs', 'addccs', 'acs', 'addacs', 'claldtms', 'addclaldtms', 'newmembers', 'addnewmembers', 'offtrainedround1', 'offtrainedround2', 'memduesontimeoct', 'memduesontimeapr', 'offlistontime', 'clubdistinguishedstatus']
+fields = ','.join(fieldnames)
+dcprange = range(fieldnames.index('ccs'), 1+fieldnames.index('offlistontime'))
+if thisyear:
+    curs.execute("select %s from clubperf where entrytype = 'L'" % fields)
+else:
+    curs.execute("select %s from clubperf where entrytype = 'M' and monthstart = '%s' " % (fields, interesting[-1]))
 
-        html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
-              font-size: 75%;}
-      
-        table {font-size: 12px; border-width: 1px; border-spacing: 0; border-collapse: collapse; border-style: solid;}
-        td, th {border-color: black; border-width: 1px; border-style: solid; text-align: center; vertical-align: middle;
-            padding: 2px;}
+fetched = {}
+for row in curs.fetchall():
+    c = clubs[row[0]]
+    if row[0] in fetched:
+        print "club %s (%s) is already here" % (c.name, c.clubnumber)
+    fetched[row[0]] = True
+    c.status = row[1]
+    c.base = row[2]
+    c.current = row[3]
+    c.goals = row[4]
+    ## Continue by assigning DCP info
+    c.dcpitems = [row[i] for i in dcprange]
+    c.dcpStatus = row[fieldnames.index('clubdistinguishedstatus')]
+    c.parentarea.counters[c.dcpStatus] += 1
+    c.parentdiv.counters[c.dcpStatus] += 1
 
-        .name {text-align: left; font-weight: bold; width: 22%;}
-        .edate {border-left: none; font-weight: bold; width: 8%}
-        .belowmin {border-left: none; font-weight: bold; width: 8%;}
-        .number {text-align: right; width: 5%;}
-        .goals {border-left: none;}
-        .wide {width: 30% !important;}
 
-        .green {background-color: lightgreen; font-weight: bold;}
-        .yellow {background-color: yellow;}
-        .red {background-color: red;}
-        .rightalign {text-align: right;}
-        .sep {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
-        .greyback {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
-        
-        .madeit {background-color: lightblue; font-weight: bold;}
-        .statushead {border-right: none; }
-        .status {border-right: none; padding: 1px;}
-        .reverse {background-color: black; color: white;}
-        .bold {font-weight: bold;}
-        .italic {font-style: italic;}
-        .areacell {border: none;}
-        .areatable {margin-bottom: 18pt; width: 100%; page-break-inside: avoid; display: block;}
-        .suspended {text-decoration: line-through; color: red;}
 
-        .divtable {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
 
-        .divtable tfoot th {border: none;}
-        .footinfo {text-align: left;}
-        .dob {background-color: #c0c0c0;}
-        .grid {width: 2%;}
 
-        .todol {margin-top: 0;}
-        .todop {margin-bottom: 0; font-weight: bold;}
-        .status {font-weight: bold; font-size: 110%;}
-        
-        .clubcounts {margin-top: 12pt;}
-        .finale {border: none; break-after: always !important; display: block; float: none; position; relative; page-break-after: always !important; page-break-inside: avoid;}
-    
-        @media print { 
-            body {-webkit-print-color-adjust: exact !important;}
-                        td {padding: 1px !important;}}
-        """)
-        outfile.write('</style>\n')
-        outfile.write('</head>\n')
-        outfile.write('<body>\n')
-    
-    def writefooter(self, outfile):
-        outfile.write('</body>\n')
-        outfile.write('</html>\n')
-    
 outfiles = Outputfiles()
 
 outfile = outfiles.add(open("stats.html", "w"))
-
-
-
     
     
 freshness.append('Find current Educational Achievments at <a href="http://tinyurl.com/d4tmeduc">http://tinyurl.com/d4tmeduc</a>')
@@ -777,7 +725,10 @@ for d in sorted(divisions.keys()):
     divfile = outfiles.add(open(divfn, "w"))
     thisdiv = divisions[d]
    
-    outfiles.write('<h1 name="Div%s"><a href="%s">Division %s</a></h1>' % (d.lower(), divfn, d))
+    if (d != '0D'):
+        outfiles.write('<h1 name="Div%s"><a href="%s">Division %s</a></h1>' % (d.lower(), divfn, d))
+    else:
+        outfiles.write('<h1 name="Div%s"><a href="%s">Clubs Awaiting Alignment</a></h1>' % (d.lower(), divfn))
     
     
     
@@ -806,87 +757,88 @@ for d in sorted(divisions.keys()):
 
     outfiles.write('</table>\n')
     
-    outfiles.write('<h2>Division and Area Summary</h2>')
+    if (d != '0D'):
+        outfiles.write('<h2>Division and Area Summary</h2>')
     
-    # Now, write the status and to-dos in a nice format
+        # Now, write the status and to-dos in a nice format
     
-    outfiles.write('<table class="stattable">\n')
-    outfiles.write('<thead><tr>')
-    outfiles.write(th(' ', rowspan="2"))
-    outfiles.write(th('Requirements', forceclass="reverse"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('Club Visits to Qualify', colspan="2", forceclass="reverse"))   
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('For Distinguished', colspan="2", forceclass="reverse"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('For Select Distinguished', colspan="2", forceclass="reverse"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('For President\'s Distinguished', colspan="2", forceclass="reverse"))
+        outfiles.write('<table class="stattable">\n')
+        outfiles.write('<thead><tr>')
+        outfiles.write(th(' ', rowspan="2"))
+        outfiles.write(th('Requirements', forceclass="tabletop"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('Club Visits to Qualify', colspan="2", forceclass="tabletop"))   
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('For Distinguished', colspan="2", forceclass="tabletop"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('For Select Distinguished', colspan="2", forceclass="tabletop"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('For President\'s Distinguished', colspan="2", forceclass="tabletop"))
 
-    outfiles.write('</tr>\n<tr>')
-    outfiles.write(th('Status'))
-    outfiles.write(th('Cycle 1'))
-    outfiles.write(th('Cycle 2'))
-    outfiles.write(th('Paid Clubs'))
-    outfiles.write(th('Distinguished or Better'))
-    outfiles.write(th('Paid Clubs'))
-    outfiles.write(th('Distinguished or Better'))
-    outfiles.write(th('Paid Clubs'))
-    outfiles.write(th('Distinguished or Better'))
+        outfiles.write('</tr>\n<tr>')
+        outfiles.write(th('Status'))
+        outfiles.write(th('Cycle 1'))
+        outfiles.write(th('Cycle 2'))
+        outfiles.write(th('Paid Clubs'))
+        outfiles.write(th('Distinguished or Better'))
+        outfiles.write(th('Paid Clubs'))
+        outfiles.write(th('Distinguished or Better'))
+        outfiles.write(th('Paid Clubs'))
+        outfiles.write(th('Distinguished or Better'))
 
-    outfiles.write('</tr></thead>\n')
-    outfiles.write('</tr>\n')
-    outfiles.write('<tbody>\n')
-    outfiles.write('<tr>\n')
-    outfiles.write(thisdiv.statline())
-    outfiles.write('</tr>\n')
-
-
-
-
-
-    
-    for a in sorted(thisdiv.areas.keys()):
-        thisarea = thisdiv.areas[a]
+        outfiles.write('</tr></thead>\n')
+        outfiles.write('</tr>\n')
+        outfiles.write('<tbody>\n')
         outfiles.write('<tr>\n')
-        outfiles.write(thisarea.statline())
+        outfiles.write(thisdiv.statline())
         outfiles.write('</tr>\n')
 
+
+
+
+
+    
+        for a in sorted(thisdiv.areas.keys()):
+            thisarea = thisdiv.areas[a]
+            outfiles.write('<tr>\n')
+            outfiles.write(thisarea.statline())
+            outfiles.write('</tr>\n')
+
         
-    outfiles.write('</tbody>\n')
-    outfiles.write('</table>\n')
+        outfiles.write('</tbody>\n')
+        outfiles.write('</table>\n')
     
-    outfiles.write('<table class="clubcounts">\n')
-    outfiles.write('<thead><tr>')
-    outfiles.write(th(' ', rowspan="2"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('Club Totals', forceclass="reverse", colspan="14"))
-    outfiles.write('</tr>\n<tr>\n')
-    outfiles.write(th('Base', forceclass="greyback"))
-    outfiles.write(th('Suspended', forceclass="greyback"))
-    outfiles.write(th('Below Minimum', forceclass="greyback"))
-    outfiles.write(th('Chartered', forceclass="greyback"))
-    outfiles.write(th('Paid', forceclass="greyback"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="1"))
-    outfiles.write(th('Distinguished', forceclass="greyback"))
-    outfiles.write(th('Select Distinguished', forceclass="greyback"))
-    outfiles.write(th('President\'s Distinguished', forceclass="greyback"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="1"))
-    outfiles.write(th('Green', forceclass="green"))
-    outfiles.write(th('Yellow', forceclass="yellow"))
-    outfiles.write(th('Red', forceclass="red"))
-    outfiles.write('</tr></thead>\n<tbody><tr>\n')
+        outfiles.write('<table class="clubcounts">\n')
+        outfiles.write('<thead><tr>')
+        outfiles.write(th(' ', rowspan="2"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('Club Totals', forceclass="tabletop", colspan="14"))
+        outfiles.write('</tr>\n<tr>\n')
+        outfiles.write(th('Base', forceclass="greyback"))
+        outfiles.write(th('Suspended', forceclass="greyback"))
+        outfiles.write(th('Below Minimum', forceclass="greyback"))
+        outfiles.write(th('Chartered', forceclass="greyback"))
+        outfiles.write(th('Paid', forceclass="greyback"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="1"))
+        outfiles.write(th('Distinguished', forceclass="greyback"))
+        outfiles.write(th('Select Distinguished', forceclass="greyback"))
+        outfiles.write(th('President\'s Distinguished', forceclass="greyback"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="1"))
+        outfiles.write(th('Green', forceclass="green"))
+        outfiles.write(th('Yellow', forceclass="yellow"))
+        outfiles.write(th('Red', forceclass="red"))
+        outfiles.write('</tr></thead>\n<tbody><tr>\n')
     
-    outfiles.write(td(thisdiv.id))
-    outfiles.write(thisdiv.clubcounts())
-    outfiles.write('</tr>')
-    for a in sorted(thisdiv.areas.keys()):
-        thisarea = thisdiv.areas[a]
-        outfiles.write('<tr>')
-        outfiles.write(td(thisarea.id))
-        outfiles.write(thisarea.clubcounts())
+        outfiles.write(td(thisdiv.id))
+        outfiles.write(thisdiv.clubcounts())
         outfiles.write('</tr>')
-    outfiles.write('</tbody></table>\n')
+        for a in sorted(thisdiv.areas.keys()):
+            thisarea = thisdiv.areas[a]
+            outfiles.write('<tr>')
+            outfiles.write(td(thisarea.id))
+            outfiles.write(thisarea.clubcounts())
+            outfiles.write('</tr>')
+        outfiles.write('</tbody></table>\n')
     
     
     

@@ -5,6 +5,7 @@
 
 CREATE TABLE IF NOT EXISTS clubs (
     # This table is derived from the Toastmasters clublist and has mostly static data about clubs.
+    id INT UNSIGNED AUTO_INCREMENT,
     district INT,
     division CHAR(2),
     area CHAR(2),
@@ -28,7 +29,8 @@ CREATE TABLE IF NOT EXISTS clubs (
     advanced BOOL,
     firstdate date, 
     lastdate date,
-    primary key(clubnumber, firstdate)
+    PRIMARY KEY(id)
+    CONSTRAINT UNIQUE INDEX(clubnumber, firstdate)
 ) CHARACTER SET utf8;
         
 # Data currency table
@@ -38,6 +40,18 @@ CREATE TABLE IF NOT EXISTS loaded (
     loadedfor DATE,
     monthstart DATE,
     primary key(tablename, loadedfor)
+);
+
+# Last entry for every club for every year
+CREATE TABLE IF NOT EXISTS lastfor (
+    clubnumber INT,
+    tmyear INT,
+    clubperf_id INT,
+    areaperf_id INT,
+    distperf_id INT,
+    asof DATE,
+    monthstart DATE,
+    UNIQUE KEY(clubnumber, tmyear)
 );
         
 # Club changes table

@@ -74,6 +74,14 @@ fi
 ../loaddb.py
 let ret=$ret+$?
 
+# Update the lastfor table, normally for the last year, but if force, do all.
+if [[ "$force" = "force" ]]
+then
+    ../populatelastfor.py
+else
+    ../populatelastfor.py --latestonly
+fi
+
 # Move old files to history unless otherwise requested
 if [[ "$zip" = "zip" ]]
 then
