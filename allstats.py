@@ -3,7 +3,7 @@
 
 import  datetime,  os, sys,  math, time
 import dbconn, tmparms, latest, os, sys, argparse
-
+from tmutil import stringify
 
 from operator import attrgetter
 
@@ -19,6 +19,12 @@ clubs = {}
 divisions = {}
 
 ### Utility Functions ###
+
+def monthtoindex(m):
+    if m >= 7:
+        return m - 7
+    else:
+        return m + 5
             
 def colorcode(number):
     try:
@@ -98,12 +104,12 @@ class Club:
     """ All the information about a single club """
 
     
-    def __init__(self, clubname, clubnumber, area, division, district, suspenddate):
-        self.clubname = clubname
-        self.clubnumber = clubnumber
-        self.area = area
+    def __init__(self, clubnumber, clubname, area, division, district, suspenddate):
+        self.name = clubname
+        self.clubnumber = stringify(clubnumber)
+        self.area = stringify(area)
         self.division = division
-        self.district = district
+        self.district = stringify(district)
         self.suspenddate = suspenddate
         # Pre-set information in case it doesn't get filled in later (if the club only
         #    exists part of the year, for example, or if there is no charter info)
@@ -128,9 +134,9 @@ class Club:
         self.novVisit = 0
         self.mayVisit = 0
         self.place = self.district + ' ' + self.division + ' ' + self.area
-        self.monthly = []
+        self.monthly = [''] * 12
         self.key = self.place + " " + self.clubnumber
-        self.suspended = self.supenddate != ''
+        self.suspended = self.suspenddate != ''
         self.chartered = self.charterdate != ''
 
         if self.division not in divisions:
@@ -212,8 +218,11 @@ class Club:
                 ret += "\n        "
                 ret += td(r, colorcode(r))
             ret += td(self.current, colorcode(self.current))
-            need = min(20, self.base + 5) - self.current
-            if (need > 0) and (not self.suspended):
+            try:
+                need = min(20, self.base + 5) - self.current
+            except TypeError:
+                pass
+            if (not self.suspended) and (need > 0):
                 ret += td(need, forceclass="bold")
             else:
                 ret += td('')
@@ -512,24 +521,32 @@ complete.sort()
 firstmonth = '%d-07-01' % tmyear
 lastmonth = '%d-06-01' % (tmyear + 1)
 
-
-
 freshness = []
 freshness.append(time.strftime("Report created %m/%d/%Y %H:%M %Z", time.localtime()))
 
 # Let's get basic club information for all clubs which exist or have existed for the months in
 # question.  If we're getting information for this year, we also have to add 'latest' entries.
 
-if thisyear:
-    entrytypes = ['M', 'L']
-else:
-    entrytypes = ['M']
     
-# Get the last entry for which we have information for every club during the year.  
+# Get the last entry for which we have information for every club during the year.  '
+lastdistperf = {}
+lastareaperf = {}
+lastclubperf = {}
+curs.execute("select clubnumber, distperf_id, areaperf_id, clubperf_id from lastfor where tmyear = %s", 
+             (tmyear,))
+for (clubnumber, distperf_id, areaperf_id, clubperf_id) in curs.fetchall():
+    lastdistperf[clubnumber] = '%d' % distperf_id
+    lastareaperf[clubnumber] = '%d' % areaperf_id
+    lastclubperf[clubnumber] = '%d' % clubperf_id
     
-curs.execute("""select clubnumber, clubname, area, division, district, suspenddate from distperf where id in (select distperf.id from distperf inner join (select clubnumber, max(asof) as m from distperf where entrytype in %s and monthstart >= %s and monthstart <= %s group by clubnumber order by monthstart desc,  m desc, clubnumber) latest on distperf.clubnumber = latest.clubnumber and distperf.asof = latest.m)""", (entrytypes, firstmonth, lastmonth))
+alldistperf = ','.join(lastdistperf.values())
+allareaperf = ','.join(lastareaperf.values())
 
-# And create the master dictionary of clubs
+# Now, get basic club information from the DISTPERF table.
+    
+curs.execute("""select clubnumber, clubname, area, division, district, suspenddate from distperf where id in (%s)""" % alldistperf)
+
+# And create the master dictionary of clubs from those last entries
 clubs = {}
 for info in curs.fetchall():
     clubnumber = info[0]
@@ -537,185 +554,104 @@ for info in curs.fetchall():
     
 # We need to get charter date info specially, because Toastmasters is not consistently posting it to
 #    the performance files.  But if there's ever a charter date in the time we care about, use it.
-curs.execute("""select clubnumber, max(charterdate) as cd from distperf group by clubnumber having cd != '' """)
+curs.execute("""select clubnumber, max(charterdate) as cd from distperf where monthstart >= %s and monthstart <= %s group by clubnumber having cd != '' """, (firstmonth, lastmonth))
 for (clubnumber, charterdate) in curs.fetchall():
     clubs[clubnumber].charterdate = charterdate
     
 # @TODO:  Here's where we'd process club overrides.
 
 # And now, finish setting up the structure (creating Areas and Divisions, for example)
-for club in clubs:
+for club in clubs.values():
     club.finishSettingUp()
 
-
-# OK, now we start fetching monthly performance information for every complete month.
-
+# Now, get information from the Area/Division performance table.  We only need the latest one.
 
 
-#Start by getting current information about all clubs in the district, though all we really care about is 
-#charter and suspension dates.  
+# Now we need the information from the latest Area/Division report for each club:
+curs.execute("""select clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward, 
+                areaclubbase,
+                areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist,
+                totalpaidareaclubs,
+                areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist,
+                totaldistareaclubs,
+                distinguishedarea,
+                divisionclubbase,
+                divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist,
+                totalpaiddivisionclubs,
+                divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist,
+                totaldistdivisionclubs,
+                distinguisheddivision
+                
+                from areaperf where id in (%s)""" % allareaperf)
+for (clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward, 
+                areaclubbase,
+                areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist,
+                totalpaidareaclubs,
+                areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist,
+                totaldistareaclubs,
+                distinguishedarea,
+                divisionclubbase,
+                divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist,
+                totalpaiddivisionclubs,
+                divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist,
+                totaldistdivisionclubs,
+                distinguisheddivision) in curs.fetchall():
+    c = clubs[clubnumber]
+    c.octRenewal = octoberrenewals  # October renewal
+    c.parentdiv.octRenewal += c.octRenewal
+    c.parentarea.octRenewal += c.octRenewal
+    c.aprRenewal = aprilrenewals  # May renewal
+    c.parentdiv.aprRenewal += c.aprRenewal
+    c.parentarea.aprRenewal += c.aprRenewal
+    c.novVisit = novvisitaward # 1st series visits
+    c.parentdiv.novVisit += c.novVisit
+    c.parentarea.novVisit += c.novVisit
+    c.mayVisit = mayvisitaward # 2nd series visits
+    c.parentdiv.mayVisit += c.mayVisit
+    c.parentarea.mayVisit += c.mayVisit
+    c.parentarea.base = areaclubbase
+    c.parentarea.paidgoals = [areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist ]
+    c.parentarea.paid = totalpaidareaclubs
+    c.parentarea.distgoals = [areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist]
+    c.parentarea.dist = totaldistareaclubs
+    c.parentarea.status = distinguishedarea
+    c.parentdiv.base = divisionclubbase
+    c.parentdiv.paidgoals = [divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist]
+    c.parentdiv.paid = totalpaiddivisionclubs
+    c.parentdiv.distgoals = [divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist]
+    c.parentdiv.dist = totaldistdivisionclubs
+    c.parentdiv.status = distinguisheddivision
 
 
+# Now get the monthly membership for each complete month and put it in the right place in the club.
 
-s = opener(resources['payments'], parms)
+curs.execute("select clubnumber, activemembers, month(monthstart) from clubperf where entrytype = 'M' and monthstart >= %s and monthstart <= %s", (complete[0], complete[-1]))
+       
+for (clubnumber, activemembers, month) in curs.fetchall():
+    clubs[clubnumber].monthly[monthtoindex(month)] = activemembers
     
-distinfo = s.readlines()
+# Now, get the current (or end-of-year, if a past year) information for each club.
 
-csvreader = csv.reader(distinfo[1:-1])
-for row in csvreader:
-    if not (row[0].startswith('Month of')):
-        c = Club(row)
-        
+fieldnames = ['clubnumber', 'clubstatus', 'membase', 'activemembers', 'goalsmet', 'ccs', 'addccs', 'acs', 'addacs', 'claldtms', 'addclaldtms', 'newmembers', 'addnewmembers', 'offtrainedround1', 'offtrainedround2', 'memduesontimeoct', 'memduesontimeapr', 'offlistontime', 'clubdistinguishedstatus']
+fields = ','.join(fieldnames)
+dcprange = range(fieldnames.index('ccs'), 1+fieldnames.index('offlistontime'))
+if thisyear:
+    curs.execute("select %s from clubperf where entrytype = 'L'" % fields)
+else:
+    curs.execute("select %s from clubperf where entrytype = 'M' and monthstart = '%s' " % (fields, complete[-1]))
 
-for i in range(len(distinfo)):
-    if distinfo[-i].startswith('Month of'):
-        freshness.append('District Performance data: %s' % distinfo[-i].strip())
-        break
-        
-
-
-             
-s.close()        
-
-# Now we need the information from the Area/Division report:
-s = opener(resources['division'], parms)
-divinfo = s.readlines()
-csvreader = csv.reader(divinfo[1:-1])
-for row in csvreader:
-    if not (row[0].startswith('Month of')):
-        c = clubs[int(row[3])]
-        c.octRenewal = int(row[5])  # October renewal
-        c.parentdiv.octRenewal += c.octRenewal
-        c.parentarea.octRenewal += c.octRenewal
-        c.aprRenewal = int(row[6])  # May renewal
-        c.parentdiv.aprRenewal += c.aprRenewal
-        c.parentarea.aprRenewal += c.aprRenewal
-        c.novVisit = int(row[7]) # 1st series visits
-        c.parentdiv.novVisit += c.novVisit
-        c.parentarea.novVisit += c.novVisit
-        c.mayVisit = int(row[8]) # 2nd series visits
-        c.parentdiv.mayVisit += c.mayVisit
-        c.parentarea.mayVisit += c.mayVisit
-        c.parentarea.base = int(row[12])
-        c.parentarea.paidgoals = [int(row[13]), int(row[14]), int(row[15])]
-        c.parentarea.paid = int(row[16])
-        c.parentarea.distgoals = [int(row[17]), int(row[18]), int(row[19])]
-        c.parentarea.dist = int(row[20])
-        c.parentarea.status = row[21]
-        c.parentdiv.base = int(row[22])
-        c.parentdiv.paidgoals = [int(row[23]), int(row[24]), int(row[25])]
-        c.parentdiv.paid = int(row[26])
-        c.parentdiv.distgoals = [int(row[27]), int(row[28]), int(row[29])]
-        c.parentdiv.dist = int(row[30])
-        c.parentdiv.status = row[31]
-
-for i in range(len(divinfo)):
-    if divinfo[-i].startswith('Month of'):
-        freshness.append('Division/Area Performance data: %s' % divinfo[-i].strip())
-        break
-
-# Now we get the club performance report for every month between the start of the TM year and today.  If we are in July,
-# we assume it's the previous TM year that matters.
-
-
-
-
-# OK, now start getting the info.  Since TMI doesn't let us ask for info for a month without specifying a day, we begin
-# by looking at the month end and continuing forward until we don't get any info.  Is this any way to run a railroad?
-## TODO: At least do a binary search instead of sequential!
-## Note:  This is not going to be changed to read from a file.
-
-def getresponse(url):
-    clubinfo = urllib.urlopen(url).readlines()
-    if len(clubinfo) < 10:
-        # We didn't get anything of value
-        clubinfo = False
-    return clubinfo
-    
-def findlastformonth(mm, yy, last=None):
-    info = Info(mm, yy)
-    url = makeurl('clubperformance', district, tmyearpiece, info.monthend, info.monthend)
-    good = info.monthend
-    clubinfo = getresponse(url)
-    for asof in info.next():
-        if (last) and (asof != last):
-            continue
-        print "getting response for ", asof
-        url = makeurl('clubperformance', district, tmyearpiece, info.monthend, asof)
-        newinfo = getresponse(url)
-        if not newinfo:
-            break
-        clubinfo = newinfo
-        good = asof
-    return (clubinfo, asof)
-
-for (mm, yy) in months:
-    filename = 'history.%0.4d-%0.2d.pickle' % (yy, mm)
-    try:
-        pfile = open(filename, 'rb')
-        clubinfo = pickle.load(pfile)
-        asof = pickle.load(pfile)
-        
-        ## If we're checking on last month's data, make sure it hasn't changed
-        if (mm, yy) == months[-2]:
-            oldasof = asof
-            (clubinfo, asof) = findlastformonth(mm, yy, last=asof)
-            if (asof != oldasof):
-                pfile.close()
-                pfile = open(filename, 'wb')
-                pickle.dump(clubinfo, pfile)
-                pickle.dump(asof, pfile)
-        
-    except Exception, e:
-        print e
-        (clubinfo, asof) = findlastformonth(mm, yy)
-        pfile = open(filename, 'wb')
-        pickle.dump(clubinfo, pfile)
-        pickle.dump(asof, pfile)
-    pfile.close()
-    # At this point, clubinfo has the last valid information for the month we care about
-    # But all we REALLY care about is the active membership!
-    if clubinfo:
-        untouched = {}
-        for k in clubs:
-            untouched[k] = True
-        csvreader = csv.reader(clubinfo[1:-1])
-        for row in csvreader:
-            untouched[int(row[3])] = False
-            try:
-                c = clubs[int(row[3])]
-            except KeyError:
-                ### Hmmm.  This club has vanished from the current report, but it's in an
-                ###   earlier report.  Let's create it in "suspended" status without a date.
-                c = Club(None, lostrow=row)
-            c.monthly.append(int(row[7]))
-        # And for any club without info, we need to put a blank in the monthly
-        for u in untouched.keys():
-            if untouched[u]:
-                clubs[u].monthly.append('')
-    
-## Now we have to get the current info.  We want all of it.
-clubinfo = opener(resources['current'], parms).readlines()
-dataasof = clubinfo[-1].strip()
-csvreader = csv.reader(clubinfo[1:-1])
-for row in csvreader:
-    row = [it.strip() for it in row]
-    c = clubs[int(row[3])]
-    c.status = row[4]
-    c.base = int(row[6])
-    c.current = int(row[7])
-    c.goals = int(row[8])
-    ## Continue by parsing DCP info,
-    c.dcpitems = [int(row[i]) for i in range(9, 22)]
-    c.dcpstat = row[22]
+for row in curs.fetchall():
+    c = clubs[row[0]]
+    c.status = row[1]
+    c.base = row[2]
+    c.current = row[3]
+    c.goals = row[4]
+    ## Continue by assigning DCP info
+    c.dcpitems = [row[i] for i in dcprange]
+    c.dcpstat = row[fieldnames.index('clubdistinguishedstatus')]
     c.parentarea.counters[c.dcpstat] += 1
     c.parentdiv.counters[c.dcpstat] += 1
-    
-for i in range(len(clubinfo)):
-    if clubinfo[-i].startswith('Month of'):
-        freshness.append('Club Performance data: %s' % clubinfo[-i].strip())
-        break;
-        
+
 class Outputfiles:
     """ This should be a singleton, but I'm being lazy and promise not to instantiate it twice. """
     
