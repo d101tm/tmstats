@@ -645,7 +645,6 @@ if thisyear:
     curs.execute("select %s from clubperf where entrytype = 'L'" % fields)
 else:
     curs.execute("select %s from clubperf where entrytype = 'M' and monthstart = '%s' " % (fields, complete[-1]))
-print curs.rowcount, 'rows fetched'
 
 fetched = {}
 for row in curs.fetchall():
