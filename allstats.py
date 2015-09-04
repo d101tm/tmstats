@@ -531,7 +531,9 @@ district = '%02d' % parms.district
 today = datetime.date.today()
 (latestmonth, latestdate) = latest.getlatest('clubperf', conn)
 (latestyear, latestmonth) = [int(f) for f in latestmonth.split('-')[0:2]]
-
+latestdate = datetime.datetime.strptime(latestdate, "%Y-%m-%d")
+monthname = ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][latestmonth + 1]
+lateststamp = " from Toastmasters data for the month of " + monthname + latestdate.strftime(", current through %m/%d/%Y.")
 if latestmonth <= 6:
     latesttmyear = latesttmyear - 1
     
@@ -554,6 +556,7 @@ if tmyear < latestyear:
     # We assume all months are in the database.  If not, we'll find out what's missing the hard way.
     interestingmonths = range(1,13)
     thisyear = False
+    lateststamp = " from final Toastmasters data for the year %d-%d." % (tmyear, tmyear-1999)
 else:
     if latestmonth <= 6:
         # We have the previous July-December, plus months up to now.
@@ -573,7 +576,8 @@ firstmonth = '%d-07-01' % tmyear
 lastmonth = '%d-06-01' % (tmyear + 1)
 
 freshness = []
-freshness.append(time.strftime("Report created %m/%d/%Y %H:%M %Z", time.localtime()))
+freshness.append(time.strftime("Report created %m/%d/%Y %H:%M %Z", time.localtime()) + lateststamp)
+
 
 # Let's get basic club information for all clubs which exist or have existed for the months in
 # question.  If we're getting information for this year, we also have to add 'latest' entries.
