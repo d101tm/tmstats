@@ -99,6 +99,95 @@ def td(what, *classes, **kwds):
         what = '&nbsp;'
     return wrap('td', what, *classes, **kwds)
 
+class Outputfiles:
+    """ This should be a singleton, but I'm being lazy and promise not to instantiate it twice. """
+    
+    def __init__(self):
+        self.files = {}
+        
+    def add(self, file):
+        self.files[file] = file
+        self.writeheader(file)
+        return file
+        
+    def close(self, file):
+        self.writefooter(file)
+        file.close()
+        del self.files[file]
+        
+    def write(self, what):
+        for f in self.files:
+            f.write(what)
+    
+
+    def writeheader(self, outfile):    
+        outfile.write('''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+           ''')
+        outfile.write('<html>\n')
+        outfile.write('<head>\n')
+        outfile.write('<meta http-equiv="Content-Style-Type" content="text/css">\n')
+        outfile.write('<title>Toastmasters Statistics</title>\n')
+        outfile.write('<style type="text/css">\n')
+        outfile.write("""
+
+        html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
+              font-size: 75%;}
+      
+        table {font-size: 12px; border-width: 1px; border-spacing: 0; border-collapse: collapse; border-style: solid;}
+        td, th {border-color: black; border-width: 1px; border-style: solid; text-align: center; vertical-align: middle;
+            padding: 2px;}
+
+        .name {text-align: left; font-weight: bold; width: 22%;}
+        .edate {border-left: none; font-weight: bold; width: 8%}
+        .belowmin {border-left: none; font-weight: bold; width: 8%;}
+        .number {text-align: right; width: 5%;}
+        .goals {border-left: none;}
+        .wide {width: 30% !important;}
+
+        .green {background-color: lightgreen; font-weight: bold;}
+        .yellow {background-color: yellow;}
+        .red {background-color: red;}
+        .rightalign {text-align: right;}
+        .sep {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
+        .greyback {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
+        
+        .madeit {background-color: lightblue; font-weight: bold;}
+        .statushead {border-right: none; }
+        .status {border-right: none; padding: 1px;}
+        .tabletop {background-color: #505050; font-weight: normal; color: white;}
+        .reverse {background-color: black; color: white;}
+        .bold {font-weight: bold;}
+        .italic {font-style: italic;}
+        .areacell {border: none;}
+        .areatable {margin-bottom: 18pt; width: 100%; page-break-inside: avoid; display: block;}
+        .suspended {text-decoration: line-through; color: red;}
+
+        .divtable {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
+
+        .divtable tfoot th {border: none;}
+        .footinfo {text-align: left;}
+        .dob {background-color: #c0c0c0;}
+        .grid {width: 2%;}
+
+        .todol {margin-top: 0;}
+        .todop {margin-bottom: 0; font-weight: bold;}
+        .status {font-weight: bold; font-size: 110%;}
+        
+        .clubcounts {margin-top: 12pt;}
+        .finale {border: none; break-after: always !important; display: block; float: none; position; relative; page-break-after: always !important; page-break-inside: avoid;}
+    
+        @media print { 
+            body {-webkit-print-color-adjust: exact !important;}
+                        td {padding: 1px !important;}}
+        """)
+        outfile.write('</style>\n')
+        outfile.write('</head>\n')
+        outfile.write('<body>\n')
+    
+    def writefooter(self, outfile):
+        outfile.write('</body>\n')
+        outfile.write('</html>\n')
+    
 
 class Club:
     """ All the information about a single club """
@@ -178,7 +267,10 @@ class Club:
             ret += th('Club Name', docclass="name wide", rowspan="2", colspan="2")
             ret += th(' ', docclass="sep", rowspan="2")
         else:
-            ret += td(self.division + self.area.lstrip('0'))
+            if (self.division != '0D'):
+                ret += td(self.division + self.area.lstrip('0'))
+            else:
+                ret += td('&nbsp;')
             ret += td(self.clubnumber.lstrip('0'), docclass="rightalign")
             color = colorcode(self.current)
             if self.suspended:
@@ -206,24 +298,19 @@ class Club:
         
         # Membership
         if headers:
-            monthcolspan = 2+len(self.monthly) + (1 if thisyear else 0) 
+            monthcolspan = 2+len(self.monthly) 
             ret += th('Membership', colspan=repr(monthcolspan), docclass='.memhead')
-            row2 += th('Base', forceclass="reverse")
+            row2 += th('Base', forceclass="tabletop")
             months = ('Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun')
             for r in range(len(self.monthly)):
-                row2 += th(months[r], forceclass="reverse")
-            if thisyear:
-                row2 += th('Curr', forceclass="reverse")
-
-            row2 += th('Need', forceclass="reverse")
+                row2 += th(months[r], forceclass="tabletop")
+            row2 += th('Need', forceclass="tabletop")
             ret += th(' ', docclass="sep", rowspan="2")
         else:
             ret += td(self.base, forceclass="bold")
             for r in self.monthly:
                 ret += "\n        "
                 ret += td(r, colorcode(r))
-            if thisyear:
-                ret += td(self.current, colorcode(self.current))
             try:
                 need = min(20, self.base + 5) - self.current
             except TypeError:
@@ -262,23 +349,23 @@ class Club:
         # Specific DCP Goals
         if headers:
             ret += th('CCs', colspan="2")
-            row2 += th('1', forceclass="reverse")
-            row2 += th('2', forceclass="reverse")
+            row2 += th('1', forceclass="tabletop")
+            row2 += th('2', forceclass="tabletop")
             ret += th('ACs', colspan="2")
-            row2 += th('3', forceclass="reverse")
-            row2 += th('4', forceclass="reverse")
+            row2 += th('3', forceclass="tabletop")
+            row2 += th('4', forceclass="tabletop")
             ret += th('Lead', colspan="2")
-            row2 += th('5', forceclass="reverse")
-            row2 += th('6', forceclass="reverse")
+            row2 += th('5', forceclass="tabletop")
+            row2 += th('6', forceclass="tabletop")
             ret += th('Mem', colspan="2")
-            row2 += th('7', forceclass="reverse")
-            row2 += th('8', forceclass="reverse")
+            row2 += th('7', forceclass="tabletop")
+            row2 += th('8', forceclass="tabletop")
             ret += th('Trn', colspan="2")
-            row2 += th('9a', forceclass="reverse")
-            row2 += th('9b', forceclass="reverse")
+            row2 += th('9a', forceclass="tabletop")
+            row2 += th('9b', forceclass="tabletop")
             ret+= th('Ren|OL', colspan="2")
-            row2 += th('Ren.', forceclass="reverse")
-            row2 += th('OL', forceclass="reverse")
+            row2 += th('Ren.', forceclass="tabletop")
+            row2 += th('OL', forceclass="tabletop")
         else:
             ## CCs, ACs, Leadership, New Members
             dcpmins = (2, 2, 1, 1, 1, 1, 4, 4)
@@ -312,8 +399,8 @@ class Club:
         if headers:
             ret += th(' ', docclass="sep", rowspan="2")
             ret += th('Visits', colspan="2")
-            row2 += th('1', forceclass="reverse")
-            row2 += th('2', forceclass="reverse")
+            row2 += th('1', forceclass="tabletop")
+            row2 += th('2', forceclass="tabletop")
         else:
             ret += td(' ', docclass="sep")
             ret += td(self.novVisit, "grid", "bold madeit" if self.novVisit > 0 else "")
@@ -425,48 +512,6 @@ class Area(Aggregate):
         
         
 
-        
-    
-
-        
-class Info:
-    """ Information relative to a Toastmasters date """
-    lasts = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-    def __init__(self, m, y):
-
-
-        if (m == 2) and (0 == y % 4):
-            eom = (2, 29, y)
-        else:
-            eom = (m, self.lasts[m-1], y)
-            
-        self.monthend = '%d/%d/%d' % eom
-        if (m == 12):
-            self.nextday = [1, 1, y+1]
-        else:
-            self.nextday = [m+1, 1, y]
-        self.lastday = self.lasts[self.nextday[0]-1]
-        if (m == 1) and (0 == y % 4):
-            self.lastday = 29
-        
-    def next(self):
-        while (self.nextday[1] <= self.lastday):
-            yield '%d/%d/%d' % (self.nextday[0], self.nextday[1], self.nextday[2])
-            self.nextday[1] += 1
-   
-            
-    def __iter__(self):
-        return self
-
-def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
-    baseurl = "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=" + report + "~" + district
-    if monthend == "":
-        return baseurl + "~~~" + tmyearpiece
-    else:
-        return baseurl + "~" + monthend + "~" + asof + "~" + tmyearpiece
-        
-
-    
 # Make it easy to run under TextMate
 if 'TM_DIRECTORY' in os.environ:
     os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
@@ -486,7 +531,7 @@ district = '%02d' % parms.district
 today = datetime.date.today()
 (latestmonth, latestdate) = latest.getlatest('clubperf', conn)
 (latestyear, latestmonth) = [int(f) for f in latestmonth.split('-')[0:2]]
-# By definition, "thismonth" is NOT complete in the database.
+
 if latestmonth <= 6:
     latesttmyear = latesttmyear - 1
     
@@ -507,21 +552,21 @@ else:
 
 if tmyear < latestyear:
     # We assume all months are in the database.  If not, we'll find out what's missing the hard way.
-    completemonths = range(1,13)
+    interestingmonths = range(1,13)
     thisyear = False
 else:
     if latestmonth <= 6:
-        # We have the previous July-December, plus months up to now which are complete
-        completemonths = range(7,13)
-        completemonths.extend(range(1,latestmonth))
+        # We have the previous July-December, plus months up to now.
+        interestingmonths = range(7,13)
+        interestingmonths.extend(range(1,latestmonth+1))
         tmyear = latestyear - 1 
     else:
-        completemonths = range(7, latestmonth)
+        interestingmonths = range(7, latestmonth+1)
         tmyear = latestyear
     thisyear = True
 # Now, get the months to ask for from the database
-complete = ['%d-%02d-01' % (tmyear + (1 if n <=6 else 0), n ) for n in completemonths]
-complete.sort()
+interesting = ['%d-%02d-01' % (tmyear + (1 if n <=6 else 0), n ) for n in interestingmonths]
+interesting.sort()
 
 # And get the first and last months for queries:
 firstmonth = '%d-07-01' % tmyear
@@ -629,9 +674,9 @@ for (clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward,
     c.parentdiv.status = distinguisheddivision
 
 
-# Now get the monthly membership for each complete month and put it in the right place in the club.
+# Now get the monthly membership for each interesting month and put it in the right place in the club.
 
-curs.execute("select clubnumber, activemembers, month(monthstart) from clubperf where entrytype = 'M' and monthstart >= %s and monthstart <= %s", (complete[0], complete[-1]))
+curs.execute("select clubnumber, activemembers, month(monthstart) from clubperf where entrytype in ('M', 'L') and monthstart >= %s and monthstart <= %s", (interesting[0], interesting[-1]))
        
 for (clubnumber, activemembers, month) in curs.fetchall():
     clubs[clubnumber].monthly[monthtoindex(month)] = activemembers
@@ -644,7 +689,7 @@ dcprange = range(fieldnames.index('ccs'), 1+fieldnames.index('offlistontime'))
 if thisyear:
     curs.execute("select %s from clubperf where entrytype = 'L'" % fields)
 else:
-    curs.execute("select %s from clubperf where entrytype = 'M' and monthstart = '%s' " % (fields, complete[-1]))
+    curs.execute("select %s from clubperf where entrytype = 'M' and monthstart = '%s' " % (fields, interesting[-1]))
 
 fetched = {}
 for row in curs.fetchall():
@@ -662,100 +707,13 @@ for row in curs.fetchall():
     c.parentarea.counters[c.dcpStatus] += 1
     c.parentdiv.counters[c.dcpStatus] += 1
 
-class Outputfiles:
-    """ This should be a singleton, but I'm being lazy and promise not to instantiate it twice. """
-    
-    def __init__(self):
-        self.files = {}
-        
-    def add(self, file):
-        self.files[file] = file
-        self.writeheader(file)
-        return file
-        
-    def close(self, file):
-        self.writefooter(file)
-        file.close()
-        del self.files[file]
-        
-    def write(self, what):
-        for f in self.files:
-            f.write(what)
-    
 
-    def writeheader(self, outfile):    
-        outfile.write('''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-           ''')
-        outfile.write('<html>\n')
-        outfile.write('<head>\n')
-        outfile.write('<meta http-equiv="Content-Style-Type" content="text/css">\n')
-        outfile.write('<title>Toastmasters Statistics</title>\n')
-        outfile.write('<style type="text/css">\n')
-        outfile.write("""
 
-        html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
-              font-size: 75%;}
-      
-        table {font-size: 12px; border-width: 1px; border-spacing: 0; border-collapse: collapse; border-style: solid;}
-        td, th {border-color: black; border-width: 1px; border-style: solid; text-align: center; vertical-align: middle;
-            padding: 2px;}
 
-        .name {text-align: left; font-weight: bold; width: 22%;}
-        .edate {border-left: none; font-weight: bold; width: 8%}
-        .belowmin {border-left: none; font-weight: bold; width: 8%;}
-        .number {text-align: right; width: 5%;}
-        .goals {border-left: none;}
-        .wide {width: 30% !important;}
 
-        .green {background-color: lightgreen; font-weight: bold;}
-        .yellow {background-color: yellow;}
-        .red {background-color: red;}
-        .rightalign {text-align: right;}
-        .sep {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
-        .greyback {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
-        
-        .madeit {background-color: lightblue; font-weight: bold;}
-        .statushead {border-right: none; }
-        .status {border-right: none; padding: 1px;}
-        .reverse {background-color: black; color: white;}
-        .bold {font-weight: bold;}
-        .italic {font-style: italic;}
-        .areacell {border: none;}
-        .areatable {margin-bottom: 18pt; width: 100%; page-break-inside: avoid; display: block;}
-        .suspended {text-decoration: line-through; color: red;}
-
-        .divtable {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
-
-        .divtable tfoot th {border: none;}
-        .footinfo {text-align: left;}
-        .dob {background-color: #c0c0c0;}
-        .grid {width: 2%;}
-
-        .todol {margin-top: 0;}
-        .todop {margin-bottom: 0; font-weight: bold;}
-        .status {font-weight: bold; font-size: 110%;}
-        
-        .clubcounts {margin-top: 12pt;}
-        .finale {border: none; break-after: always !important; display: block; float: none; position; relative; page-break-after: always !important; page-break-inside: avoid;}
-    
-        @media print { 
-            body {-webkit-print-color-adjust: exact !important;}
-                        td {padding: 1px !important;}}
-        """)
-        outfile.write('</style>\n')
-        outfile.write('</head>\n')
-        outfile.write('<body>\n')
-    
-    def writefooter(self, outfile):
-        outfile.write('</body>\n')
-        outfile.write('</html>\n')
-    
 outfiles = Outputfiles()
 
 outfile = outfiles.add(open("stats.html", "w"))
-
-
-
     
     
 freshness.append('Find current Educational Achievments at <a href="http://tinyurl.com/d4tmeduc">http://tinyurl.com/d4tmeduc</a>')
@@ -767,7 +725,10 @@ for d in sorted(divisions.keys()):
     divfile = outfiles.add(open(divfn, "w"))
     thisdiv = divisions[d]
    
-    outfiles.write('<h1 name="Div%s"><a href="%s">Division %s</a></h1>' % (d.lower(), divfn, d))
+    if (d != '0D'):
+        outfiles.write('<h1 name="Div%s"><a href="%s">Division %s</a></h1>' % (d.lower(), divfn, d))
+    else:
+        outfiles.write('<h1 name="Div%s"><a href="%s">Clubs Awaiting Alignment</a></h1>' % (d.lower(), divfn))
     
     
     
@@ -796,87 +757,88 @@ for d in sorted(divisions.keys()):
 
     outfiles.write('</table>\n')
     
-    outfiles.write('<h2>Division and Area Summary</h2>')
+    if (d != '0D'):
+        outfiles.write('<h2>Division and Area Summary</h2>')
     
-    # Now, write the status and to-dos in a nice format
+        # Now, write the status and to-dos in a nice format
     
-    outfiles.write('<table class="stattable">\n')
-    outfiles.write('<thead><tr>')
-    outfiles.write(th(' ', rowspan="2"))
-    outfiles.write(th('Requirements', forceclass="reverse"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('Club Visits to Qualify', colspan="2", forceclass="reverse"))   
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('For Distinguished', colspan="2", forceclass="reverse"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('For Select Distinguished', colspan="2", forceclass="reverse"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('For President\'s Distinguished', colspan="2", forceclass="reverse"))
+        outfiles.write('<table class="stattable">\n')
+        outfiles.write('<thead><tr>')
+        outfiles.write(th(' ', rowspan="2"))
+        outfiles.write(th('Requirements', forceclass="tabletop"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('Club Visits to Qualify', colspan="2", forceclass="tabletop"))   
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('For Distinguished', colspan="2", forceclass="tabletop"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('For Select Distinguished', colspan="2", forceclass="tabletop"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('For President\'s Distinguished', colspan="2", forceclass="tabletop"))
 
-    outfiles.write('</tr>\n<tr>')
-    outfiles.write(th('Status'))
-    outfiles.write(th('Cycle 1'))
-    outfiles.write(th('Cycle 2'))
-    outfiles.write(th('Paid Clubs'))
-    outfiles.write(th('Distinguished or Better'))
-    outfiles.write(th('Paid Clubs'))
-    outfiles.write(th('Distinguished or Better'))
-    outfiles.write(th('Paid Clubs'))
-    outfiles.write(th('Distinguished or Better'))
+        outfiles.write('</tr>\n<tr>')
+        outfiles.write(th('Status'))
+        outfiles.write(th('Cycle 1'))
+        outfiles.write(th('Cycle 2'))
+        outfiles.write(th('Paid Clubs'))
+        outfiles.write(th('Distinguished or Better'))
+        outfiles.write(th('Paid Clubs'))
+        outfiles.write(th('Distinguished or Better'))
+        outfiles.write(th('Paid Clubs'))
+        outfiles.write(th('Distinguished or Better'))
 
-    outfiles.write('</tr></thead>\n')
-    outfiles.write('</tr>\n')
-    outfiles.write('<tbody>\n')
-    outfiles.write('<tr>\n')
-    outfiles.write(thisdiv.statline())
-    outfiles.write('</tr>\n')
-
-
-
-
-
-    
-    for a in sorted(thisdiv.areas.keys()):
-        thisarea = thisdiv.areas[a]
+        outfiles.write('</tr></thead>\n')
+        outfiles.write('</tr>\n')
+        outfiles.write('<tbody>\n')
         outfiles.write('<tr>\n')
-        outfiles.write(thisarea.statline())
+        outfiles.write(thisdiv.statline())
         outfiles.write('</tr>\n')
 
+
+
+
+
+    
+        for a in sorted(thisdiv.areas.keys()):
+            thisarea = thisdiv.areas[a]
+            outfiles.write('<tr>\n')
+            outfiles.write(thisarea.statline())
+            outfiles.write('</tr>\n')
+
         
-    outfiles.write('</tbody>\n')
-    outfiles.write('</table>\n')
+        outfiles.write('</tbody>\n')
+        outfiles.write('</table>\n')
     
-    outfiles.write('<table class="clubcounts">\n')
-    outfiles.write('<thead><tr>')
-    outfiles.write(th(' ', rowspan="2"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="2"))
-    outfiles.write(th('Club Totals', forceclass="reverse", colspan="14"))
-    outfiles.write('</tr>\n<tr>\n')
-    outfiles.write(th('Base', forceclass="greyback"))
-    outfiles.write(th('Suspended', forceclass="greyback"))
-    outfiles.write(th('Below Minimum', forceclass="greyback"))
-    outfiles.write(th('Chartered', forceclass="greyback"))
-    outfiles.write(th('Paid', forceclass="greyback"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="1"))
-    outfiles.write(th('Distinguished', forceclass="greyback"))
-    outfiles.write(th('Select Distinguished', forceclass="greyback"))
-    outfiles.write(th('President\'s Distinguished', forceclass="greyback"))
-    outfiles.write(th(' ', forceclass="sep", rowspan="1"))
-    outfiles.write(th('Green', forceclass="green"))
-    outfiles.write(th('Yellow', forceclass="yellow"))
-    outfiles.write(th('Red', forceclass="red"))
-    outfiles.write('</tr></thead>\n<tbody><tr>\n')
+        outfiles.write('<table class="clubcounts">\n')
+        outfiles.write('<thead><tr>')
+        outfiles.write(th(' ', rowspan="2"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="2"))
+        outfiles.write(th('Club Totals', forceclass="tabletop", colspan="14"))
+        outfiles.write('</tr>\n<tr>\n')
+        outfiles.write(th('Base', forceclass="greyback"))
+        outfiles.write(th('Suspended', forceclass="greyback"))
+        outfiles.write(th('Below Minimum', forceclass="greyback"))
+        outfiles.write(th('Chartered', forceclass="greyback"))
+        outfiles.write(th('Paid', forceclass="greyback"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="1"))
+        outfiles.write(th('Distinguished', forceclass="greyback"))
+        outfiles.write(th('Select Distinguished', forceclass="greyback"))
+        outfiles.write(th('President\'s Distinguished', forceclass="greyback"))
+        outfiles.write(th(' ', forceclass="sep", rowspan="1"))
+        outfiles.write(th('Green', forceclass="green"))
+        outfiles.write(th('Yellow', forceclass="yellow"))
+        outfiles.write(th('Red', forceclass="red"))
+        outfiles.write('</tr></thead>\n<tbody><tr>\n')
     
-    outfiles.write(td(thisdiv.id))
-    outfiles.write(thisdiv.clubcounts())
-    outfiles.write('</tr>')
-    for a in sorted(thisdiv.areas.keys()):
-        thisarea = thisdiv.areas[a]
-        outfiles.write('<tr>')
-        outfiles.write(td(thisarea.id))
-        outfiles.write(thisarea.clubcounts())
+        outfiles.write(td(thisdiv.id))
+        outfiles.write(thisdiv.clubcounts())
         outfiles.write('</tr>')
-    outfiles.write('</tbody></table>\n')
+        for a in sorted(thisdiv.areas.keys()):
+            thisarea = thisdiv.areas[a]
+            outfiles.write('<tr>')
+            outfiles.write(td(thisarea.id))
+            outfiles.write(thisarea.clubcounts())
+            outfiles.write('</tr>')
+        outfiles.write('</tbody></table>\n')
     
     
     
