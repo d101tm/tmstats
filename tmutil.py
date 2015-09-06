@@ -156,8 +156,8 @@ def showclubswithvalues(clubs, valuename, outfile):
     <th>Area</th><th>Club</th><th>%s</th>""" % valuename)
     else:
         outfile.write("""
-    <th style="visibility: hidden">&nbsp;
-    <th style="visibility: hidden">Area</th><th style="visibility: hidden">Club</th><th style="visibility: hidden">%s</th>""" % valuename)
+    <th class="DSShidden">&nbsp;
+    <th class="DSShidden">Area</th><th class="DSShidden">Club</th><th class="DSShidden">%s</th>""" % valuename)
     outfile.write("""
   </tr>
   </thead>
@@ -196,8 +196,8 @@ def showclubswithoutvalues(clubs, outfile):
     <th>Area</th><th>Club</th><th>""")
     else:
         outfile.write("""
-    <th style="visibility: hidden">&nbsp;
-    <th style="visibility: hidden">Area</th><th style="visibility: hidden">Club</th>""")
+    <th class="DSShidden">&nbsp;
+    <th class="DSShidden">Area</th><th class="DSShidden">Club</th>""")
     outfile.write("""
   </tr>
   </thead>
