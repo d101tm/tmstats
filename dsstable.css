@@ -1,7 +1,13 @@
 /* Declarations to make the tables come out nicely. The "DSS" is to ensure uniqueness,not ego. */
+.DSShidden {
+    visibility: hidden;
+    border-color: transparent !important;
+}
+
 .DSSctable {/* 3 columns per item,2 items per row */
     border-collapse:collapse;
-    width: 80%;
+    width: 96%;
+    table-layout: fixed;
 }
 .DSSctable thead tr th {
     background-color: #004165;
@@ -17,7 +23,7 @@
     border: 1px solid black;
 }
 .DSSctable tr th:nth-child(4n+1),.DSSctable tr td:nth-child(4n+1) {
-    width: 8%;
+    width: 6%;
     text-align: left;
     border-left: 1px solid black;
     border-right: 1px solid black;
@@ -29,7 +35,7 @@
     border-right: 1px solid black;
 }
 .DSSctable tr th:nth-child(4n+3),.DSSctable tr td:nth-child(4n+3) {
-    width: 8%;
+    width: 10%;
     text-align: right;
     border-left: 1px solid black;
     border-right: 1px solid black;
@@ -42,7 +48,8 @@
 }
 .DSSbtable {/* 2 columns per item,2 items per row */
     border-collapse:collapse;
-    width: 80%;
+    width: 96%;
+    table-layout: fixed;
 }
 .DSSbtable thead tr th {
     background-color: #004165;
@@ -58,13 +65,13 @@
     border: 1px solid black;
 }
 .DSSbtable tr th:nth-child(3n+1),.DSSbtable tr td:nth-child(3n+1) {
-    width: 8%;
+    width: 6%;
     text-align: left;
     border-left: 1px solid black;
     border-right: 1px solid black;
 }
 .DSSbtable tr th:nth-child(3n+2),.DSSbtable tr td:nth-child(3n+2) {
-    width: 42%;
+    width: 44%;
     text-align: left;
     border-left: 1px solid black;
     border-right: 1px solid black;
