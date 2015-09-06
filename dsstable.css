@@ -1,0 +1,77 @@
+/* Declarations to make the tables come out nicely. The "DSS" is to ensure uniqueness,not ego. */
+.DSSctable {/* 3 columns per item,2 items per row */
+    border-collapse:collapse;
+    width: 80%;
+}
+.DSSctable thead tr th {
+    background-color: #004165;
+    color: white;
+    border: 1px solid black;
+}
+.DSSctable tbody tr:nth-child(odd) {
+    background-color: #F2DF74;
+    border: 1px solid black;
+}
+.DSSctable tbody tr:nth-child(even) {
+    background-color: white;
+    border: 1px solid black;
+}
+.DSSctable tr th:nth-child(4n+1),.DSSctable tr td:nth-child(4n+1) {
+    width: 8%;
+    text-align: left;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+.DSSctable tr th:nth-child(4n+2),.DSSctable tr td:nth-child(4n+2) {
+    width: 34%;
+    text-align: left;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+.DSSctable tr th:nth-child(4n+3),.DSSctable tr td:nth-child(4n+3) {
+    width: 8%;
+    text-align: right;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+.DSSctable tr th:nth-child(4),.DSSctable tr td:nth-child(4) {
+    border-top: hidden;
+    border-bottom: hidden;
+    background-color: white;
+    width: 2%;
+}
+.DSSbtable {/* 2 columns per item,2 items per row */
+    border-collapse:collapse;
+    width: 80%;
+}
+.DSSbtable thead tr th {
+    background-color: #004165;
+    color: white;
+    border: 1px solid black;
+}
+.DSSbtable tbody tr:nth-child(odd) {
+    background-color: #F2DF74;
+    border: 1px solid black;
+}
+.DSSbtable tbody tr:nth-child(even) {
+    background-color: white;
+    border: 1px solid black;
+}
+.DSSbtable tr th:nth-child(3n+1),.DSSbtable tr td:nth-child(3n+1) {
+    width: 8%;
+    text-align: left;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+.DSSbtable tr th:nth-child(3n+2),.DSSbtable tr td:nth-child(3n+2) {
+    width: 42%;
+    text-align: left;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+.DSSbtable tr th:nth-child(3),.DSSbtable tr td:nth-child(3) {
+    border-top: hidden;
+    border-bottom: hidden;
+    background-color: white;
+    width: 2%;
+}
