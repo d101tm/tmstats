@@ -48,12 +48,12 @@ outfile = parms.outfile
 # If there's monthly data for the end date, use it; otherwise, use
 #   today's data.
 
-curs.execute("SELECT c.clubnumber, c.clubname, c.asof, c.activemembers - p.activemembers AS delta, c.division, c.area FROM clubperf c INNER JOIN (SELECT activemembers, clubnumber FROM clubperf WHERE monthstart=%s AND entrytype = 'M') p ON p.clubnumber = c.clubnumber WHERE monthstart=%s AND entrytype = 'M'  HAVING delta >= 5 ORDER BY c.division, c.area" , (startmonth, endmonth))
+curs.execute("SELECT c.clubnumber, c.clubname, c.asof, (c.activemembers - c.membase) - (p.activemembers - p.membase) AS delta, c.division, c.area FROM clubperf c INNER JOIN (SELECT activemembers, membase, clubnumber FROM clubperf WHERE monthstart=%s AND entrytype = 'M') p ON p.clubnumber = c.clubnumber WHERE monthstart=%s AND entrytype = 'M'  HAVING delta >= 5 ORDER BY c.division, c.area" , (startmonth, endmonth))
 if curs.rowcount:
     final = True
 else:
     # No data returned; use today's data instead
-    curs.execute("SELECT c.clubnumber, c.clubname, c.asof, c.activemembers - p.activemembers AS delta, c.division, c.area FROM clubperf c INNER JOIN (SELECT activemembers, clubnumber FROM clubperf WHERE monthstart=%s AND entrytype = 'M')  p ON p.clubnumber = c.clubnumber WHERE entrytype = 'L'  HAVING delta >= 5 ORDER BY c.division, c.area;",  (startmonth,))
+    curs.execute("SELECT c.clubnumber, c.clubname, c.asof, (c.activemembers - c.membase) - (p.activemembers - p.membase) AS delta, c.division, c.area FROM clubperf c INNER JOIN (SELECT activemembers, membase, clubnumber FROM clubperf WHERE monthstart=%s AND entrytype = 'M')  p ON p.clubnumber = c.clubnumber WHERE entrytype = 'L'  HAVING delta >= 5 ORDER BY c.division, c.area;",  (startmonth,))
     final = False
 
 clubs = []
