@@ -45,14 +45,14 @@ if __name__ == "__main__":
     parms.netfile.write('"Club Name","Members Added"\n')
     curs.execute("select clubname, activemembers - membase as net from clubperf where entrytype = 'L'  having net > 0 and net >= (select min(net) from (select activemembers - membase as net from clubperf where entrytype = 'L' order by net desc limit 10) m) order by net desc, clubname")
     for l in curs.fetchall():
-        parms.netfile.write('"%s", %d\n' % (l[0], l[1]))
+        parms.netfile.write('%s, %d\n' % (l[0].replace(',',';'), l[1]))
     parms.netfile.close()
      
     # And now, the biggest clubs
     parms.bigfile.write('"Club Name", "Active Members"\n')
     curs.execute("select clubname, activemembers from clubperf where entrytype = 'L' having activemembers >= (select min(activemembers) from (select activemembers from clubperf where entrytype = 'L' order by activemembers desc limit 10) m) order by activemembers desc, clubname")
     for l in curs.fetchall():
-        parms.bigfile.write('"%s", %d\n' % (l[0], l[1]))
+        parms.bigfile.write('%s, %d\n' % (l[0].replace(',',';'), l[1]))
     parms.bigfile.close()    
     
     # And that's it.
