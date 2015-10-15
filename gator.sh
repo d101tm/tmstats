@@ -144,6 +144,12 @@ if [[ "$dorun" = "yes" ]] ; then
         ../sanity.py
     fi
     
+    ### Run other statistics
+    if (( $haveperf == 0 )) ; then
+        echo "Running club sizes"
+        ../clubsizes.py
+    fi
+    
     ### Run daily housekeeping
     if (( $haveclubs == 0 )) ; then
         echo "Building Area/Division page"
