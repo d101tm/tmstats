@@ -56,6 +56,8 @@ else:
     curs.execute("SELECT c.clubnumber, c.clubname, c.asof, (c.activemembers - c.membase) - (p.activemembers - p.membase) AS delta, c.division, c.area FROM clubperf c INNER JOIN (SELECT activemembers, membase, clubnumber FROM clubperf WHERE monthstart=%s AND entrytype = 'M')  p ON p.clubnumber = c.clubnumber WHERE entrytype = 'L'  HAVING delta >= 5 ORDER BY c.division, c.area;",  (startmonth,))
     final = False
 
+status = "final" if final else "updated daily"
+
 clubs = []
 for c in curs.fetchall():
     clubs.append(myclub(*c))
@@ -65,8 +67,8 @@ awards = [c for c in clubs if not c.stretch]
 
 outfile.write("""<h3 id="smedley">Smedley Stretch and Smedley Award</h3>
 <p>
-Clubs adding 5 or more new, reinstated, or dual members between August 1 and September 30 receive the <q>Smedley Award</q> from Toastmasters International.  Clubs which add 7 or more new, reinstated, or dual members during that time also complete the <q>Smedley Stretch</q> and earn $50 in District Credit.  This report is updated daily.</p>
-""")
+Clubs adding 5 or more new, reinstated, or dual members between August 1 and September 30 receive the <q>Smedley Award</q> from Toastmasters International.  Clubs which add 7 or more new, reinstated, or dual members during that time also complete the <q>Smedley Stretch</q> and earn $50 in District Credit.  This report is %s.</p>
+""" % status)
 
 if len(stretchers) > 0:
     outfile.write("<h4>Smedley Stretchers</h4>\n")

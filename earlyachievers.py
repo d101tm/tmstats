@@ -52,6 +52,8 @@ else:
     curs.execute("SELECT clubnumber, clubname, asof, goalsmet, division, area FROM clubperf WHERE entrytype = 'L'")
     final = False
 
+status = "final" if final else "updated daily"
+
 clubs = []
 for c in curs.fetchall():
     clubs.append(myclub(*c))
@@ -61,8 +63,8 @@ almost = [c for c in clubs if c.goalsmet == 4]
 
 outfile.write("""<h3 id="early">Early Achievers</h3>
 <p>
-Clubs achieving 5 or more Distinguished Club Program (DCP) goals by October 31 earn $100 in District Credit.  This report is updated daily.</p>
-""")
+Clubs achieving 5 or more Distinguished Club Program (DCP) goals by October 31 earn $100 in District Credit.  This report is %s.</p>
+""" % status)
 
 if len(winners) > 0:
     outfile.write("<h4>Early Achievers</h4>\n")
