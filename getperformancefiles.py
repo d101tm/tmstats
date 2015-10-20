@@ -96,6 +96,7 @@ if __name__ == "__main__":
     enddate = datetime.strptime(cleandate(parms.enddate), '%Y-%m-%d').date()
     if parms.startdate:
         startdate = datetime.strptime(cleandate(parms.startdate), '%Y-%m-%d').date()
+        (lastmonth, last) = (False, False)
     else:
         # If nothing was specified, start with the latest date in the database.
         import dbconn, latest
@@ -139,7 +140,13 @@ if __name__ == "__main__":
             months.append(m)
             if m == startdate.month:
                 break
+    
+    # Don't look for data for months earlier than the most recent data in the database
+    if lastmonth:
+        monthnum = int(lastmonth[5:7])
+        months = months[months.index(monthnum):]
     months = [(m, tmyear + (1 if m <= 6 else 0)) for m in months]
+    
 
     # We assume all reports have identical availabilities, so we
     #    use the clubperf report to find the first available report
