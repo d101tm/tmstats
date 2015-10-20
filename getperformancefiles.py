@@ -21,10 +21,7 @@ def monthend(m, y):
 
 def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
     baseurl = "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=" + report + "~" + district
-    if monthend == "":
-        return baseurl + "~~~" + tmyearpiece
-    else:
-        return baseurl + "~" + monthend + "~" + asof + "~" + tmyearpiece
+    return baseurl + "~" + monthend + "~" + asof + "~" + tmyearpiece
 
         
 def getresponse(url):
@@ -63,16 +60,18 @@ def writedailyreports(data, district, tmyearpiece, month, thedate):
     with open(makefilename('distperf', thedate), 'w') as f:
         f.write(''.join(data).replace('\r',''))
     
-def dolatest(district):
-    for (urlpart, filepart) in (('clubperformance', 'clubperf'), 
-                                ('divisionperformance', 'areaperf'),
-                                ('districtperformance', 'distperf')):
-        url = makeurl(urlpart, district)
-        data = getresponse(url)
-        if data:
-            thedate = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d').date()  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
-            with open(makefilename(filepart, thedate), 'w') as f:
-                f.write(''.join(data).replace('\r',''))
+def dolatest(district, finals, tmyearpiece):
+    for monthend in finals:
+        for (urlpart, filepart) in (('clubperformance', 'clubperf'), 
+                                    ('divisionperformance', 'areaperf'),
+                                    ('districtperformance', 'distperf')):
+            url = makeurl(urlpart, district, monthend=monthend, tmyearpiece=tmyearpiece)
+            data = getresponse(url)
+            if data:
+                thedate = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d').date()  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
+                with open(makefilename(filepart, thedate), 'w') as f:
+                    f.write(''.join(data).replace('\r',''))
+                print 'Updated %s for %s (month: %s, year: %s)' % (filepart, thedate, monthend, tmyearpiece)
 
 if __name__ == "__main__":
     
@@ -147,6 +146,11 @@ if __name__ == "__main__":
         months = months[months.index(monthnum):]
     months = [(m, tmyear + (1 if m <= 6 else 0)) for m in months]
     
+    # Save the final and next-to-final months for "dolatest" to cope with Toastmasters'
+    #  most recent change (not including Charter/Suspend info unless a month is given)
+    finals = [monthend(m[0],m[1]) for m in months[-2:]]
+    
+    
 
     # We assume all reports have identical availabilities, so we
     #    use the clubperf report to find the first available report
@@ -205,7 +209,7 @@ if __name__ == "__main__":
 
     if enddate.year == today.year and enddate.month == today.month and enddate.day == today.day:
         print "Getting the latest performance info"
-        dolatest(district)
+        dolatest(district, finals, tmyearpiece)
         
         
     # And get and write current club data unless told not to
