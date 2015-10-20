@@ -6,7 +6,7 @@
 import dbconn, tmparms, xlrd, csv
 import os, sys, urllib2
 from simpleclub import Club
-from tmutil import overrideClubs
+from tmutil import overrideClubs, removeSuspendedClubs
 
 class Division():
     divisions = {}
@@ -150,6 +150,9 @@ clubs = Club.getClubsOn(curs)
 
 if parms.newAlignment:
     overrideClubs(clubs, parms.newAlignment)
+    
+# Remove suspended clubs
+clubs = removeSuspendedClubs(clubs, curs)
 
 
 # Now, assign clubs to Areas and Divisions

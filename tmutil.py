@@ -143,6 +143,16 @@ def overrideClubs(clubs, newAlignment):
             
     return clubs
     
+def removeSuspendedClubs(clubs, curs):
+    """ Removes currently suspended clubs from the clubs array.
+        Uses the 'distperf' table for the suspension information. """
+    curs.execute("SELECT clubnumber FROM distperf WHERE id in (SELECT distperf_id FROM lastfor WHERE tmyear = (SELECT max(tmyear) FROM lastfor)) AND suspenddate != ''")
+    for ans in curs.fetchall():
+        clubnum = numToString(ans[0])
+        if clubnum in clubs:
+            del clubs[clubnum]
+    return clubs
+    
 def showclubswithvalues(clubs, valuename, outfile):
     """ Outputs clubs in a 2-column table. """
     

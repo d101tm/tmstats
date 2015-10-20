@@ -6,7 +6,7 @@
 import sys, re, os
 from simpleclub import Club
 import tmparms, dbconn
-from tmutil import cleandate, overrideClubs
+from tmutil import cleandate, overrideClubs, removeSuspendedClubs
 
 
 # Create the templates
@@ -136,6 +136,9 @@ clubs = Club.getClubsOn(curs, parms.date)
 # And override it if needed.
 if parms.newAlignment:
     overrideClubs(clubs, parms.newAlignment)
+    
+# And remove suspended clubs.
+clubs = removeSuspendedClubs(clubs, curs)
     
 cities = {}
 
