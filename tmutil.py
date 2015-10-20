@@ -146,7 +146,12 @@ def overrideClubs(clubs, newAlignment):
 def removeSuspendedClubs(clubs, curs):
     """ Removes currently suspended clubs from the clubs array.
         Uses the 'distperf' table for the suspension information. """
-    curs.execute("SELECT clubnumber FROM distperf WHERE id in (SELECT distperf_id FROM lastfor WHERE tmyear = (SELECT max(tmyear) FROM lastfor)) AND suspenddate != ''")
+    curs.execute("SELECT MAX(tmyear) FROM lastfor")
+    tmyear = curs.fetchone()[0]
+    curs.execute("SELECT distperf_id FROM lastfor WHERE tmyear = %s", (tmyear,))
+    idlist = ','.join(['%d' % ans[0] for ans in curs.fetchall()])
+    curs.execute("SELECT clubnumber FROM distperf WHERE id IN (" + idlist + ")")
+
     for ans in curs.fetchall():
         clubnum = numToString(ans[0])
         if clubnum in clubs:
