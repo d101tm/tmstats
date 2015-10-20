@@ -150,7 +150,7 @@ def removeSuspendedClubs(clubs, curs):
     tmyear = curs.fetchone()[0]
     curs.execute("SELECT distperf_id FROM lastfor WHERE tmyear = %s", (tmyear,))
     idlist = ','.join(['%d' % ans[0] for ans in curs.fetchall()])
-    curs.execute("SELECT clubnumber FROM distperf WHERE id IN (" + idlist + ")")
+    curs.execute("SELECT clubnumber FROM distperf WHERE id IN (" + idlist + ") AND suspenddate != ''")
 
     for ans in curs.fetchall():
         clubnum = numToString(ans[0])
