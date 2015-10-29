@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS clubs (
     advanced BOOL,
     firstdate date, 
     lastdate date,
-    PRIMARY KEY(id)
+    PRIMARY KEY(id),
     CONSTRAINT UNIQUE INDEX(clubnumber, firstdate)
 ) CHARACTER SET utf8;
         
