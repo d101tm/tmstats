@@ -118,6 +118,12 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     expectedheaderscount = len(dbheaders)
     dbheaders.append('firstdate')
     dbheaders.append('lastdate')     # For now...
+    
+    # Remove latitude and longitude for now.
+    if 'latitude' in dbheaders:
+        dbheaders.remove('latitude')
+    if 'longitude' in dbheaders:
+        dbheaders.remove('longitude')
   
     Club.setfieldnames(dbheaders)
 
