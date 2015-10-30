@@ -143,14 +143,19 @@ def overrideClubs(clubs, newAlignment):
             
     return clubs
     
-def removeSuspendedClubs(clubs, curs):
-    """ Removes currently suspended clubs from the clubs array.
+def removeSuspendedClubs(clubs, curs, date=None):
+    """ Removes suspended clubs from the clubs array.
+        If date=None, removes currently suspended clubs; otherwise, removes clubs which were 
+        suspended as of that date.
         Uses the 'distperf' table for the suspension information. """
-    curs.execute("SELECT MAX(tmyear) FROM lastfor")
-    tmyear = curs.fetchone()[0]
-    curs.execute("SELECT distperf_id FROM lastfor WHERE tmyear = %s", (tmyear,))
-    idlist = ','.join(['%d' % ans[0] for ans in curs.fetchall()])
-    curs.execute("SELECT clubnumber FROM distperf WHERE id IN (" + idlist + ") AND suspenddate != ''")
+    if date:
+        curs.execute("SELECT clubnumber FROM distperf WHERE suspenddate != '' AND asof = (select min(d) FROM (SELECT %s AS d UNION ALL SELECT MAX(asof) FROM distperf) q)", (date,))
+    else:
+        curs.execute("SELECT MAX(tmyear) FROM lastfor")
+        tmyear = curs.fetchone()[0]
+        curs.execute("SELECT distperf_id FROM lastfor WHERE tmyear = %s", (tmyear,))
+        idlist = ','.join(['%d' % ans[0] for ans in curs.fetchall()])
+        curs.execute("SELECT clubnumber FROM distperf WHERE id IN (" + idlist + ") AND suspenddate != ''")
 
     for ans in curs.fetchall():
         clubnum = numToString(ans[0])

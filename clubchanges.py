@@ -13,7 +13,7 @@
 """
 from simpleclub import Club
 import os, sys
-from tmutil import cleandate
+from tmutil import cleandate, removeSuspendedClubs
 import datetime, argparse
 
 
@@ -59,12 +59,15 @@ if __name__ == "__main__":
     namestocompare = ['place', 'address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime', 'area', 'division', 'district']
     # Get information for clubs as of the "from" date:
     oldclubs = Club.getClubsOn(curs, date=fromdate, goodnames=namestocompare)
+    oldclubs = removeSuspendedClubs(oldclubs, curs, date=fromdate)
     newclubs = {}   # Where clubs created during the period go
     changedclubs = {}  # Where clubs changed during the period go
 
     
     # And compare to the the list of clubs at the end of the period
     allclubs = Club.getClubsOn(curs, date=todate)
+    allclubs = removeSuspendedClubs(allclubs, curs, date=todate)
+    
     for club in allclubs.values():
         if club.clubnumber not in oldclubs:
             club.info = 'New Club'
