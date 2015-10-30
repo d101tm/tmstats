@@ -174,7 +174,7 @@ class Outputfiles:
         .status {font-weight: bold; font-size: 110%;}
         
         .clubcounts {margin-top: 12pt;}
-        .finale {border: none; break-after: always !important; display: block; float: none; position; relative; page-break-after: always !important; page-break-inside: avoid;}
+        .finale {border: none; break-after: always !important; display: block; float: none; position: relative; page-break-after: always !important; page-break-inside: avoid;}
     
         @media print { 
             body {-webkit-print-color-adjust: exact !important;}
