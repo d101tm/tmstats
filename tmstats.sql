@@ -195,3 +195,19 @@ CREATE TABLE IF NOT EXISTS geo (
     types VARCHAR(100),
     INDEX(id)
 );
+
+CREATE TABLE IF NOT EXISTS awards (
+    id INT UNSIGNED AUTO_INCREMENT,
+    clubnumber INT,
+    clubname VARCHAR(100),
+    division CHAR(2),
+    area CHAR(2),
+    award CHAR(8),
+    awarddate DATE,
+    membername VARCHAR(100),
+    clublocation VARCHAR(100),
+    tmyear INT,
+    PRIMARY KEY (id),
+    CONSTRAINT UNIQUE INDEX (clubnumber, membername, award, awarddate)
+) CHARACTER SET utf8;
+

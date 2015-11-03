@@ -149,6 +149,11 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running club sizes"
         ../clubsizes.py
     fi
+
+    if (( $haveperf == 0 )) ; then
+        echo "Running award tallies"
+        ../awardtallies.py
+    fi
     
     ### Run daily housekeeping
     if (( $haveclubs == 0 )) ; then

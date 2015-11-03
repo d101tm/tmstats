@@ -7,6 +7,8 @@
 #   2:  club info not received
 #   4:  performance info not received
 
+# We also get educational achievements but the return code is unaffected.
+
 
 # Even if we're running in a weird shell, let's use THIS directory as the current directory
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
@@ -87,6 +89,10 @@ if [[ "$zip" = "zip" ]]
 then
     zip -mT history.zip clubs.*.csv clubperf.*.csv areaperf.*.csv distperf.*.csv -x clubs.$today.csv *perf.$yday.csv
 fi
+
+# Get the educational achievements
+../geteducationals.py
+
 
 # And exit
 exit $ret
