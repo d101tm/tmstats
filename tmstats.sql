@@ -208,6 +208,7 @@ CREATE TABLE IF NOT EXISTS awards (
     clublocation VARCHAR(100),
     tmyear INT,
     PRIMARY KEY (id),
-    CONSTRAINT UNIQUE INDEX (clubnumber, membername, award, awarddate)
+    INDEX (award),
+    INDEX (division)
 ) CHARACTER SET utf8;
 
