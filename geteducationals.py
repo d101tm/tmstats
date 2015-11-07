@@ -64,6 +64,11 @@ if __name__ == "__main__":
     line = starter.find_next_sibling("tr")
     while line:
         candidate = [s.strip() for s in line.stripped_strings]
+        line = line.find_next_sibling("tr")
+        
+        if candidate[3].startswith("P"):
+            continue   # Skip pending awards
+            
         # Reformat the date
         dparts = candidate[4].split('/')
         candidate[4] = dparts[2] + '-' + dparts[0] + '-' + dparts[1]
@@ -75,7 +80,6 @@ if __name__ == "__main__":
         if makekey(candidate[5], candidate[0], candidate[3], candidate[4]) not in existing:
             awards.append(candidate)
         
-        line = line.find_next_sibling("tr")
     # And insert awards into the database
     if awards:
         changecount = curs.executemany("INSERT INTO awards (clubnumber, division, area, award, awarddate, membername, clubname, clublocation, tmyear) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)", awards)     
