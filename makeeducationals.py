@@ -48,7 +48,9 @@ class Award:
             awards[award] = []
         awards[award].append(self)
         if award not in knowns:
-            unknowns = unknowns + award
+            print award
+            unknowns.add(award)
+            print unknowns
             
     def __repr__(self):
         return '<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (self.membername, self.clubname, self.awarddate.strftime('%m/%d/%Y'))
@@ -104,7 +106,22 @@ if __name__ == "__main__":
         Award(membername, award, clubname, awarddate)
         
     for k in commtrack:
-        print knownawards[k]
-        for each in sorted(awards[k], key=lambda x:x.key):
-            print each
+        if k in awards:
+            print knownawards[k]
+            for each in sorted(awards[k], key=lambda x:x.key):
+                print each
+            
+    for k in ldrtrack:
+        if k in awards:
+            print knownawards[k]
+            for each in sorted(awards[k], key=lambda x:x.key):
+                print each
+                
+    print unknowns
+            
+    for k in sorted(unknowns):
+        if k in awards:
+            print k
+            for each in sorted(awards[k], key=lambda x:x.key):
+                print each
         
