@@ -34,7 +34,6 @@ knownawards = {
 commtrack = ['CC', 'ACB', 'ACS', 'ACG']
 ldrtrack = ['CL', 'ALB', 'ALS', 'DTM']
 knowns = commtrack + ldrtrack
-print knowns
 unknowns = set()
 
 class Award:
@@ -48,9 +47,7 @@ class Award:
             awards[award] = []
         awards[award].append(self)
         if award not in knowns:
-            print award
             unknowns.add(award)
-            print unknowns
             
     def __repr__(self):
         return '<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (self.membername, self.clubname, self.awarddate.strftime('%m/%d/%Y'))
@@ -117,7 +114,6 @@ if __name__ == "__main__":
             for each in sorted(awards[k], key=lambda x:x.key):
                 print each
                 
-    print unknowns
             
     for k in sorted(unknowns):
         if k in awards:
