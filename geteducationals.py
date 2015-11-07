@@ -18,6 +18,9 @@ def inform(*args, **kwargs):
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
+def makekey(membername, clubname, award, awarddate):
+    return '%s+%s+%s+%s' % (membername, clubname, award, awarddate)
+
 if __name__ == "__main__":
  
     import tmparms
@@ -40,6 +43,15 @@ if __name__ == "__main__":
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
     
+    # Get the existing awards (significant parts only) so we don't create duplicates.  We can't 
+    #   let the datbase do it because we don't have a valid unique key - a person can earn 
+    #   identical awards for the same club on the same date.
+    existing = set()
+    curs.execute("SELECT membername, clubnumber, award, awarddate FROM awards")
+    for (membername, clubnumber, award, awarddate) in curs.fetchall():
+        existing.add(makekey(membername, clubnumber, award, tmutil.stringify(awarddate)))
+        
+    
     # Get the data from Toastmasters
     url = "http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%d&s=Club&sortOrder=0" % parms.district
     data = ''.join(urllib.urlopen(url).readlines())
@@ -51,18 +63,24 @@ if __name__ == "__main__":
     starter = soup.find('tr', class_='content')
     line = starter.find_next_sibling("tr")
     while line:
-        awards.append([s.strip() for s in line.stripped_strings])
+        candidate = [s.strip() for s in line.stripped_strings]
         # Reformat the date
-        dparts = awards[-1][4].split('/')
-        awards[-1][4] = dparts[2] + '-' + dparts[0] + '-' + dparts[1]
+        dparts = candidate[4].split('/')
+        candidate[4] = dparts[2] + '-' + dparts[0] + '-' + dparts[1]
         tmyear = int(dparts[2])
         month = int(dparts[0])
         if month <= 6:
             tmyear = tmyear - 1
-        awards[-1].append(tmyear)
+        candidate.append(tmyear)
+        if makekey(candidate[5], candidate[0], candidate[3], candidate[4]) not in existing:
+            awards.append(candidate)
+        
         line = line.find_next_sibling("tr")
     # And insert awards into the database
-    changecount = curs.executemany("INSERT IGNORE INTO awards (clubnumber, division, area, award, awarddate, membername, clubname, clublocation, tmyear) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)", awards)           
-    inform("%d %s added" % (changecount, "awards" if changecount != 1 else "award"))
+    if awards:
+        changecount = curs.executemany("INSERT INTO awards (clubnumber, division, area, award, awarddate, membername, clubname, clublocation, tmyear) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)", awards)     
+    else:
+        changecount = "No"      
+    inform("%s %s added" % (changecount, "awards" if changecount != 1 else "award"))
     conn.commit()
     conn.close()
