@@ -109,22 +109,43 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
             print "'clubnumber' not in '%s'" % hline
         return
         
+    # Find out what fields we have in the database itself
+    dbfields = []
+    curs.execute("describe clubs")
+    for l in curs.fetchall():
+        dbfields.append(l[0])
+        
     inform("clubs for", cdate, suppress=1)
     dbheaders = [p for p in headers]
-    addrcol1 = dbheaders.index('address1')
-    addrcol2 = dbheaders.index('address2')
+    
+    # Convert between Toastmasters' names for address and location and ours; they've changed it a few times.  *sigh*
+    if 'address1' in dbheaders:
+        addrcol1 = dbheaders.index('address1')
+    else:
+        addrcol1 = dbheaders.index('location')
+    if 'address2' in dbheaders:
+        addrcol2 = dbheaders.index('address2')
+    else:
+        addrcol2 = dbheaders.index('address')
+        
     dbheaders[addrcol1] = 'place'
     dbheaders[addrcol2] = 'address'
     expectedheaderscount = len(dbheaders)
     dbheaders.append('firstdate')
     dbheaders.append('lastdate')     # For now...
     
-    # Remove latitude and longitude for now.
-    if 'latitude' in dbheaders:
-        dbheaders.remove('latitude')
-    if 'longitude' in dbheaders:
-        dbheaders.remove('longitude')
-  
+    # Now, suppress anything in the file that's not in the database:
+    suppress = []
+    oldheaders = dbheaders
+    dbheaders = []
+    for i in xrange(len(oldheaders)):
+        if oldheaders[i] in dbfields:
+            dbheaders.append(oldheaders[i])
+        else:
+            suppress.append(i)
+    suppress.reverse()   # We remove these columns from the input
+    
+        
     Club.setfieldnames(dbheaders)
 
     
@@ -136,6 +157,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     for row in reader:
         if len(row) < expectedheaderscount:
             break     # we're finished
+            
+        for i in suppress:
+            del row[i]
 
         # Convert to unicode.  Toastmasters usually uses UTF-8 but occasionally uses Windows CP1252 on the wire.
         try:
@@ -144,7 +168,6 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
             row = [unicode(t.strip(), "CP1252") for t in row]
          
         if len(row) > expectedheaderscount:
-            print row
             # Special case...Millbrae somehow snuck two club websites in!
             row[16] = row[16] + ',' + row[17]
             del row[17]
@@ -219,6 +242,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
             club.place = club.place.replace(';;','\n')
         
             thestr = 'INSERT IGNORE INTO clubs (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
+
             try:
                 changecount += curs.execute(thestr, values)
             except Exception, e:
