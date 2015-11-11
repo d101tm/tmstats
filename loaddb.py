@@ -134,6 +134,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     dbheaders.append('firstdate')
     dbheaders.append('lastdate')     # For now...
     
+    areacol = dbheaders.index('area')
+    divisioncol = dbheaders.index('division')
+    
     # Now, suppress anything in the file that's not in the database:
     suppress = []
     oldheaders = dbheaders
@@ -182,6 +185,15 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         address = normalize(row[addrcol2])
         row[addrcol2] = address
         
+        # Toastmasters is currently reversing the "Area" and "Division" items.  "Area" should be a
+        #    number; if not, swap the two.
+        try:
+            thearea = row[areacol]
+            thedivision = row[divisioncol]
+            areanum = int(row[areacol])
+        except ValueError:
+            row[areacol] = thedivision
+            row[divisioncol] = thearea
             
         # Get the right number of items into the row by setting today as the 
         #   tentative first and last date
