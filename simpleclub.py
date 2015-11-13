@@ -4,6 +4,12 @@
 import datetime, re
 from copy import deepcopy
 
+npatt = re.compile('\W*', re.UNICODE)  # Get rid of anything that isn't a Unicode alphameric
+
+def normalize(s):
+    """ Normalize a string to minimize irrelevant miscompares """
+    return (' '.join(re.split('\W+', s, flags=re.UNICODE))).strip().lower()
+
 class Club:
     """ Keep information about a club """
     
@@ -76,6 +82,10 @@ class Club:
             curs.execute("SELECT MAX(lastdate) from clubs")
             lastdate = self.stringify(curs.fetchone()[0])
             date = min(date, lastdate)
+            # And just in case there was no data for the specified date, back up to a date where there
+            #   was data
+            curs.execute("SELECT MAX(loadedfor) FROM loaded where tablename = 'clubs' AND loadedfor <= %s", (date,))
+            date = self.stringify(curs.fetchone()[0])
             curs.execute("SELECT * FROM clubs WHERE firstdate <= %s AND lastdate >= %s", (date, date))
         else:
             curs.execute("SELECT clubs.* FROM clubs INNER JOIN (SELECT clubnumber, MAX(lastdate) AS m FROM clubs GROUP BY clubnumber) lasts ON lasts.m = clubs.lastdate AND lasts.clubnumber = clubs.clubnumber;")
@@ -106,7 +116,7 @@ class Club:
                 value = '\n'.join(value.split(';;'))  ## Clean up the database encoding of newlines in the address
             self.__dict__[name] = value
             if name in self.goodnames and name not in self.badnames:
-                self.cmp.append(value)
+                self.cmp.append(normalize(value))
                 
     def addvalues(self, values, fieldnames):
         """ Add values to the club; don't change anything already there. """
@@ -116,7 +126,7 @@ class Club:
                 value = self.stringify(value)
                 self.__dict__[name] = value
                 if name not in self.badnames:
-                    self.cmp.append(value)
+                    self.cmp.append(normalize(value))
      
     def __eq__(self, other):
         return self.cmp == other.cmp
