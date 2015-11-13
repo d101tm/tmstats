@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
-    parms.add_argument('--resetto', default='yesterday', help="Date to reset the database to.")
+    parms.add_argument('resetto', default='yesterday', help="Date to reset the database to.")
     # Add other parameters here
     parms.parse() 
    
