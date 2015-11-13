@@ -8,8 +8,11 @@ npatt = re.compile('\W+', re.UNICODE)  # Get rid of anything that isn't a Unicod
 
 def normalize(s):
     """ Normalize a string to minimize irrelevant miscompares """
-    return (' '.join(re.split(npatt, s))).strip().lower()
-
+    try:
+        return (' '.join(re.split(npatt, s))).strip().lower()
+    except TypeError:
+        return s
+        
 class Club:
     """ Keep information about a club """
     
