@@ -4,11 +4,11 @@
 import datetime, re
 from copy import deepcopy
 
-npatt = re.compile('\W*', re.UNICODE)  # Get rid of anything that isn't a Unicode alphameric
+npatt = re.compile('\W+', re.UNICODE)  # Get rid of anything that isn't a Unicode alphameric
 
 def normalize(s):
     """ Normalize a string to minimize irrelevant miscompares """
-    return (' '.join(re.split('\W+', s, flags=re.UNICODE))).strip().lower()
+    return (' '.join(re.split(npatt, s))).strip().lower()
 
 class Club:
     """ Keep information about a club """
