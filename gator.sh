@@ -155,6 +155,11 @@ if [[ "$dorun" = "yes" ]] ; then
         ../awardtallies.py
     fi
     
+    if (( $haveperf == 0 )) ; then
+        echo "Creating Triple Crown"
+        ../triplecrown.py > triplecrown.html
+    fi
+    
     ### Run daily housekeeping
     if (( $haveclubs == 0 )) ; then
         echo "Building Area/Division page"
