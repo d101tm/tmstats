@@ -15,6 +15,61 @@ changecount = 0
 
 headersnotinboth = []
 
+
+statelist = {
+'Alabama':'AL',
+'Alaska':'AK',
+'Arizona':'AZ',
+'Arkansas':'AR',
+'California':'CA',
+'Colorado':'CO',
+'Connecticut':'CT',
+'Delaware':'DE',
+'District of Columbia':'DC',
+'Florida':'FL',
+'Georgia':'GA',
+'Hawaii':'HI',
+'Idaho':'ID',
+'Illinois':'IL',
+'Indiana':'IN',
+'Iowa':'IA',
+'Kansas':'KS',
+'Kentucky':'KY',
+'Louisiana':'LA',
+'Maine':'ME',
+'Maryland':'MD',
+'Massachusetts':'MA',
+'Michigan':'MI',
+'Minnesota':'MN',
+'Mississippi':'MS',
+'Missouri':'MO',
+'Montana':'MT',
+'Nebraska':'NE',
+'Nevada':'NV',
+'New Hampshire':'NH',
+'New Jersey':'NJ',
+'New Mexico':'NM',
+'New York':'NY',
+'North Carolina':'NC',
+'North Dakota':'ND',
+'Ohio':'OH',
+'Oklahoma':'OK',
+'Oregon':'OR',
+'Pennsylvania':'PA',
+'Rhode Island':'RI',
+'South Carolina':'SC',
+'South Dakota':'SD',
+'Tennessee':'TN',
+'Texas':'TX',
+'Utah':'UT',
+'Vermont':'VT',
+'Virginia':'VA',
+'Washington':'WA',
+'West Virginia':'WV',
+'Wisconsin':'WI',
+'Wyoming':'WY'
+} 
+
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
           suppress is the minimum number of 'quiet's that need be specified for
@@ -109,22 +164,47 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
             print "'clubnumber' not in '%s'" % hline
         return
         
+    # Find out what fields we have in the database itself
+    dbfields = []
+    curs.execute("describe clubs")
+    for l in curs.fetchall():
+        dbfields.append(l[0])
+        
     inform("clubs for", cdate, suppress=1)
     dbheaders = [p for p in headers]
-    addrcol1 = dbheaders.index('address1')
-    addrcol2 = dbheaders.index('address2')
+    
+    # Convert between Toastmasters' names for address and location and ours; they've changed it a few times.  *sigh*
+    if 'address1' in dbheaders:
+        addrcol1 = dbheaders.index('address1')
+    else:
+        addrcol1 = dbheaders.index('location')
+    if 'address2' in dbheaders:
+        addrcol2 = dbheaders.index('address2')
+    else:
+        addrcol2 = dbheaders.index('address')
+        
     dbheaders[addrcol1] = 'place'
     dbheaders[addrcol2] = 'address'
     expectedheaderscount = len(dbheaders)
     dbheaders.append('firstdate')
     dbheaders.append('lastdate')     # For now...
     
-    # Remove latitude and longitude for now.
-    if 'latitude' in dbheaders:
-        dbheaders.remove('latitude')
-    if 'longitude' in dbheaders:
-        dbheaders.remove('longitude')
-  
+    areacol = dbheaders.index('area')
+    divisioncol = dbheaders.index('division')
+    statecol = dbheaders.index('state')
+    
+    # Now, suppress anything in the file that's not in the database:
+    suppress = []
+    oldheaders = dbheaders
+    dbheaders = []
+    for i in xrange(len(oldheaders)):
+        if oldheaders[i] in dbfields:
+            dbheaders.append(oldheaders[i])
+        else:
+            suppress.append(i)
+    suppress.reverse()   # We remove these columns from the input
+    
+        
     Club.setfieldnames(dbheaders)
 
     
@@ -136,6 +216,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     for row in reader:
         if len(row) < expectedheaderscount:
             break     # we're finished
+            
+        for i in suppress:
+            del row[i]
 
         # Convert to unicode.  Toastmasters usually uses UTF-8 but occasionally uses Windows CP1252 on the wire.
         try:
@@ -144,7 +227,6 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
             row = [unicode(t.strip(), "CP1252") for t in row]
          
         if len(row) > expectedheaderscount:
-            print row
             # Special case...Millbrae somehow snuck two club websites in!
             row[16] = row[16] + ',' + row[17]
             del row[17]
@@ -159,6 +241,19 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         address = normalize(row[addrcol2])
         row[addrcol2] = address
         
+        # Toastmasters is currently reversing the "Area" and "Division" items.  "Area" should be a
+        #    number; if not, swap the two.
+        try:
+            thearea = row[areacol]
+            thedivision = row[divisioncol]
+            areanum = int(row[areacol])
+        except ValueError:
+            row[areacol] = thedivision
+            row[divisioncol] = thearea
+            
+        # Collapse state names into their abbreviations
+        if row[statecol] in statelist:
+            row[statecol] = statelist[row[statecol]]
             
         # Get the right number of items into the row by setting today as the 
         #   tentative first and last date
@@ -219,6 +314,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
             club.place = club.place.replace(';;','\n')
         
             thestr = 'INSERT IGNORE INTO clubs (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
+
             try:
                 changecount += curs.execute(thestr, values)
             except Exception, e:

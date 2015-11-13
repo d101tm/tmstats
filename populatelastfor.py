@@ -65,7 +65,28 @@ def doyear(y, curs):
     allclubs = [(c.clubnumber, c.clubperfid, c.areaperfid, c.distperfid, c.asof, c.monthstart, y) for c in clubinfo.values()]
     curs.executemany(stmt, allclubs)
 
-    conn.commit()
+    
+def doit(curs, parms):
+    # Delete any entries in the table; we regenerate from scratch.
+    curs.execute('DELETE FROM lastfor')
+    
+    # We assume the same years in all three performance tables.
+    curs.execute("SELECT MIN(monthstart), MAX(monthstart) FROM distperf")
+    (firstmonth, lastmonth) = curs.fetchone()
+
+    firsttmyear = firstmonth.year + (1 if firstmonth.month <= 6 else 0)
+    lasttmyear = lastmonth.year + (1 if lastmonth.month <= 6 else 0)
+ 
+    # If 'latestonly' is specified, only process the last year in the database
+    try:
+        if parms.latestonly:
+            firsttmyear = lasttmyear
+    except AttributeError:
+        pass
+ 
+    for y in range(firsttmyear, lasttmyear+1):
+        doyear(y, curs)
+    
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -89,22 +110,11 @@ if __name__ == "__main__":
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
     
-    # Delete any entries in the table; we regenerate from scratch.
-    curs.execute('DELETE FROM lastfor')
+    doit(curs, parms)
+    conn.commit()
     
-    # We assume the same years in all three performance tables.
-    curs.execute("SELECT MIN(monthstart), MAX(monthstart) FROM distperf")
-    (firstmonth, lastmonth) = curs.fetchone()
+    
 
-    firsttmyear = firstmonth.year + (1 if firstmonth.month <= 6 else 0)
-    lasttmyear = lastmonth.year + (1 if lastmonth.month <= 6 else 0)
- 
-    # If 'latestonly' is specified, only process the last year in the database
-    if parms.latestonly:
-        firsttmyear = lasttmyear
- 
-    for y in range(firsttmyear, lasttmyear+1):
-        doyear(y, curs)
     
         
         
