@@ -86,10 +86,10 @@ if __name__ == "__main__":
     else:
         print "<table>"
         print "  <thead>"
-        print "    <tr><th>Name</th><th>Awards</th></tr>"
+        print "    <tr><th align='left'>Name</th><th align='left'>Awards</th></tr>"
         print "  </thead>"
         print "  <tbody>"
         for name in sorted(winners.keys()):
-            print "    <tr><td>%s</td><td>%s</td></tr>" % (name, winners[name])
+            print "    <tr><td style='padding-right: 20px;'>%s</td><td>%s</td></tr>" % (name, winners[name])
         print "  </tbody>"
         print "</table>"
