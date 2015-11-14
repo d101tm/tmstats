@@ -81,8 +81,11 @@ if parms.bcc:
 
 
 # Connect to the mail server:
-mailconn = smtplib.SMTP(parms.mailserver, parms.mailport)
+print "connecting to %s:%d" % (parms.mailserver, parms.mailport)
+mailconn = smtplib.SMTP_SSL(parms.mailserver, parms.mailport)
+print "connected"
 mailconn.login(parms.sender, parms.mailpw)
+print "logged in at %s" % parms.sender
 
 # and send the mail
 mailconn.sendmail(parms.sender, targets, finalmsg)
