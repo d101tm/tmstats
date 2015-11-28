@@ -292,7 +292,11 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         # Clean up advanced status
         club.advanced = '1' if (club.advanced != '') else '0'
     
-    
+        # Now, take care of missing latitude/longitude
+        if ('latitude') in dbheaders and club.latitude is None:
+            club.latitude = 0.0
+        if ('longitude') in dbheaders and club.longitude is None:
+            club.longitude = 0.0
     
         # And put it into the database if need be
         if club.clubnumber in clubhist:
@@ -312,6 +316,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
             
             # And then put the place back into normal form
             club.place = club.place.replace(';;','\n')
+            
         
             thestr = 'INSERT IGNORE INTO clubs (' + ','.join(dbheaders) + ') VALUES (' + ','.join(['%s' for each in values]) + ');'
 
