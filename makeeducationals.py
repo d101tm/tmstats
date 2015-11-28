@@ -104,19 +104,21 @@ if __name__ == "__main__":
         
     def printawards(awards, knownawards, k):
         if k in awards:
-            print '<tr><td class="awardname">%s</td></tr>' % knownawards[k]
+            print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
             for each in sorted(awards[k], key=lambda x:x.key):
                 print each
             
-    # Print the full-width version 
-           
-    print '<div class="moduletable hidden-phone">'
-    print '<div clas"custom hidden-phone">'
-    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:4px; border:0.5px solid white; font-family: "myriad-pro", Arial, sans-serif;font-size: 12px;} .awardname {background-color: green; font-size: 14pt; font-weight: bold; colspan: 2}--></style>'
     print '<h2>Member Educationals</h2>'
     print '<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals in the last 30 days.  Will we see YOUR name here next?</p>'
     print '<p>Achievements not shown here can be found on the Toastmasters International'
     print '<a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
+    
+    # Print the full-width version 
+           
+    print '<div class="moduletable hidden-phone">'
+    print '<div class="custom hidden-phone">'
+    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:2px; padding-right: 4px; border:0.5px solid white; font-family:  Arial, sans-serif;font-size: 12px;} .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center;}--></style>'
+
     print '<table>'
     print '  <tr>'
     print '    <td width="50%">'
@@ -137,5 +139,20 @@ if __name__ == "__main__":
     print '</table>'   
     print '</div>'
     print '</div>'         
+    
+    # And now print the narrow version
+    print '<div class="moduletable visible-phone">'
+    print '<div class="custom visible-phone">'
+    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:2px; border:0.5px solid white; font-family: Arial, sans-serif;font-size: 12px;} .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center;}--></style>'
+    print '<table>'
+    for k in commtrack:
+        printawards(awards, knownawards, k)
+    for k in ldrtrack:
+        printawards(awards, knownawards, k)
+    print '</table>'
+    print '</div>'
+    print '</div>'
+
+    
 
         
