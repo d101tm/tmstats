@@ -50,7 +50,7 @@ class Award:
             unknowns.add(award)
             
     def __repr__(self):
-        return '<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (self.membername, self.clubname, self.awarddate.strftime('%m/%d/%Y'))
+        return '<tr><td>%s</td><td>%s</td></tr>' % (self.membername, self.clubname)
         
 
 
@@ -102,22 +102,40 @@ if __name__ == "__main__":
     for (membername, award, clubname, awarddate) in curs.fetchall():
         Award(membername, award, clubname, awarddate)
         
+    def printawards(awards, knownawards, k):
+        if k in awards:
+            print '<tr><td class="awardname">%s</td></tr>' % knownawards[k]
+            for each in sorted(awards[k], key=lambda x:x.key):
+                print each
+            
+    # Print the full-width version 
+           
+    print '<div class="moduletable hidden-phone">'
+    print '<div clas"custom hidden-phone">'
+    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:4px; border:0.5px solid white; font-family: "myriad-pro", Arial, sans-serif;font-size: 12px;} .awardname {background-color: green; font-size: 14pt; font-weight: bold; colspan: 2}--></style>'
+    print '<h2>Member Educationals</h2>'
+    print '<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals in the last 30 days.  Will we see YOUR name here next?</p>'
+    print '<p>Achievements not shown here can be found on the Toastmasters International'
+    print '<a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
+    print '<table>'
+    print '  <tr>'
+    print '    <td width="50%">'
+    print '<table>'
+    
     for k in commtrack:
-        if k in awards:
-            print knownawards[k]
-            for each in sorted(awards[k], key=lambda x:x.key):
-                print each
-            
+        printawards(awards, knownawards, k)
+    print '</table>'
+    print '    </td>'
+    print '    <td width="50%">'
+    print '<table>'
+        
     for k in ldrtrack:
-        if k in awards:
-            print knownawards[k]
-            for each in sorted(awards[k], key=lambda x:x.key):
-                print each
-                
-            
-    for k in sorted(unknowns):
-        if k in awards:
-            print k
-            for each in sorted(awards[k], key=lambda x:x.key):
-                print each
+        printawards(awards, knownawards, k)
+    print '</table>'
+    print '    </td>'
+    print '  </tr>'
+    print '</table>'   
+    print '</div>'
+    print '</div>'         
+
         
