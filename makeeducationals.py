@@ -116,7 +116,7 @@ if __name__ == "__main__":
             for each in sorted(awards[k], key=lambda x:x.key):
                 print each
             
-    print '<h2>Member Educationals %s</h2>' % timestamp
+    print '<h3>Member Educationals %s</h3>' % timestamp
     print '<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals %s.  Will we see YOUR name here next?</p>' % timestamp
     print '<p>Achievements not shown here can be found on the Toastmasters International'
     print '<a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
@@ -125,7 +125,7 @@ if __name__ == "__main__":
            
     print '<div class="moduletable hidden-phone">'
     print '<div class="custom hidden-phone">'
-    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:2px; padding-right: 4px; border:0.5px solid white; font-family:  Arial, sans-serif;font-size: 12px;} .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center; width: 100%;}--></style>'
+    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:1px; padding-right: 4px; border:0.5px solid white; font-family:  Arial, sans-serif;font-size: 12px;} .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center; width: 100%;}--></style>'
 
     print '<table>'
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     # And now print the narrow version
     print '<div class="moduletable visible-phone">'
     print '<div class="custom visible-phone">'
-    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:2px; border:0.5px solid white; font-family: Arial, sans-serif;font-size: 12px;}  .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center;}--></style>'
+    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:1px; border:0.5px solid white; font-family: Arial, sans-serif;font-size: 12px;}  .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center;}--></style>'
     print '<table>'
     for k in commtrack:
         printawards(awards, knownawards, k)
