@@ -153,6 +153,9 @@ if [[ "$dorun" = "yes" ]] ; then
     if (( $haveperf == 0 )) ; then
         echo "Running award tallies"
         ../awardtallies.py
+        echo "Creating award files"
+        ../makeeducationals.py --since 30
+        convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
     fi
     
     if (( $haveperf == 0 )) ; then
@@ -184,12 +187,18 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "copying to $maindir"
         $finder -exec cp {} "$maindir" \;
         cp "clubs.$today.csv" "$maindir/clubs.csv"
+        cp "recentawards.jpg" "$maindir/../../images/"
+        cp "recentawards.jpg" "$maindir/../../media/mod_jmslideshow/942x410_fit_recentawards.jpg"
+        convert "recentawards.jpg" "-resize 100x65 "$maindir/../../media/mod_jmslideshow/100x65_recentawards.jpg"
         
     fi
     if [[ "$testdir" != "" ]] ; then
         echo "copying to $testdir"
         $finder -exec cp {} "$testdir" \;
         cp "clubs.$today.csv" "$testdir/clubs.csv"       
+        cp "recentawards.jpg" "$testdir/../../images/"
+        cp "recentawards.jpg" "$testdir/../../media/mod_jmslideshow/942x410_fit_recentawards.jpg"
+        convert "recentawards.jpg" "-resize 100x65 "$testdir/../../media/mod_jmslideshow/100x65_recentawards.jpg"
     fi
     
     rm marker
