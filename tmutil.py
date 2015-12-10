@@ -3,6 +3,14 @@
 from datetime import date, timedelta, datetime
 import csv, cStringIO, codecs
 import xlrd
+import os
+
+def gotodatadir():
+    """ Go to the 'data' directory if we're not already there """
+    curdir = os.path.realpath(os.curdir)  # Get the canonical directory
+    lastpart = curdir.split(os.sep)[-1]
+    if lastpart.lower() != 'data':
+        os.chdir('data')   # Fails if there is no data directory; that is intentional.
 
 
 def cleandate(indate):

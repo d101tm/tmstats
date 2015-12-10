@@ -209,9 +209,8 @@ if [[ "$dorun" = "yes" ]] ; then
 fi    
     
 # Handle training reports and clear the cache, no matter what.
-cd "$SCRIPTPATH/../training"
-./doit.sh
 cd "$SCRIPTPATH"
+./dotraining.sh
 ./clearcache.sh
 
 # If voting is in process, handle the votes
