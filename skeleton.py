@@ -20,9 +20,9 @@ def inform(*args, **kwargs):
 if __name__ == "__main__":
  
     import tmparms
+    from tmutil import gotodatadir
     # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+    gotodatadir()
         
     reload(sys).setdefaultencoding('utf8')
     
