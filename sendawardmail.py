@@ -172,7 +172,6 @@ def sendmail(msg, to, cc, bcc, parms):
 
     # Convert the message to string format:
     finalmsg = msg.as_string()
-
  
     # And send the mail.
     targets = []
@@ -263,7 +262,7 @@ if __name__ == "__main__":
         awardinfo = curs.fetchall()
         theclubs = ','.join(['%d' % item[2] for item in awardinfo])
         # Get the person's information
-        curs.execute("SELECT firstname, email FROM roster WHERE clubnum IN (%s) AND fullname = %s", (theclubs, membername.replace('"', '')))
+        curs.execute("SELECT firstname, email FROM roster WHERE clubnum IN (" + theclubs + ") AND fullname = %s", (membername.replace('"', ''),))
         email = ''
         for (name, mail) in curs.fetchall():
             if email == '':
