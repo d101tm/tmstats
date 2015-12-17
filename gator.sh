@@ -200,6 +200,14 @@ if [[ "$dorun" = "yes" ]] ; then
         cp "recentawards.jpg" "$testdir/../../media/mod_jmslideshow/942x410_fit_recentawards.jpg"
         cp "100x65_recentawards.jpg" "$testdir/../../media/mod_jmslideshow/100x65_recentawards.jpg"
     fi
+
+    # Now, ingest rosters if need be
+    echo "Checking for a new roster"
+    ../getroster.py && ../ingestroster.py
+
+    # And process award letters
+    echo "Processing award letters"
+    ../sendawardmail.py
     
     rm marker
     rm *.success 2>/dev/null
