@@ -207,6 +207,7 @@ CREATE TABLE IF NOT EXISTS awards (
     membername VARCHAR(100),
     clublocation VARCHAR(100),
     tmyear INT,
+    acknowledged BOOL DEFAULT FALSE,
     PRIMARY KEY (id),
     INDEX (award),
     INDEX (division)
