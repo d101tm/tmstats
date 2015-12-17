@@ -67,4 +67,7 @@ if __name__ == "__main__":
         values.append(sheet.row_values(row))
     valuepart = ','.join(['%s']*len(fieldnames))
     print curs.executemany('INSERT INTO roster VALUES (' + valuepart + ')', values), 'members found.'
+    curs.execute('ALTER TABLE roster ADD COLUMN fullname VARCHAR(100)')
+    print ('UPDATE roster SET fullname = REPLACE(CONCAT(lastname, ", ", firstname, " ", middle), \'"\', "")')
+    curs.execute('UPDATE roster SET fullname = REPLACE(CONCAT(lastname, ", ", firstname, " ", middle), \'"\', "")')
     conn.commit()
