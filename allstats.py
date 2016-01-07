@@ -534,9 +534,6 @@ today = datetime.date.today()
 latestdate = datetime.datetime.strptime(latestdate, "%Y-%m-%d")
 monthname = ['Jan', 'Feb', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][latestmonth - 1]
 lateststamp = " from Toastmasters data for the month of " + monthname + latestdate.strftime(", current through %m/%d/%Y.")
-if latestmonth <= 6:
-    latesttmyear = latesttmyear - 1
-    
 
 # Let's resolve the tmyear
 if parms.tmyear:
@@ -598,7 +595,6 @@ alldistperf = ','.join(lastdistperf.values())
 allareaperf = ','.join(lastareaperf.values())
 
 # Now, get basic club information from the DISTPERF table.
-    
 curs.execute("""select clubnumber, clubname, area, division, district, suspenddate from distperf where id in (%s)""" % alldistperf)
 
 # And create the master dictionary of clubs from those last entries
