@@ -67,15 +67,13 @@ def doyear(y, curs):
 
     
 def doit(curs, parms):
-    # Delete any entries in the table; we regenerate from scratch.
-    curs.execute('DELETE FROM lastfor')
     
     # We assume the same years in all three performance tables.
     curs.execute("SELECT MIN(monthstart), MAX(monthstart) FROM distperf")
     (firstmonth, lastmonth) = curs.fetchone()
 
     firsttmyear = firstmonth.year + (1 if firstmonth.month <= 6 else 0)
-    lasttmyear = lastmonth.year + (1 if lastmonth.month <= 6 else 0)
+    lasttmyear = lastmonth.year - (1 if lastmonth.month <= 6 else 0)
  
     # If 'latestonly' is specified, only process the last year in the database
     try:
@@ -84,6 +82,10 @@ def doit(curs, parms):
     except AttributeError:
         pass
  
+    # Delete any entries in the table for these years; we regenerate from scratch.
+    curs.execute('DELETE FROM lastfor WHERE tmyear >= %s AND tmyear <= %s', (firsttmyear, lasttmyear))
+
+   # And now build.
     for y in range(firsttmyear, lasttmyear+1):
         doyear(y, curs)
     
