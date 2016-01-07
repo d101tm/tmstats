@@ -4,7 +4,7 @@ cd data
 rm latesttraining.html 2>/dev/null
 echo $(date +"%B %e") | sed 's/  / /' > trainingreportdate.txt
 ../gettrainingstatus.py || exit $?
-../training.py latesttraining.html || exit $?
+../training.py latesttraining.html --require9a || exit $?
 if [ -d ~/www/files/training ] ; then  
     for name in trainingreport*
     do
@@ -37,6 +37,6 @@ There is an Excel version of the report at http://d4tm.org/files/training/report
 The "Lucky 7" report has also been updated on the "What's Trending" page.
 EOF
 
-    ../sendmail.py --textfile trainingmessage.txt  --bcc david@d2j.us --subject "$filemsg"
+    ../sendmail.py --textfile trainingmessage.txt --to quality@d4tm.org --bcc david@d2j.us --subject "$filemsg"
 
 fi
