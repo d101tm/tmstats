@@ -293,9 +293,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         club.advanced = '1' if (club.advanced != '') else '0'
     
         # Now, take care of missing latitude/longitude
-        if ('latitude') in dbheaders and club.latitude is None:
+        if ('latitude') in dbheaders and not club.latitude:
             club.latitude = 0.0
-        if ('longitude') in dbheaders and club.longitude is None:
+        if ('longitude') in dbheaders and not club.longitude:
             club.longitude = 0.0
     
         # And put it into the database if need be
