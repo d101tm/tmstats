@@ -17,7 +17,7 @@ class myclub():
     fields = [k.strip() for k in fieldnames.replace(',',' ').split()]
     values = ('%s,' * len(fields))[:-1]
     
-    def __init__(self, clubnumber, clubname, place, address, city, state, zip):
+    def __init__(self, clubnumber, clubname, place, address, city, state, zip, latitude, longitude):
         self.clubnumber = clubnumber
         self.clubname = clubname
         self.place = place
@@ -25,8 +25,8 @@ class myclub():
         self.city = city
         self.state = state
         self.zip = zip
-        self.latitude = 0.0
-        self.longitude = 0.0
+        self.latitude = latitude
+        self.longitude = longitude
         self.locationtype = ''
         self.partialmatch = False
         self.nelat = 0.0
@@ -39,6 +39,12 @@ class myclub():
         self.outcity = ''
         self.outstate = ''
         self.outzip = ''
+
+    def updatefromwhq(self, curs):
+        curs.execute('DELETE FROM geo WHERE clubnumber = %s', (self.clubnumber,))
+        self.locationtype = 'WHQ'
+        curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
+                ([self.__dict__[k] for k in self.fields]))
         
     def update(self, results, curs):
         if isinstance(results, basestring):
