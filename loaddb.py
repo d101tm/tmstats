@@ -8,6 +8,7 @@
 
 import csv, dbconn, sys, os, glob
 from simpleclub import Club
+from tmutil import cleandate
 
 # Global variable to see how many entries got changed.  All we really care about is zero/nonzero.
 global changecount
@@ -89,11 +90,13 @@ def normalize(str):
 def different(new, old, headers):
     """ Returns a list of items which have changed, each of which is a tuple of (item, old, new)."""
     res = []
+    # Do some type conversions so the comparison works
+    old.latitude = float(old.latitude)
+    old.longitude = float(old.longitude)
+    
     for h in headers:
         try:
             if new.__dict__[h] != old.__dict__[h]:
-                #print h ,'is different for club', new.clubnumber
-                #print 'old = %s, new = %s' % (old.__dict__[h], new.__dict__[h])
                 res.append((h, old.__dict__[h], new.__dict__[h]))
         except KeyError:
             if h not in headersnotinboth:
@@ -104,11 +107,7 @@ def different(new, old, headers):
                 headersnotinboth.append(h)
     return res
     
-def cleandate(date):
-    charterdate = date.split('/')  
-    if len(charterdate[2]) == 2:
-        charterdate[2] = "20" + charterdate[2]
-    return '-'.join((charterdate[2],charterdate[0],charterdate[1]))
+
     
 def cleanheaders(hline):
     headers = [p.lower().replace(' ','') for p in hline]
@@ -293,16 +292,28 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         club.advanced = '1' if (club.advanced != '') else '0'
     
         # Now, take care of missing latitude/longitude
-        if ('latitude') in dbheaders and not club.latitude:
+        if ('latitude') in dbheaders:
+            try:
+                club.latitude = float(club.latitude)
+            except ValueError:
+                club.latitude = 0.0
+        else:
             club.latitude = 0.0
-        if ('longitude') in dbheaders and not club.longitude:
-            club.longitude = 0.0
-    
+            
+        if ('longitude') in dbheaders:
+           try:
+               club.longitude = float(club.longitude)
+           except ValueError:
+               club.longitude = 0.0
+        else:
+           club.longitude = 0.0
+
         # And put it into the database if need be
         if club.clubnumber in clubhist:
             changes = different(club, clubhist[club.clubnumber], dbheaders[:-2])
         else:
             changes = []
+
         
         if club.clubnumber not in clubhist and not firsttime:
             # This is a new (or reinstated) club; note it in the changes database.
