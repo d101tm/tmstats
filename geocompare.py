@@ -56,15 +56,56 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
-def subtable(place, address, locationtype, reverse, reversetype):
-    res = ['<table>']
-    res.append('<tr class="loctype"><td>%s</td></tr>' % locationtype)
-    res.append('<tr class="place"><td>%s<br />' % place.replace(';;','<br />'))
-    res.append('%s</td></tr>' % address)
-    res.append('<tr class="loctype"><td>%s</td></tr>' % reversetype)
-    res.append('<tr class="address"><td>%s</td></tr>' % reverse)
-    res.append('</table>')
-    return '\n'.join(res)
+class Clubinfo:
+    clubs = []
+    clubsbylocator = {}
+    def __init__(self, row):
+        fields = [f.strip() for f in 'district, division, area, clubnumber, clubname, place, address, latitude, longitude, locationtype, whqlatitude, whqlongitude, whqreverse, whqreversetype, maplatitude, maplongitude, mapaddress, mapreverse, mapreversetype'.split(',')]
+        for (name, value) in zip(fields, row):
+            self.__dict__[name] = value
+        self.whqgeodelta = distance_on_unit_sphere(self.whqlatitude, self.whqlongitude, self.latitude, self.longitude)
+        self.whqmapdelta = distance_on_unit_sphere(self.whqlatitude, self.whqlongitude, self.maplatitude, self.maplongitude)
+        self.geomapdelta = distance_on_unit_sphere(self.latitude, self.longitude, self.maplatitude, self.maplongitude)
+        self.clubs.append(self)
+        locator = 'District %s, Area %s' % (self.district, self.division + self.area)
+        if locator not in self.clubsbylocator:
+            self.clubsbylocator[locator] = []
+        self.clubsbylocator[locator].append(self)
+
+    def __repr__(self):
+        ans = []
+        ans.append("<tr>")
+        ans.append("<td>%s</td>"% self.district)
+        ans.append("<td>%s%s</td>"% (self.division, self.area))
+        ans.append("<td>%s</td>"% self.clubnumber)
+        ans.append("<td>%s</td>"% self.clubname)
+        ans.append("<td>")
+        ans.append("<table border=\"1\">")
+        ans.append("<tr>")
+        ans.append("<td width=\"50%%\">%s<br />%s<br />&nbsp;<br />%s</td>"% (self.place, self.address, self.locationtype))
+        ans.append("<td width=\"50%%\">%s</td>"% (self.mapaddress))
+        ans.append("</tr>")
+        ans.append("<tr>")
+        ans.append("<td width=\"50%%\">%s<br />&nbsp;<br />%s</td>"% (self.whqreverse, self.whqreversetype))
+        ans.append("<td width=\"50%%\">%s<br />&nbsp;<br />%s</td>"% (self.mapreverse, self.mapreversetype))
+        ans.append("</tr>")
+        ans.append("<tr><td>WHQ to geoencoded: %.2f; WHQ to map: %.2f; map to geoencoded: %.2f"% (self.whqgeodelta, self.whqmapdelta, self.geomapdelta))
+        href = []
+        href.append("http://maps.googleapis.com/maps/api/staticmap?size=600x600")
+        href.append("&markers=color:red%7Clabel:M%7C")
+        href.append("%f,%f"% (self.maplatitude, self.maplongitude))
+        href.append("&markers=color:blue%7Clabel:G%7C")
+        href.append("%f,%f"% (self.latitude, self.longitude))
+        if self.whqlatitude != 0.0 or self.whqlongitude != 0.0:
+            href.append("&markers=color:green%7Clabel:W%7C")
+            href.append("%f,%f"% (self.whqlatitude, self.whqlongitude))
+        href = ''.join(href)
+        ans.append('<a target="_blank"href="%s">map</a>' % href)
+        ans.append('</td></tr>')
+        ans.append("</table>")
+        ans.append("</td>")
+        ans.append("</tr>")
+        return '\n'.join(ans)
 
 if __name__ == "__main__":
  
@@ -94,40 +135,10 @@ if __name__ == "__main__":
     <table>
 """)
     c.execute("select clubs.district, clubs.division, clubs.area, geo.clubnumber, geo.clubname, geo.place, concat(geo.address,', ',geo.city,', ',geo.state,' ',geo.zip, ', USA'), geo.latitude, geo.longitude, locationtype, geo.whqlatitude, geo.whqlongitude, reverse, reversetype, map.lat, map.lng, map.address, mapreverse, mapreversetype from geo inner join map on map.clubnumber = geo.clubnumber inner join clubs on geo.clubnumber = clubs.clubnumber WHERE clubs.lastdate IN (SELECT MAX(lastdate) FROM clubs) order by clubs.district, clubs.division, clubs.area, geo.clubnumber")
-    for (district, division, area, clubnumber, clubname, place, address, latitude, longitude, locationtype, whqlatitude, whqlongitude, whqreverse, whqreversetype, maplatitude, maplongitude, mapaddress, mapreverse, mapreversetype) in c.fetchall():
-        whqgeodelta = distance_on_unit_sphere(whqlatitude, whqlongitude, latitude, longitude)
-        whqmapdelta = distance_on_unit_sphere(whqlatitude, whqlongitude, maplatitude, maplongitude)
-        geomapdelta = distance_on_unit_sphere(latitude, longitude, maplatitude, maplongitude)
-        outfile.write("      <tr>\n")
-        outfile.write("        <td>%s</td>\n" % district)
-        outfile.write("        <td>%s%s</td>\n" % (division, area))
-        outfile.write("        <td>%s</td>\n" % clubnumber)
-        outfile.write("        <td>%s</td>\n" % clubname)
-        outfile.write("<td>")
-        outfile.write("<table>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<td width=\"50%%\">%s<br />%s<br />&nbsp;<br />%s</td>" % (place, address, locationtype))
-        outfile.write("<td width=\"50%%\">%s</td>" % (mapaddress))
-        outfile.write("</tr>\n")
-        outfile.write("<tr>\n")
-        outfile.write("<td width=\"50%%\">%s<br />&nbsp;<br />%s</td>" % (whqreverse, whqreversetype))
-        outfile.write("<td width=\"50%%\">%s<br />&nbsp;<br />%s</td>" % (mapreverse, mapreversetype))
-        outfile.write("</tr>\n")
-        outfile.write("<tr><td>WHQ to geoencoded: %.2f; WHQ to map: %.2f; map to geoencoded: %.2f\n" % (whqgeodelta, whqmapdelta, geomapdelta))
-        href = []
-        href.append("http://maps.googleapis.com/maps/api/staticmap?size=600x600")
-        href.append("&markers=color:red%7Clabel:M%7C")
-        href.append("%f,%f" % (maplatitude, maplongitude))
-        href.append("&markers=color:blue%7Clabel:G%7C")
-        href.append("%f,%f" % (latitude, longitude))
-        if whqlatitude != 0.0 or whqlongitude != 0.0:
-            href.append("&markers=color:green%7Clabel:W%7C")
-            href.append("%f,%f" % (whqlatitude, whqlongitude))
-        href = ''.join(href)
-        outfile.write('<a target="_blank" href="%s">map</a>' % href)
-        outfile.write('</td></tr>')
-        outfile.write("</table>\n")
-        outfile.write("</td>\n")
-        outfile.write("      </tr>\n")
+    for (row) in c.fetchall():
+        club = Clubinfo(row)
+        outfile.write(repr(club))
+
+   
     outfile.write("    </table>\n  </body>\n</html>\n")
     outfile.close()
