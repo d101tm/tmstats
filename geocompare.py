@@ -80,7 +80,7 @@ class Clubinfo:
         ans.append("<td>%s</td>"% self.clubname)
         ans.append("<td>")
         href = []
-        href.append("http://maps.googleapis.com/maps/api/staticmap?size=600x600")
+        href.append("http://maps.googleapis.com/maps/api/staticmap?size=400x400")
         href.append("&markers=color:red%7Clabel:M%7C")
         href.append("%f,%f"% (self.maplatitude, self.maplongitude))
         href.append("&markers=color:blue%7Clabel:G%7C")
@@ -90,6 +90,7 @@ class Clubinfo:
             href.append("%f,%f"% (self.whqlatitude, self.whqlongitude))
         href = ''.join(href)
         ans.append("<img src=\"%s\">" % href)
+        ans.append("</td><td>")
         ans.append("<p>Meeting location in Club Central: %s<br />%s</p>\n" % (self.place, self.address)) 
         ans.append("<p>Meeting location in D4 map:%s</p>" % self.mapaddress)
         ans.append("<p>Reverse-located (%s) from Club Central: %s</p>" % (self.whqreversetype, self.whqreverse))
@@ -124,21 +125,22 @@ if __name__ == "__main__":
 
 
     # And now, create the final comparison as a table
-    outfile = open('compare.html', 'w')
-    outfile.write("<html><head>\n")
-    outfile.write("</head><body>\n")
+
     c.execute("select clubs.district, clubs.division, clubs.area, geo.clubnumber, geo.clubname, geo.place, concat(geo.address,', ',geo.city,', ',geo.state,' ',geo.zip, ', USA'), geo.latitude, geo.longitude, locationtype, geo.whqlatitude, geo.whqlongitude, reverse, reversetype, map.lat, map.lng, map.address, mapreverse, mapreversetype from geo inner join map on map.clubnumber = geo.clubnumber inner join clubs on geo.clubnumber = clubs.clubnumber WHERE clubs.lastdate IN (SELECT MAX(lastdate) FROM clubs) order by clubs.district, clubs.division, clubs.area, geo.clubnumber")
     for (row) in c.fetchall():
         club = Clubinfo(row)
     
     for l in sorted(club.clubsbylocator.keys()):
+        print l
         clubs = club.clubsbylocator[l]
+        outfile = open('compare%s.html' % (clubs[0].division + clubs[0].area), 'w')
+        outfile.write("<html><head>\n")
+        outfile.write("</head><body>\n")
         outfile.write('<h3>%s</h3>\n' % l)
         clubs.sort(key=lambda k:-k.maxdelta)
         outfile.write('<table border="1">')
         for club in clubs:
             outfile.write(repr(club))
         outfile.write('</table>')
-   
-    outfile.write("    </table>\n  </body>\n</html>\n")
-    outfile.close()
+        outfile.write("</body>\n</html>\n")
+        outfile.close()
