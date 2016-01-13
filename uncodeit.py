@@ -12,12 +12,12 @@ from math import pi, sin, cos
 clubs = {}
 class myclub():
     
-    fieldnames = 'clubnumber, clubname, place, address, city, state, zip, latitude, longitude, locationtype, partialmatch, nelat, nelong, swlat, swlong, area, formatted, types'
+    fieldnames = 'clubnumber, clubname, place, address, city, state, zip, latitude, longitude, locationtype, partialmatch, nelat, nelong, swlat, swlong, area, formatted, types, whqlatitude, whqlongitude'
     fieldnames += ', outcity, outstate, outzip'
     fields = [k.strip() for k in fieldnames.replace(',',' ').split()]
     values = ('%s,' * len(fields))[:-1]
     
-    def __init__(self, clubnumber, clubname, place, address, city, state, zip, latitude, longitude):
+    def __init__(self, clubnumber, clubname, place, address, city, state, zip, whqlatitude, whqlongitude):
         self.clubnumber = clubnumber
         self.clubname = clubname
         self.place = place
@@ -25,8 +25,10 @@ class myclub():
         self.city = city
         self.state = state
         self.zip = zip
-        self.latitude = latitude
-        self.longitude = longitude
+        self.whqlatitude = whqlatitude
+        self.whqlongitude = whqlongitude
+        self.latitude = whqlatitude
+        self.longitude = whqlongitude
         self.locationtype = ''
         self.partialmatch = False
         self.nelat = 0.0
