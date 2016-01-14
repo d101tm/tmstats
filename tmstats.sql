@@ -200,6 +200,8 @@ CREATE TABLE IF NOT EXISTS geo (
     whqlongitude DOUBLE,
     reverse VARCHAR(200),
     reversetype VARCHAR(30),
+    whqreverse VARCHAR(200), 
+    whqreversetype VARCHAR(30),
     INDEX(id)
 );
 
