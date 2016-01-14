@@ -84,6 +84,22 @@ if __name__ == "__main__":
             fa = rev['formatted_address']
             revloctype = rev['geometry']['location_type']
             print '        ', revloctype, fa
+            c.execute('UPDATE geo SET whqreverse=%s, whqreversetype=%s WHERE clubnumber=%s',
+                    (fa, revloctype, clubnumber))
+        except Exception, e:
+            print e
+    conn.commit()
+    
+    # Do the same for the locally-geocoded data
+    c.execute("SELECT clubnumber, clubname, latitude, longitude FROM geo")
+    for (clubnumber, clubname, latitude, longitude) in c.fetchall():
+        # Now, reverse-geocode the address and add it to the table
+        print clubnumber, clubname, latitude, longitude
+        try:        
+            rev = gmaps.reverse_geocode((latitude, longitude))[0]
+            fa = rev['formatted_address']
+            revloctype = rev['geometry']['location_type']
+            print '        ', revloctype, fa
             c.execute('UPDATE geo SET reverse=%s, reversetype=%s WHERE clubnumber=%s',
                     (fa, revloctype, clubnumber))
         except Exception, e:
