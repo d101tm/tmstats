@@ -75,22 +75,21 @@ if __name__ == "__main__":
     # Your main program begins here.
 
     gmaps = googlemaps.Client(key='AIzaSyAQJ_oe8p5ldJGJEQLSHvGpJcFocCRnxYg')
-    if 0:
-        c.execute("SELECT clubnumber, clubname, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs) ORDER BY clubnumber;")
-        for (clubnumber, clubname, whqlatitude, whqlongitude) in c.fetchall():
-            # Now, reverse-geocode the address and add it to the table
-            print clubnumber, clubname, whqlatitude, whqlongitude
-            try:        
-                rev = gmaps.reverse_geocode((whqlatitude, whqlongitude))[0]
-                fa = rev['formatted_address']
-                revloctype = rev['geometry']['location_type']
-                print '        ', revloctype, fa
-                c.execute('UPDATE geo SET reverse=%s, reversetype=%s WHERE clubnumber=%s',
-                        (fa, revloctype, clubnumber))
-            except Exception, e:
-                print e
-        conn.commit()
-    
+    c.execute("SELECT clubnumber, clubname, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs) ORDER BY clubnumber;")
+    for (clubnumber, clubname, whqlatitude, whqlongitude) in c.fetchall():
+        # Now, reverse-geocode the address and add it to the table
+        print clubnumber, clubname, whqlatitude, whqlongitude
+        try:        
+            rev = gmaps.reverse_geocode((whqlatitude, whqlongitude))[0]
+            fa = rev['formatted_address']
+            revloctype = rev['geometry']['location_type']
+            print '        ', revloctype, fa
+            c.execute('UPDATE geo SET reverse=%s, reversetype=%s WHERE clubnumber=%s',
+                    (fa, revloctype, clubnumber))
+        except Exception, e:
+            print e
+    conn.commit()
+
     # Now, do the same for the map info
     c.execute("SELECT clubnumber, clubname, lat, lng FROM map ORDER BY clubnumber")
     for (clubnumber, clubname, maplatitude, maplongitude) in c.fetchall():
