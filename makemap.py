@@ -77,9 +77,10 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--outfile', dest='outfile', default='markers.js')
     parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
-    parms.add_argument('--override', dest='override', default=None, help='Overrides coordinates and info from the GEO table.')
+    parms.add_argument('--pins', dest='pins', default='../../map/pins', help='Directory with pins')
     # Add other parameters here
     parms.parse() 
+    print parms
    
     # Connect to the database        
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
@@ -130,6 +131,11 @@ if __name__ == "__main__":
             else:
                 icon = ''.join(sorted(divs))
             print icon
+            try:
+                open('%s/%s.png' % (parms.pins, icon), 'r')
+            except Exception, e:
+                print e
+                icon = 'missing'
             outfile.write('addMarker("%d clubs", "%s",%s,%s,%s);\n' % (len(l), icon, club.latitude, club.longitude, clubinfo))
         else:
             club = l[0]
