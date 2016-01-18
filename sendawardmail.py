@@ -262,6 +262,7 @@ if __name__ == "__main__":
         awardinfo = curs.fetchall()
         theclubs = ','.join(['%d' % item[2] for item in awardinfo])
         # Get the person's information
+        firstname = ''
         curs.execute("SELECT firstname, email FROM roster WHERE clubnum IN (" + theclubs + ") AND fullname = %s", (membername.replace('"', ''),))
         email = ''
         for (name, mail) in curs.fetchall():
@@ -271,7 +272,7 @@ if __name__ == "__main__":
             
         letterinfo = []
         for item in awardinfo:
-            award = Award(membername, firstname, item[0], awarddate, email, item[1], item[3])
+            award = Award(membername, firstname if firstname else '<b>Not in roster</b>', item[0], awarddate, email if email else '<b>No email found</b>', item[1], item[3])
             report.append(award)
             letterinfo.append(award)    
 
