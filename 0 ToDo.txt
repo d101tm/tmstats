@@ -1,0 +1,47 @@
+TODO:
+
+
+
+Add "district" to the YML file and make it a required parameter (no default in the code).  Affects madness, distclubs, nothinbutnet.
+
+
+Rewrite madness.py to use the database.
+Rewrite distclubs.py to use the database.
+Rewrite nothinbutnet.py to use the database.
+
+Refactor snapshot.py to use OverrideClubs (or at least get the column definitions from it)  [part of a bigger rewrite]
+
+Consider allowing allstats to OverrideClubs.
+
+
+Get the geocoding done.
+
+###
+
+Consider setting up one- and two-column tables for What's Trending for phone users.
+
+###
+
+Fix dbconn.dbconn to retry on 
+
+\_mysql\_exceptions.OperationalError: (1040, 'Too many connections') 
+
+###
+
+
+Look at the month-end handling in getperformance.  This doesn't look right:
+
+     Updated clubperf for 2015-11-04 (month: 10/31/2015, year: 2015-2016) 
+     Updated areaperf for 2015-11-04 (month: 10/31/2015, year: 2015-2016) 
+     Updated distperf for 2015-11-04 (month: 10/31/2015, year: 2015-2016) 
+     Updated clubperf for 2015-11-04 (month: 11/30/2015, year: 2015-2016) 
+     Updated areaperf for 2015-11-04 (month: 11/30/2015, year: 2015-2016) 
+     Updated distperf for 2015-11-04 (month: 11/30/2015, year: 2015-2016) 
+
+###
+
+Clean up 'gator.sh' to allow doing more discrete operations.
+
+###
+
+Triple Crown

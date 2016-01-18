@@ -4,7 +4,7 @@
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
-import dbconn, tmutil, sys, os, xlrd, re
+import dbconn, tmutil, sys, os, xlrd, re, csv, codecs
 
 
 def inform(*args, **kwargs):
@@ -19,6 +19,45 @@ def inform(*args, **kwargs):
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
+
+def normalizefieldnames(fields):
+    # ('#' -> 'num', lowercase, no spaces or special chars)
+    fieldnames = [f.strip().lower().replace('#','num') for f in fields]
+    fieldnames = [re.sub(r'[^a-zA-z0-9]+','',f) for f in fieldnames]
+    return fieldnames
+    
+        
+class UTF8Recoder:
+    """
+    Iterator that reads an encoded stream and reencodes the input to UTF-8
+    """
+    def __init__(self, f, encoding):
+        self.reader = codecs.getreader(encoding)(f)
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.reader.next().encode("utf-8")
+
+
+class UnicodeReader:
+    """
+    A CSV reader which will iterate over lines in the CSV file "f",
+    which is encoded in the given encoding.
+    """
+
+    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+        f = UTF8Recoder(f, encoding)
+        self.reader = csv.reader(f, dialect=dialect, **kwds)
+
+    def next(self):
+        row = self.reader.next()
+        return [unicode(s, "utf-8") for s in row]
+
+    def __iter__(self):
+        return self
+
 if __name__ == "__main__":
  
     import tmparms
@@ -29,23 +68,42 @@ if __name__ == "__main__":
     
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument('roster', type=str, nargs='?', default='latestroster.xlsx', help='Name of the roster file, default is %(default)s')
+    parms.add_argument('roster', type=str, nargs=1, help='Name of the roster file')
     parms.add_argument('--quiet', '-q', action='count')
     # Add other parameters here
     parms.parse() 
-   
+    
+    parms.roster = parms.roster[0]
     # Connect to the database        
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
     
-    # Open the Excel file
-    book = xlrd.open_workbook(parms.roster)
-    sheet = book.sheet_by_index(0)
+    filetype = os.path.splitext(parms.roster)[1].lower()
+    values = []
+    
+    if filetype in ['.xls', '.xlsx']:
+        # Open the Excel file
+        book = xlrd.open_workbook(parms.roster)
+        sheet = book.sheet_by_index(0)
 
-    # Get the field names ('#' -> 'num', lowercase, no spaces or special chars)
-    fields = sheet.row_values(0)
-    fieldnames = [f.strip().lower().replace('#','num') for f in fields]
-    fieldnames = [re.sub(r'[^a-zA-z0-9]+','',f) for f in fieldnames]
+        # Get the field names and normalize them
+        fieldnames = normalizefieldnames(sheet.row_values(0))
+    
+        # And get the values
+        for row in xrange(1, sheet.nrows):
+            values.append(sheet.row_values(row))
+            
+    
+    elif filetype in ['.csv']:
+        csvfile = open(parms.roster, 'rbU')
+        reader = UnicodeReader(csvfile, encoding='Latin-1')
+        # Get the field names and convert them
+        fieldnames = normalizefieldnames(reader.next())
+        
+        # And get the values
+        for row in reader:
+            values.append(row)
+        csvfile.close()
     
     # Now, convert the field names into a SQL table declaration.  
     declare = []
@@ -54,6 +112,7 @@ if __name__ == "__main__":
             declare.append(f + ' INT')
         else:
             declare.append(f + ' VARCHAR(100)')
+        
 
     create = 'CREATE TABLE roster \n(%s,\n INDEX (clubnum, membernum))' % ',\n'.join(declare)
     
@@ -62,10 +121,8 @@ if __name__ == "__main__":
     curs.execute(create)
     
     # And now, populate the table
-    values = []
-    for row in xrange(1, sheet.nrows):
-        values.append(sheet.row_values(row))
     valuepart = ','.join(['%s']*len(fieldnames))
+    
     print curs.executemany('INSERT INTO roster VALUES (' + valuepart + ')', values), 'members found.'
     curs.execute('ALTER TABLE roster ADD COLUMN fullname VARCHAR(100)')
     print ('UPDATE roster SET fullname = REPLACE(CONCAT(lastname, ", ", firstname, " ", middle), \'"\', "")')

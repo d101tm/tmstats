@@ -45,11 +45,12 @@ delta_cursor = None
 try:
     tokinfo = open(state_file, 'r')
     for l in tokinfo.readlines():
-        (name, value) = l.strip().split(':')
-        if name == 'oauth2':
-            token = value
-        elif name == 'delta_cursor':
-            delta_cursor = value
+        if ':' in l:
+            (name, value) = l.strip().split(':')
+            if name == 'oauth2':
+                token = value
+            elif name == 'delta_cursor':
+                delta_cursor = value
     tokinfo.close()
 except IOError:
     pass
@@ -84,27 +85,29 @@ while has_more:
         if fileinfo:
             print filename
         ext = os.path.splitext(filename)[1]
-        if fileinfo and ext in ['.xlsx']:
-            # We care about Excel files, but only ones which exist.
-            # We only want to keep the very latest Excel file.
+        if fileinfo and ext in ['.xlsx', '.xls', '.csv']:
+            # We care about Excel and CSV files, but only ones which exist.
+            # We only want to keep the very latest file.
             # We assume consistency in timezone from Dropbox...
             fileinfo['modified'] = ' '.join(fileinfo['modified'].split()[1:5])
             filetime = datetime.strptime(fileinfo['modified'], "%d %b %Y %H:%M:%S")
             if (filetime > lasttime):
                 lastfile = filename
                 lasttime = filetime
+                lastext = ext
 
 
 # OK, if any Excel files were updated, we have the name of the latest in 
 # 'lastfile'.  Go get it.
 
 if lastfile:
-    outfile = open('latestroster.xlsx', 'wb')
+    outfilename = 'latestroster%s' % ext
+    outfile = open(outfilename, 'wb')
     with client.get_file(lastfile) as f:
         outfile.write(f.read())
     outfile.close()
     with open('rosterfileinfo.txt', 'wb') as outfile:
-        outfile.write('%s\n' % (lastfile))
+        outfile.write(outfilename + '\n')
     sys.exit(0)
 
 # If we get here, nothing has happened.  Exit RC=1
