@@ -80,7 +80,7 @@ if __name__ == "__main__":
     parms.add_argument('--pins', dest='pins', default='../../map/pins', help='Directory with pins')
     # Add other parameters here
     parms.parse() 
-    print parms
+    
    
     # Connect to the database        
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
@@ -99,6 +99,13 @@ if __name__ == "__main__":
     # Your main program begins here.
     outfile = open(parms.outfile, 'w')
     
+    # Start by putting in the buildMap call, since it will vary from District to District
+    buildmapparms = []
+    buildmapparms.append(repr(parms.map['northeast']))
+    buildmapparms.append(repr(parms.map['southwest']))
+    buildmapparms.append(repr(parms.map['center']))
+    outfile.write('buildMap(%s);\n' % ', '.join(buildmapparms))
+        
     # Replace the latitude/longitude information from WHQ with info from the GEO table, and also create 
     #   the directory of clubs by location, and the data for each club
     clubsByLocation = {}
@@ -116,12 +123,12 @@ if __name__ == "__main__":
     # Now, find multiple clubs at the same location
     for l in clubsByLocation.values():
         if len(l) > 1:
-            print '%d clubs at %s' % (len(l), l[0].coords)
+            inform('%d clubs at %s' % (len(l), l[0].coords))
             clubinfo = []
             divs = []
             for club in l:
-                print '%s%s %s' % (club.division, club.area, club.clubname)
-                print '   %s' % (club.address)
+                inform('%s%s %s' % (club.division, club.area, club.clubname), file=sys.stdout)
+                inform('   %s' % (club.address), file=sys.stdout)
                 clubinfo.append('new iwTab("%s", "%s")' % (club.clubname, makeCard(club)))
                 if club.division not in divs:
                     divs.append(club.division)
@@ -130,13 +137,13 @@ if __name__ == "__main__":
                 icon = divs[0] + 'M'
             else:
                 icon = ''.join(sorted(divs))
-            print icon
+            inform(icon, file=sys.stdout)
             try:
                 open('%s/%s.png' % (parms.pins, icon), 'r')
             except Exception, e:
                 print e
                 icon = 'missing'
-            outfile.write('addMarker("%d clubs", "%s",%s,%s,%s);\n' % (len(l), icon, club.latitude, club.longitude, clubinfo))
+            outfile.write('addMarker("%d clubs meet here", "%s",%s,%s,%s);\n' % (len(l), icon, club.latitude, club.longitude, clubinfo))
         else:
             club = l[0]
             clubinfo = '[new iwTab("%s", "%s")]' % (club.clubname, makeCard(club))
