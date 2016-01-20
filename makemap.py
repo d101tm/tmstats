@@ -62,7 +62,40 @@ def makeCard(club):
     data['state'] = club.state
     data['zip'] = club.zip
     return (cardtemplate % data).replace('"','\\"').replace("\n","\\n")
+
+class Bounds:
+
+    def __init__(self):  
+        self.north = None
+        self.south = None
+        self.east = None
+        self.west = None
+        
+    def extend(self, latitude, longitude):
+        if self.north is None:
+            self.north = latitude
+            self.south = latitude
+        else:
+            self.north = max(self.north, latitude)
+            self.south = min(self.south, latitude)
+        if self.east is None:
+            self.east = longitude
+            self.west = longitude
+        else:
+            self.east = max(self.east, longitude)
+            self.west = min(self.west, longitude)
+            
+    def center(self):
+        return '{lat:%f, lng:%f}' % ((self.north + self.south) / 2.0, (self.east + self.west) / 2.0)
+        
+    def northeast(self, latpadding, longpadding):
+        return '{lat:%f, lng:%f}' % (self.north + latpadding, self.east + longpadding)
     
+    def southwest(self, latpadding, longpadding):
+        return '{lat:%f, lng:%f}' % (self.south - longpadding, self.west - latpadding) 
+        
+    def bounds(self, latpadding=0.005, longpadding=0.001):
+        return 'new g.LatLngBounds(%s, %s)' % (self.southwest(latpadding, longpadding), self.northeast(latpadding, longpadding))
 
 if __name__ == "__main__":
  
@@ -75,7 +108,7 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
-    parms.add_argument('--outfile', dest='outfile', default='markers.js')
+    parms.add_argument('--outfile', dest='outfile', default='../../map/markers.js')
     parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
     parms.add_argument('--pins', dest='pins', default='../../map/pins', help='Directory with pins')
     # Add other parameters here
@@ -100,15 +133,13 @@ if __name__ == "__main__":
     outfile = open(parms.outfile, 'w')
     
     # Start by putting in the buildMap call, since it will vary from District to District
-    buildmapparms = []
-    buildmapparms.append(repr(parms.map['northeast']))
-    buildmapparms.append(repr(parms.map['southwest']))
-    buildmapparms.append(repr(parms.map['center']))
-    outfile.write('buildMap(%s);\n' % ', '.join(buildmapparms))
+
         
     # Replace the latitude/longitude information from WHQ with info from the GEO table, and also create 
     #   the directory of clubs by location, and the data for each club
     clubsByLocation = {}
+    boundsByDivision = {}
+    districtBounds = Bounds()
     curs.execute("SELECT clubnumber, latitude, longitude FROM geo")
     for (clubnumber, latitude, longitude) in curs.fetchall():
         club = clubs['%d' % clubnumber]
@@ -118,9 +149,30 @@ if __name__ == "__main__":
         club.card = makeCard(club)
         if club.coords not in clubsByLocation:
             clubsByLocation[club.coords] = []
+        if club.division != '0D':
+            if club.division not in boundsByDivision:
+                boundsByDivision[club.division] = Bounds()
+            boundsByDivision[club.division].extend(latitude, longitude)
+        districtBounds.extend(latitude, longitude)
         clubsByLocation[club.coords].append(club) 
         
-    # Now, find multiple clubs at the same location
+    # Write the actual call to build the map
+    outfile.write("buildMap();\n")
+    outfile.write("moveMap(%s,%s);\n" % (districtBounds.center(), districtBounds.bounds()))
+    
+        
+    # Write the zoom code
+    boundsByDivision['z'] = districtBounds
+    for div in sorted(boundsByDivision.keys()):
+        this = boundsByDivision[div]
+        outfile.write("""
+        $(".%s").click(function(){
+            moveMap(%s, %s)});
+        """ % (div.lower(), this.center(), this.bounds()))
+        
+  
+        
+    # Now, find multiple clubs at the same location and write out the markers
     for l in clubsByLocation.values():
         if len(l) > 1:
             inform('%d clubs at %s' % (len(l), l[0].coords))
