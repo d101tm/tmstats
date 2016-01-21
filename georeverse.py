@@ -106,19 +106,5 @@ if __name__ == "__main__":
             print e
     conn.commit()
 
-    # Now, do the same for the map info
-    c.execute("SELECT clubnumber, clubname, lat, lng FROM map ORDER BY clubnumber")
-    for (clubnumber, clubname, maplatitude, maplongitude) in c.fetchall():
-        print clubnumber, clubname, maplatitude, maplongitude
-        try:        
-            rev = gmaps.reverse_geocode((maplatitude, maplongitude))[0]
-            fa = rev['formatted_address']
-            revloctype = rev['geometry']['location_type']
-            print '        ', revloctype, fa
-            c.execute('UPDATE map SET mapreverse=%s, mapreversetype=%s WHERE clubnumber=%s',
-                    (fa, revloctype, clubnumber))
-        except Exception, e:
-            print e
-    conn.commit()
         
   
