@@ -209,11 +209,11 @@ if __name__ == "__main__":
     outfile.write("if ($('#map').width() >= %d) {\n" % (left + (half * celltotal)))
     # Normal case, if there's enough room
     for div in sorted(boundsByDivision.keys()):
-        top = celltotalheight if i > half else 0
         outfile.write("$('.div%s').css(%s);\n" % (div, outputprops(standardprops, left, top)))
         outfile.write("$('.div%s').css('background-color', fillcolors['%s']);\n" % (div, div))
         if i == half:
             left = initwidth + celltotal
+            top = celltotalheight
         else:
             left += celltotal
         i += 1
@@ -223,12 +223,18 @@ if __name__ == "__main__":
     smalltotal = 25
     top = 0
     standardprops['width'] = '15px'
-    standardprops['text-align'] = 'centerr'
+    standardprops['text-align'] = 'center'
+    i = 1
     for div in sorted(boundsByDivision.keys()):
         outfile.write("$('.div%s').css(%s);\n" % (div, outputprops(standardprops, left, top)))
         outfile.write("$('.div%s').css('background-color', fillcolors['%s']);\n" % (div, div))
         outfile.write("$('.div%s').html(' %s ');\n" % (div, div))
-        left += smalltotal
+        if i == half:
+            left = initwidth + celltotal
+            top = celltotalheight
+        else:
+            left += smalltotal
+        i += 1
     outfile.write("}\n")
 
     # Add the whole district's bounds    
