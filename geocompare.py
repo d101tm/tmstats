@@ -142,13 +142,10 @@ class Clubinfo:
     clubs = []
     clubsbylocator = {}
     def __init__(self, row):
-        fields = [f.strip() for f in 'district, division, area, clubnumber, clubname, place, address, latitude, longitude, reverse, reversetype, locationtype, whqlatitude, whqlongitude, whqreverse, whqreversetype, maplatitude, maplongitude, mapaddress, mapreverse, mapreversetype'.split(',')]
+        fields = [f.strip() for f in 'district, division, area, clubnumber, clubname, place, address, latitude, longitude, reverse, reversetype, locationtype, whqlatitude, whqlongitude, whqreverse, whqreversetype'.split(',')]
         for (name, value) in zip(fields, row):
             self.__dict__[name] = value
         self.whqgeodelta = distance_on_unit_sphere(self.whqlatitude, self.whqlongitude, self.latitude, self.longitude) if (self.whqlatitude != 0 and self.whqlongitude !=0) else 0
-        self.whqmapdelta = distance_on_unit_sphere(self.whqlatitude, self.whqlongitude, self.maplatitude, self.maplongitude) if (self.whqlatitude != 0 and self.whqlongitude !=0) else 0
-        self.geomapdelta = distance_on_unit_sphere(self.latitude, self.longitude, self.maplatitude, self.maplongitude)
-        self.maxdelta = max(self.whqgeodelta, self.whqmapdelta, self.geomapdelta)
         self.clubs.append(self)
         locator = 'District %s, Area %s' % (self.district, self.division + self.area)
         if locator not in self.clubsbylocator:
@@ -168,30 +165,23 @@ class Clubinfo:
         ans.append("<tr>")
         ans.append("<td>&nbsp;</td>")
         ans.append("<td>C: Club Central</td>")
-        ans.append("<td>M: D4TM map</td>")
         ans.append("<td>G: geocoded from Club Central</td>")
         ans.append("</tr>")
         ans.append("<tr>")
         ans.append("<td>Meeting Location</td>")
         ans.append("<td>%s<br />%s</td>" % (self.place, self.address)) 
-        ans.append("<td>%s</td>" % self.mapaddress)
         ans.append("<td>&nbsp;</td>")
         ans.append("</tr><tr>")
         ans.append("<td>Coordinates</td>")
         ans.append("<td>(%f, %f)</td>" % (self.whqlatitude, self.whqlongitude))
-        ans.append("<td>(%f, %f)</td>" % (self.maplatitude, self.maplongitude))
         ans.append("<td>(%f, %f)</td>" % (self.latitude, self.longitude))
         ans.append("</tr><tr>")
         ans.append("<td>Coordinate address</td>")
         ans.append("<td>%s<br />(%s)" % (self.whqreverse, self.whqreversetype))
-        ans.append("<td>%s<br />(%s)" % (self.mapreverse, self.mapreversetype))
         ans.append("<td>%s<br />(%s)" % (self.reverse, self.reversetype))
         ans.append("<td>&nbsp;</td>")
         ans.append("</tr><tr>")
         ans.append("<td>Distance (miles)</td>")
-        ans.append("<td>C to M: %s</td>" % ('%.2f' % self.whqmapdelta if self.whqlatitude != 0 and self.whqlongitude != 0 else 'N/A'))
-        ans.append("<td>M to G: %.2f</td>" % self.geomapdelta)
-
         ans.append("<td>G to C: %s</td>" % ('%.2f' % self.whqgeodelta if self.whqlatitude != 0 and self.whqlongitude != 0 else 'N/A'))
         ans.append("</tr>")
         if club.clubnumber in addrchanges:
@@ -205,8 +195,6 @@ class Clubinfo:
         ans.append("<td>")
         href = []
         href.append("http://maps.googleapis.com/maps/api/staticmap?size=400x400&key=AIzaSyAMfs7vnmebebI4j00oTz8kqH3hw7b9s_8") 
-        href.append("&markers=color:red%7Clabel:M%7C")
-        href.append("%f,%f"% (self.maplatitude, self.maplongitude))
         href.append("&markers=color:blue%7Clabel:G%7C")
         href.append("%f,%f"% (self.latitude, self.longitude))
         if self.whqlatitude != 0.0 or self.whqlongitude != 0.0:
@@ -242,7 +230,7 @@ if __name__ == "__main__":
 
     # And now, create the final comparison as a table
 
-    c.execute("select clubs.district, clubs.division, clubs.area, geo.clubnumber, geo.clubname, geo.place, concat(geo.address,', ',geo.city,', ',geo.state,' ',geo.zip, ', USA'), geo.latitude, geo.longitude, geo.reverse, geo.reversetype, geo.locationtype, geo.whqlatitude, geo.whqlongitude, geo.whqreverse, geo.whqreversetype, map.lat, map.lng, map.address, mapreverse, mapreversetype from geo inner join map on map.clubnumber = geo.clubnumber inner join clubs on geo.clubnumber = clubs.clubnumber WHERE clubs.lastdate IN (SELECT MAX(lastdate) FROM clubs) order by clubs.district, clubs.division, clubs.area, geo.clubnumber")
+    c.execute("select clubs.district, clubs.division, clubs.area, geo.clubnumber, geo.clubname, geo.place, concat(geo.address,', ',geo.city,', ',geo.state,' ',geo.zip, ', USA'), geo.latitude, geo.longitude, geo.reverse, geo.reversetype, geo.locationtype, geo.whqlatitude, geo.whqlongitude, geo.whqreverse, geo.whqreversetype from geo inner join map on map.clubnumber = geo.clubnumber inner join clubs on geo.clubnumber = clubs.clubnumber WHERE clubs.lastdate IN (SELECT MAX(lastdate) FROM clubs) order by clubs.district, clubs.division, clubs.area, geo.clubnumber")
     for (row) in c.fetchall():
         club = Clubinfo(row)
         
@@ -265,7 +253,7 @@ if __name__ == "__main__":
         outfile.write("</style>")
         outfile.write("</head><body>\n")
         outfile.write('<h1>%s</h1>\n' % l)
-        clubs.sort(key=lambda k:-k.maxdelta)
+        clubs.sort(key=lambda k:-k.whqgeodelta)
 
         for club in clubs:
             outfile.write(repr(club))
