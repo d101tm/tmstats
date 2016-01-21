@@ -129,7 +129,6 @@ if __name__ == "__main__":
     # Remove suspended clubs
     clubs = removeSuspendedClubs(clubs, curs)
     
-    # Your main program begins here.
     outfile = open(parms.outfile, 'w')
     
     # Start by putting in the buildMap call, since it will vary from District to District
@@ -155,24 +154,80 @@ if __name__ == "__main__":
             boundsByDivision[club.division].extend(latitude, longitude)
         districtBounds.extend(latitude, longitude)
         clubsByLocation[club.coords].append(club) 
+    
+    
+    
         
     # Write the actual call to build the map
     outfile.write("buildMap();\n")
     outfile.write("moveMap(%s,%s);\n" % (districtBounds.center(), districtBounds.bounds()))
     
+    # Insert the "zoom" controls
+    outfile.write("""zoomdiv = $('<div id="zoom"></div>').insertAfter('#map');\n""")
+    structure = []
+    structure.append('<span id="nav-head">Click to Select</span>')
+    structure.append('<span class="divdistrict">District %s</span>' % parms.district)
+    
+    for div in sorted(boundsByDivision.keys()):
+        structure.append('<span class="div%s">Division %s</span>' % (div, div))
+            
+    outfile.write("$('%s').appendTo('#zoom');\n" % '\\\n'.join(structure))
+    
+    
+    def outputprops(props, left, top):
+        out = []
+        for k, v in props.iteritems():
+            out.append("'%s':'%s'" % (k, v))
+        out.append("'left':'%dpx'" % left)
+        out.append("'top':'%dpx'" % top)
+        out.append("'position':'absolute'")
+        return '{%s}' % ','.join(out)
+        
+        
+        
+    # Position and style the "zoom" controls
+    cellwidth = 60
+    celltotal = 70
+    cellheight = 20
+    celltotalheight = 24
+    initwidth = 90
+    standardprops = {'width':'%dpx' % cellwidth,'padding':'2px','border-style':'solid','border-width':'1px','border-color':'#555','vertical-align':'top'}
+    outfile.write("$('#zoom').css({'top':'10px', 'font-family':'Arial', 'font-size':'10pt', 'position':'relative'});\n")
+    outfile.write("$('#nav-head').css({'width':'%dpx','text-align':'center','vertical-align':'middle','height':'%dpx','display':'inline-block'});\n" % (cellwidth, 2*cellheight))
+    aaaprops = standardprops.copy()
+    aaaprops['display'] = 'inline-block'
+    aaaprops['height'] = '%dpx' % (cellheight * 2)
+    aaaprops['vertical-align'] = 'center'
+    outfile.write("$('.divdistrict').css(%s);\n" % outputprops(aaaprops, initwidth, 0))
+    left = initwidth + celltotal
+    top = 0
+    i = 1
+    half = (1 + len(boundsByDivision)) / 2
+    for div in sorted(boundsByDivision.keys()):
+        top = celltotalheight if i > half else 0
+        outfile.write("$('.div%s').css(%s);\n" % (div, outputprops(standardprops, left, top)))
+        outfile.write("$('.div%s').css('background-color', fillcolors['%s']);\n" % (div, div))
+        if i == half:
+            left = initwidth + celltotal
+        else:
+            left += celltotal
+        i += 1
+        
+        
+    
+
+    # Add the whole district's bounds    
+    boundsByDivision['district'] = districtBounds
         
     # Write the zoom code
-    boundsByDivision['z'] = districtBounds
     for div in sorted(boundsByDivision.keys()):
         this = boundsByDivision[div]
         outfile.write("""
-        $(".%s").click(function(){
+        $(".div%s").click(function(){
             moveMap(%s, %s)});
-        """ % (div.lower(), this.center(), this.bounds()))
+        """ % (div, this.center(), this.bounds()))
         
-  
-        
-    # Now, find multiple clubs at the same location and write out the markers
+    # Now, write out the markers (combining multiple clubs at the same location)
     for l in clubsByLocation.values():
         if len(l) > 1:
             inform('%d clubs at %s' % (len(l), l[0].coords))
