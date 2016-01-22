@@ -86,26 +86,41 @@ if __name__ == "__main__":
         book = xlrd.open_workbook(parms.roster)
         sheet = book.sheet_by_index(0)
 
-        # Get the field names and normalize them
+        # Get the field names and normalize them; find the name columns
         fieldnames = normalizefieldnames(sheet.row_values(0))
+        fieldnames.append('fullname')
+        ifirstname = fieldnames.index('firstname')
+        imiddle = fieldnames.index('middle')
+        ilastname = fieldnames.index('lastname')
     
         # And get the values
         for row in xrange(1, sheet.nrows):
             values.append(sheet.row_values(row))
+            # And add the fullname
+            values[-1].append(('%s, %s %s' % (row[ilastname],row[ifirstname],row[imiddle])).strip())
             
     
     elif filetype in ['.csv']:
         csvfile = open(parms.roster, 'rbU')
         reader = UnicodeReader(csvfile, encoding='Latin-1')
-        # Get the field names and convert them
+
+        # Get the field names and normalize them; find the name columns
         fieldnames = normalizefieldnames(reader.next())
+        fieldnames.append('fullname')
+        ifirstname = fieldnames.index('firstname')
+        imiddle = fieldnames.index('middle')
+        ilastname = fieldnames.index('lastname')
+        
         
         # And get the values
         for row in reader:
             values.append(row)
+            # And add the fullname
+            values[-1].append(('%s, %s %s' % (row[ilastname],row[ifirstname],row[imiddle])).strip())
         csvfile.close()
     
     # Now, convert the field names into a SQL table declaration.  
+    # add "fullname" at the end
     declare = []
     for f in fieldnames:
         if f.endswith('num'):
@@ -114,8 +129,9 @@ if __name__ == "__main__":
             declare.append(f + ' VARCHAR(100)')
         
 
-    create = 'CREATE TABLE roster \n(%s,\n INDEX (clubnum, membernum))' % ',\n'.join(declare)
+    create = 'CREATE TABLE roster \n(%s,\n INDEX (clubnum, fullname))' % ',\n'.join(declare)
     
+    print create
     # And create the table (dropping an old one if it exists)
     curs.execute('DROP TABLE IF EXISTS roster')
     curs.execute(create)
@@ -124,7 +140,4 @@ if __name__ == "__main__":
     valuepart = ','.join(['%s']*len(fieldnames))
     
     print curs.executemany('INSERT INTO roster VALUES (' + valuepart + ')', values), 'members found.'
-    curs.execute('ALTER TABLE roster ADD COLUMN fullname VARCHAR(100)')
-    print ('UPDATE roster SET fullname = REPLACE(CONCAT(lastname, ", ", firstname, " ", middle), \'"\', "")')
-    curs.execute('UPDATE roster SET fullname = REPLACE(CONCAT(lastname, ", ", firstname, " ", middle), \'"\', "")')
     conn.commit()
