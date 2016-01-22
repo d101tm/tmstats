@@ -203,7 +203,7 @@ if [[ "$dorun" = "yes" ]] ; then
 
     # Now, ingest rosters if need be
     echo "Checking for a new roster"
-    ../getroster.py && ../ingestroster.py
+    ../getroster.py && ../ingestroster.py "$(cat rosterfileinfo.txt)"
 
     # And process award letters
     echo "Processing award letters"
