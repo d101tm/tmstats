@@ -131,7 +131,6 @@ if __name__ == "__main__":
 
     create = 'CREATE TABLE roster \n(%s,\n INDEX (clubnum, fullname))' % ',\n'.join(declare)
     
-    print create
     # And create the table (dropping an old one if it exists)
     curs.execute('DROP TABLE IF EXISTS roster')
     curs.execute(create)
