@@ -186,13 +186,13 @@ if __name__ == "__main__":
         
         
     # Position and style the "zoom" controls
-    cellwidth = 60
-    celltotal = 70
+    cellwidth = 65
+    celltotal = 75
     cellheight = 20
     celltotalheight = 24
     initwidth = 90
     standardprops = {'width':'%dpx' % cellwidth,'padding':'2px','border-style':'solid','border-width':'1px','border-color':'#555','vertical-align':'top'}
-    outfile.write("$('#zoom').css({'top':'10px', 'font-family':'Arial', 'font-size':'10pt', 'position':'relative'});\n")
+    outfile.write("$('#zoom').css({'top':'3px', 'font-family':'Arial', 'font-size':'10pt', 'position':'relative', 'height':'47px'});\n")
     outfile.write("$('#nav-head').css({'width':'%dpx','text-align':'center','vertical-align':'middle','height':'%dpx','display':'inline-block'});\n" % (cellwidth, 2*cellheight))
     aaaprops = standardprops.copy()
     aaaprops['display'] = 'inline-block'
