@@ -7,13 +7,18 @@ import dbconn, tmparms
 import os, sys
 from math import pi, sin, cos
 import pprint
+import datetime
 
 
 
 clubs = {}
 class myclub():
     
-    fieldnames = 'clubnumber, clubname, place, address, city, state, zip, latitude, longitude, locationtype, partialmatch, nelat, nelong, swlat, swlong, area, formatted, types, whqlatitude, whqlongitude, reverse, reversetype, whqreverse, whqreversetype'
+    @classmethod
+    def setgmaps(self, gmaps):
+        self.gmaps = gmaps
+    
+    fieldnames = 'clubnumber, clubname, place, address, city, state, zip, country, latitude, longitude, locationtype, partialmatch, nelat, nelong, swlat, swlong, area, formatted, types, whqlatitude, whqlongitude, reverse, reversetype, whqreverse, whqreversetype'
     fieldnames += ', premise, outcity, outstate, outzip'
     fields = [k.strip() for k in fieldnames.replace(',',' ').split()]
     values = ('%s,' * len(fields))[:-1]
@@ -134,24 +139,51 @@ class myclub():
                     
             # Now, reverse-geocode the coordinates from WHQ
             try:        
-                rev = gmaps.reverse_geocode((self.whqlatitude, self.whqlongitude))[0]
+                rev = self.gmaps.reverse_geocode((self.whqlatitude, self.whqlongitude))[0]
                 self.whqreverse = rev['formatted_address']
                 self.whqreversetype = rev['geometry']['location_type']
             except Exception, e:
                 print(e)
+                sys.exit(1)
                 
             # And reverse-geocode the coordinates we calculated
             try:        
-                rev = gmaps.reverse_geocode((self.latitude, self.longitude))[0]
+                rev = self.gmaps.reverse_geocode((self.latitude, self.longitude))[0]
                 self.reverse = rev['formatted_address']
                 self.reversetype = rev['geometry']['location_type']
             except Exception, e:
                 print(e)
+                sys.exit(1)
                                     
             # Finally, update the database
             curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
                     ([self.__dict__[k] for k in self.fields]))
             
+def updateclubstocurrent(conn, clubs):
+    # conn is a database connection
+    # Clubs is an array of clubnumbers to update; if null, update all clubs.
+    gmaps = googlemaps.Client(key='AIzaSyAQJ_oe8p5ldJGJEQLSHvGpJcFocCRnxYg')
+    myclub.setgmaps(gmaps)
+    c = conn.cursor()
+    selector = "SELECT clubnumber, clubname, place, address, city, state, zip, country, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs)"
+    if clubs:
+        clubs = '(%s)' % ','.join([repr(club) for club in clubs])
+        print('Updating %s' % clubs)
+        c.execute(selector + ' AND clubnumber IN ' + clubs)
+    else:
+        c.execute(selector)
+       
+    for (clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude)  in c.fetchall():
+        print (clubnumber, clubname)
+        print (address, city, state, zip)
+        gres = gmaps.geocode("%s, %s, %s %s" % (address, city, state, zip))
+        pprint.pprint(gres)
+        print ("=================")
+        club = myclub(clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude).update(gres, c)
+        
+    # And delete any clubs from GEO which aren't current
+    c.execute('DELETE FROM geo WHERE clubnumber NOT IN (SELECT clubnumber FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs))')
+    conn.commit()
             
         
 if __name__ == "__main__":
@@ -162,20 +194,11 @@ if __name__ == "__main__":
     gotodatadir()
         
     reload(sys).setdefaultencoding('utf8')
-    sys.stdout = open('geocode.txt', 'w')
-    gmaps = googlemaps.Client(key='AIzaSyAQJ_oe8p5ldJGJEQLSHvGpJcFocCRnxYg')
+    sys.stdout = open('geocode.%s.txt' % datetime.datetime.now().strftime('%Y-%m-%d'), 'w')
+    
     parms = tmparms.tmparms()
     parms.parse()
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    c = conn.cursor()
-    c.execute("SELECT clubnumber, clubname, place, address, city, state, zip, country, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs) ORDER BY CLUBNUMBER;")
-    for (clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude)  in c.fetchall():
-        print (clubnumber, clubname)
-        print (address, city, state, zip)
-        gres = gmaps.geocode("%s, %s, %s %s" % (address, city, state, zip))
-        pprint.pprint(gres)
-        print ("=================")
-        club = myclub(clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude).update(gres, c)
-    conn.commit()
+    updateclubstocurrent(conn, [])
     
     

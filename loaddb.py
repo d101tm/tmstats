@@ -9,6 +9,7 @@
 import csv, dbconn, sys, os, glob
 from simpleclub import Club
 from tmutil import cleandate
+import geocode
 
 # Global variable to see how many entries got changed.  All we really care about is zero/nonzero.
 global changecount
@@ -143,6 +144,13 @@ def doHistoricalClubs(conn):
     
     # Commit all changes    
     conn.commit()
+    
+    # And update the GEO table if necessary
+    curs.execute('SELECT c.clubnumber FROM clubs c INNER JOIN geo g ON g.clubnumber = c.clubnumber AND (c.address != g.address OR c.city != g.city OR c.state != g.state OR c.zip != g.zip OR c.country != g.country OR c.latitude != g.whqlatitude OR c.longitude != g.whqlongitude) WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs)')
+    clubstoupdate = ['%d' % c[0] for c in curs.fetchall()]
+    if clubstoupdate:
+        geocode.updateclubstocurrent(conn, clubstoupdate)
+        
 
 
 def doDailyClubs(infile, conn, cdate, firsttime=False):
