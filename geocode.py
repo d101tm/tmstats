@@ -61,13 +61,14 @@ class myclub():
         curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
                 ([self.__dict__[k] for k in self.fields]))
         
-    def update(self, results, curs):
+        
+    def process(self, results):
+        
         if isinstance(results, basestring):
             results = eval(results)  # Yes, it's unsafe.  
         if len(results) != 1:
             print(len(results), 'results found for', self.clubnumber, self.clubname, '\n', self.address, self.city, self.state, self.zip, file=sys.stderr)
-        if len(results) >= 1:
-            curs.execute('DELETE FROM geo WHERE clubnumber = %s', (self.clubnumber,))
+
         # Let's see if there's a ROOFTOP address - if so, use it and only it.  If not, warn, and put all addresses in the database for now.
         for r in results:
             if r['geometry']['location_type'] == 'ROOFTOP':
@@ -144,7 +145,7 @@ class myclub():
                 self.whqreversetype = rev['geometry']['location_type']
             except Exception, e:
                 print(e)
-                sys.exit(1)
+                
                 
             # And reverse-geocode the coordinates we calculated
             try:        
@@ -153,11 +154,15 @@ class myclub():
                 self.reversetype = rev['geometry']['location_type']
             except Exception, e:
                 print(e)
-                sys.exit(1)
-                                    
-            # Finally, update the database
-            curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
-                    ([self.__dict__[k] for k in self.fields]))
+            
+                
+    def update(self, results, curs):
+        # Process the information
+        self.process(results)
+        # Update the database
+        curs.execute('DELETE FROM geo WHERE clubnumber = %s', (self.clubnumber,))
+        curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
+                ([self.__dict__[k] for k in self.fields]))
             
 def updateclubstocurrent(conn, clubs):
     # conn is a database connection
