@@ -9,6 +9,12 @@ from datetime import datetime
 import sys
 from tmutil import gotodatadir
 
+
+# temphackfix
+
+from dropbox.rest import urllib3
+urllib3.disable_warnings()
+
 state_file = 'trainingstate.txt'
 appinfo_file = 'trainingtokens.txt'
 
