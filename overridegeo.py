@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
-    parms.add_argument('--override', dest='override', default='https://docs.google.com/spreadsheets/d/1DQy6JmPkH827WXk0MxD1OdyE3BNhwdZPwoX8pQPjrr4/export?format=csv&usp=sharing', help='Google Spreadsheet with overrides coordinates and info from the GEO table.')
+    parms.add_argument('--override', dest='override', default='https://docs.google.com/spreadsheets/d/1DQy6JmPkH827WXk0MxD1OdyE3BNhwdZPwoX8pQPjrr4/export?format=csv&usp=sharing', help='Google Spreadsheet which overrides coordinates and info from the GEO table.')
     
     # Add other parameters here
     parms.parse() 
