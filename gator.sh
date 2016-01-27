@@ -176,7 +176,7 @@ if [[ "$dorun" = "yes" ]] ; then
         ../runclubchanges.sh Sat
 
         echo "Making map"
-        ../makemap.py 
+        ../makemap.py -q
         
     fi
     
