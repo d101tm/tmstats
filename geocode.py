@@ -1,15 +1,21 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
 import googlemaps
-import urllib3
-import logging
 import dbconn, tmparms
 import os, sys
 from math import pi, sin, cos
 import pprint
 import datetime
 
+# temphackfix
+from requests.adapters import HTTPAdapter
+orig_send = HTTPAdapter.send
+def _send_no_verify(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None):
+    return orig_send(self, request, stream, timeout, False, cert, proxies)
+HTTPAdapter.send = _send_no_verify
 
+from requests.packages import urllib3
+urllib3.disable_warnings()
 
 clubs = {}
 class myclub():
@@ -174,13 +180,15 @@ def updateclubstocurrent(conn, clubs, apikey):
     gmaps = googlemaps.Client(apikey)
     myclub.setgmaps(gmaps)
     c = conn.cursor()
-    selector = "SELECT clubnumber, clubname, place, address, city, state, zip, country, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs)"
+    c.execute('SELECT MAX(lastdate) FROM clubs')
+    lastdate = c.fetchone()[0]
+    selector = "SELECT clubnumber, clubname, place, address, city, state, zip, country, latitude, longitude FROM clubs WHERE lastdate = %s"
     if clubs:
         clubs = '(%s)' % ','.join([repr(club) for club in clubs])
         print('Updating %s' % clubs)
-        c.execute(selector + ' AND clubnumber IN ' + clubs)
+        c.execute(selector + ' AND clubnumber IN ' + clubs, (lastdate,))
     else:
-        c.execute(selector)
+        c.execute(selector, (lastdate,))
        
     for (clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude)  in c.fetchall():
         print (clubnumber, clubname)
@@ -191,7 +199,7 @@ def updateclubstocurrent(conn, clubs, apikey):
         club = myclub(clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude).update(gres, c)
         
     # And delete any clubs from GEO which aren't current
-    c.execute('DELETE FROM geo WHERE clubnumber NOT IN (SELECT clubnumber FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs))')
+    c.execute('DELETE FROM geo WHERE clubnumber NOT IN (SELECT clubnumber FROM clubs WHERE lastdate = %s)', (lastdate,))
     conn.commit()
             
         
