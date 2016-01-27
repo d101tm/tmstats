@@ -5,8 +5,7 @@
 import dbconn, tmutil, sys, os
 from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs
-import googlemaps
-import urllib2, csv
+from overridepositions import Relocate, overrideClubPositions
 
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
@@ -64,40 +63,7 @@ def makeCard(club):
     data['zip'] = club.zip
     return (cardtemplate % data).replace('"','\\"').replace("\n","\\n")
     
-def overrideClubPositions(clubs, overridefile, apikey):
-    from geocode import myclub
-    gmaps = googlemaps.Client(key=apikey)
-    myclub.setgmaps(gmaps)
-    data = urllib2.urlopen(overridefile, 'rb')
-    reader = csv.DictReader(data)
-    for row in reader:
-        clubnumber = row['clubnumber']
-        club = clubs[clubnumber]
-        try:
-            # Use explicit coordinates if we find them
-            latitude = float(row['latitude'])
-            longitude = float(row['longitude'])
-            Relocate(clubnumber, latitude, longitude)   # Create the relocation entry
-            # Both are specified, so we use them
-        except:
-            if row['address']:
-                # No coordinates provided but an address is here; use it.
-                gres = gmaps.geocode(row['address']) # Includes city, state, zip, country if needed
-                reloinfo = myclub(clubnumber, club.clubname, club.place, club.address, club.city, club.state, club.zip, club.country, 0.0, 0.0)
-                print reloinfo
-                reloinfo.process(gres)
-                print reloinfo
-                Relocate(clubnumber, reloinfo.latitude, reloinfo.longitude)
-    data.close()
-    
-class Relocate:
-    relocations = {}
-    def __init__(self, clubnumber, latitude, longitude):
-        self.clubnumber = clubnumber
-        self.latitude = latitude
-        self.longitude = longitude
-        self.relocations[int(clubnumber)] = self
-        print 'Relocated club %s to (%f, %f)' % (clubnumber, latitude, longitude)
+
 
 class Bounds:
 
@@ -172,7 +138,6 @@ if __name__ == "__main__":
     # If there are overrides to club positioning, handle them now
     if parms.mapoverride:
         overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
-        print Relocate.relocations
 
     outfile = open(parms.outfile, 'w')
     
