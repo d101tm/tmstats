@@ -126,7 +126,7 @@ def cleanitem(item):
     return item
     
         
-def doHistoricalClubs(conn):
+def doHistoricalClubs(conn, mapkey):
     clubfiles = glob.glob("clubs.*.csv")
     clubfiles.sort()
     curs = conn.cursor()
@@ -149,7 +149,7 @@ def doHistoricalClubs(conn):
     curs.execute('SELECT c.clubnumber FROM clubs c INNER JOIN geo g ON g.clubnumber = c.clubnumber AND (c.address != g.address OR c.city != g.city OR c.state != g.state OR c.zip != g.zip OR c.country != g.country OR c.latitude != g.whqlatitude OR c.longitude != g.whqlongitude) WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs)')
     clubstoupdate = ['%d' % c[0] for c in curs.fetchall()]
     if clubstoupdate:
-        geocode.updateclubstocurrent(conn, clubstoupdate)
+        geocode.updateclubstocurrent(conn, clubstoupdate, mapkey)
         
 
 
@@ -677,7 +677,7 @@ if __name__ == "__main__":
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
         
     inform("Processing Clubs", supress=1)
-    doHistoricalClubs(conn)
+    doHistoricalClubs(conn, parms.googlemapsapikey)
     doHistorical(conn, "distperf")
     doHistorical(conn, "clubperf")
     doHistorical(conn, "areaperf")

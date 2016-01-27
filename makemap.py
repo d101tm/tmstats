@@ -108,12 +108,16 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
-    parms.add_argument('--outfile', dest='outfile', default='../../map/markers.js')
+    parms.add_argument('--outfile', dest='outfile', default='markers.js')
     parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
-    parms.add_argument('--pins', dest='pins', default='../../map/pins', help='Directory with pins')
+    parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
+    parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     # Add other parameters here
     parms.parse() 
     
+    # Promote information from parms.makemap if not already specified
+    parms.mapoverride = parms.mappoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
+    parms.pindir = parms.pindir if parms.pindir else parms.makemap.get('pindir',None)
    
     # Connect to the database        
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
@@ -267,16 +271,28 @@ if __name__ == "__main__":
             else:
                 icon = ''.join(sorted(divs))
             inform(icon, file=sys.stdout)
-            try:
-                open('%s/%s.png' % (parms.pins, icon), 'r')
-            except Exception, e:
-                print e
-                icon = 'missing'
+            if parms.pindir:
+                try:
+                    open('%s/%s.png' % (parms.pindir, icon), 'r')
+                except Exception, e:
+                    print e
+                    icon = 'missing'
+            else:
+                icon = ''
             outfile.write('addMarker("%d clubs meet here", "%s",%s,%s,%s);\n' % (len(l), icon, club.latitude, club.longitude, clubinfo))
         else:
             club = l[0]
+            if parms.pindir:
+                icon = (club.division + club.area).upper()
+                try:
+                    open('%s/%s.png' % (parms.pindir, icon), 'r')
+                except Exception, e:
+                    print e
+                    icon = 'missing'
+            else:
+                icon = ''
             clubinfo = '[new iwTab("%s", "%s")]' % (club.clubname, makeCard(club))
-            outfile.write('addMarker("%s", "%s",%s,%s,%s);\n' % (club.clubname, (club.division + club.area).upper(), club.latitude, club.longitude, clubinfo))
+            outfile.write('addMarker("%s", "%s",%s,%s,%s);\n' % (club.clubname, icon, club.latitude, club.longitude, clubinfo))
 
     outfile.close()
    

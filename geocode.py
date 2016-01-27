@@ -164,10 +164,10 @@ class myclub():
         curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
                 ([self.__dict__[k] for k in self.fields]))
             
-def updateclubstocurrent(conn, clubs):
+def updateclubstocurrent(conn, clubs, apikey):
     # conn is a database connection
     # Clubs is an array of clubnumbers to update; if null, update all clubs.
-    gmaps = googlemaps.Client(key='AIzaSyAQJ_oe8p5ldJGJEQLSHvGpJcFocCRnxYg')
+    gmaps = googlemaps.Client(apikey)
     myclub.setgmaps(gmaps)
     c = conn.cursor()
     selector = "SELECT clubnumber, clubname, place, address, city, state, zip, country, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs)"
@@ -204,6 +204,6 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.parse()
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    updateclubstocurrent(conn, [])
+    updateclubstocurrent(conn, [], parms.googlemapsapikey)
     
     
