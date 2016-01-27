@@ -182,6 +182,7 @@ CREATE TABLE IF NOT EXISTS geo (
     city VARCHAR(50),
     state VARCHAR(10),
     zip VARCHAR(10),
+    country varchar(100),
     latitude DOUBLE,
     longitude DOUBLE,
     locationtype VARCHAR(30),
@@ -202,6 +203,7 @@ CREATE TABLE IF NOT EXISTS geo (
     reversetype VARCHAR(30),
     whqreverse VARCHAR(200), 
     whqreversetype VARCHAR(30),
+    premise varchar(100),
     INDEX(id)
 );
 
