@@ -174,6 +174,9 @@ if [[ "$dorun" = "yes" ]] ; then
         
         echo "Running Club Change Report"
         ../runclubchanges.sh Sat
+
+        echo "Making map"
+        ../makemap.py 
         
     fi
     
@@ -206,8 +209,13 @@ if [[ "$dorun" = "yes" ]] ; then
     ../getroster.py && ../ingestroster.py
 
     # And process award letters
-    echo "Processing award letters"
-    ../sendawardmail.py
+    if [[ "$(hostname)" == *.local ]]
+        then
+            echo "award letters not sent - not on proper host"
+    else
+            echo "Processing award letters"
+            echo ../sendawardmail.py
+    fi
     
     rm marker
     rm *.success 2>/dev/null
