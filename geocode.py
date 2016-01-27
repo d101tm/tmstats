@@ -54,6 +54,9 @@ class myclub():
         self.whqreverse = ''
         self.whqreversetype = ''
         
+    def __repr__(self):
+        return "%s (%s)\n  ours: (%f, %f)\n  whq: (%f, %f)" % (self.clubname, self.clubnumber, self.latitude, self.longitude, self.whqlatitude, self.whqlongitude)
+        
 
     def updatefromwhq(self, curs):
         curs.execute('DELETE FROM geo WHERE clubnumber = %s', (self.clubnumber,))
@@ -139,12 +142,13 @@ class myclub():
                     self.premise = each['short_name']
                     
             # Now, reverse-geocode the coordinates from WHQ
-            try:        
-                rev = self.gmaps.reverse_geocode((self.whqlatitude, self.whqlongitude))[0]
-                self.whqreverse = rev['formatted_address']
-                self.whqreversetype = rev['geometry']['location_type']
-            except Exception, e:
-                print(e)
+            if (self.whqlatitude != 0.0) and (self.whqlatitude != 0.0):
+                try:        
+                    rev = self.gmaps.reverse_geocode((self.whqlatitude, self.whqlongitude))[0]
+                    self.whqreverse = rev['formatted_address']
+                    self.whqreversetype = rev['geometry']['location_type']
+                except Exception, e:
+                    print(e)
                 
                 
             # And reverse-geocode the coordinates we calculated
