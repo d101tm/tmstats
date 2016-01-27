@@ -22,13 +22,13 @@ parms = tmparms.tmparms()
 parms.parse()
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 c = conn.cursor()
-c.execute("SELECT clubnumber, clubname, place, address, city, state, zip FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs) ORDER BY CLUBNUMBER;")
-for (clubnumber, clubname, place, address, city, state, zip)  in c.fetchall():
+c.execute("SELECT clubnumber, clubname, place, address, city, state, zip, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs) ORDER BY CLUBNUMBER;")
+for (clubnumber, clubname, place, address, city, state, zip, whqlatitude, whqlongitude)  in c.fetchall():
     print clubnumber, clubname
     print address, city, state, zip
     gres = gmaps.geocode("%s, %s, %s %s" % (address, city, state, zip))
     pprint.pprint(gres)
     print "================="
-    club = myclub(clubnumber, clubname, place, address, city, state, zip).update(gres, c)
+    club = myclub(clubnumber, clubname, place, address, city, state, zip, whqlatitude, whqlongitude).update(gres, c)
 conn.commit()
 

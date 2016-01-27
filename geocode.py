@@ -6,18 +6,24 @@ import logging
 import dbconn, tmparms
 import os, sys
 from math import pi, sin, cos
+import pprint
+import datetime
 
 
 
 clubs = {}
 class myclub():
     
-    fieldnames = 'clubnumber, clubname, place, address, city, state, zip, latitude, longitude, locationtype, partialmatch, nelat, nelong, swlat, swlong, area, formatted, types, whqlatitude, whqlongitude'
-    fieldnames += ', outcity, outstate, outzip'
+    @classmethod
+    def setgmaps(self, gmaps):
+        self.gmaps = gmaps
+    
+    fieldnames = 'clubnumber, clubname, place, address, city, state, zip, country, latitude, longitude, locationtype, partialmatch, nelat, nelong, swlat, swlong, area, formatted, types, whqlatitude, whqlongitude, reverse, reversetype, whqreverse, whqreversetype'
+    fieldnames += ', premise, outcity, outstate, outzip'
     fields = [k.strip() for k in fieldnames.replace(',',' ').split()]
     values = ('%s,' * len(fields))[:-1]
     
-    def __init__(self, clubnumber, clubname, place, address, city, state, zip, whqlatitude, whqlongitude):
+    def __init__(self, clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude):
         self.clubnumber = clubnumber
         self.clubname = clubname
         self.place = place
@@ -25,6 +31,7 @@ class myclub():
         self.city = city
         self.state = state
         self.zip = zip
+        self.country = country
         self.whqlatitude = whqlatitude
         self.whqlongitude = whqlongitude
         self.latitude = whqlatitude
@@ -41,6 +48,15 @@ class myclub():
         self.outcity = ''
         self.outstate = ''
         self.outzip = ''
+        self.premise = ''
+        self.reverse = ''
+        self.reversetype = ''
+        self.whqreverse = ''
+        self.whqreversetype = ''
+        
+    def __repr__(self):
+        return "%s (%s)\n  ours: (%f, %f)\n  whq: (%f, %f)" % (self.clubname, self.clubnumber, self.latitude, self.longitude, self.whqlatitude, self.whqlongitude)
+        
 
     def updatefromwhq(self, curs):
         curs.execute('DELETE FROM geo WHERE clubnumber = %s', (self.clubnumber,))
@@ -48,13 +64,14 @@ class myclub():
         curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
                 ([self.__dict__[k] for k in self.fields]))
         
-    def update(self, results, curs):
+        
+    def process(self, results):
+        
         if isinstance(results, basestring):
             results = eval(results)  # Yes, it's unsafe.  
         if len(results) != 1:
             print(len(results), 'results found for', self.clubnumber, self.clubname, '\n', self.address, self.city, self.state, self.zip, file=sys.stderr)
-        if len(results) >= 1:
-            curs.execute('DELETE FROM geo WHERE clubnumber = %s', (self.clubnumber,))
+
         # Let's see if there's a ROOFTOP address - if so, use it and only it.  If not, warn, and put all addresses in the database for now.
         for r in results:
             if r['geometry']['location_type'] == 'ROOFTOP':
@@ -110,17 +127,9 @@ class myclub():
             else:
                 self.formatted = ''
             self.types = ', '.join(r['types'])
-            if self.area > 0:
-                print(self.clubnumber, self.clubname, '\n', self.address, self.city,self.state,self.zip,file=sys.stderr)
-                if (self.area > 0.0001):
-                    print('best choice (bounding box %f square miles)' % self.area, self.locationtype, file=sys.stderr)
-                else:
-                    print('best choice (bounding box %d square feet)' % (self.area * 5280.0 * 5280.0), self.locationtype, file=sys.stderr)
-                print(self.formatted, file=sys.stderr)
-                print('-----------------------------', file=sys.stderr)
-                
+            
             # Now, disassemble the address components
-            # We only care about city, state, and zip
+            # We only care about premise, city, state, and zip
             ac = r['address_components']
             for each in ac:
                 if 'locality' in each['types']:
@@ -129,49 +138,76 @@ class myclub():
                     self.outstate = each['short_name']
                 elif 'postal_code' in each['types']:
                     self.outzip = each['short_name']
+                elif 'premise' in each['types']:
+                    self.premise = each['short_name']
                     
-            # Finally, update the database
-            curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
-                    ([self.__dict__[k] for k in self.fields]))
+            # Now, reverse-geocode the coordinates from WHQ
+            if (self.whqlatitude != 0.0) and (self.whqlatitude != 0.0):
+                try:        
+                    rev = self.gmaps.reverse_geocode((self.whqlatitude, self.whqlongitude))[0]
+                    self.whqreverse = rev['formatted_address']
+                    self.whqreversetype = rev['geometry']['location_type']
+                except Exception, e:
+                    print(e)
+                
+                
+            # And reverse-geocode the coordinates we calculated
+            try:        
+                rev = self.gmaps.reverse_geocode((self.latitude, self.longitude))[0]
+                self.reverse = rev['formatted_address']
+                self.reversetype = rev['geometry']['location_type']
+            except Exception, e:
+                print(e)
             
+                
+    def update(self, results, curs):
+        # Process the information
+        self.process(results)
+        # Update the database
+        curs.execute('DELETE FROM geo WHERE clubnumber = %s', (self.clubnumber,))
+        curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
+                ([self.__dict__[k] for k in self.fields]))
+            
+def updateclubstocurrent(conn, clubs, apikey):
+    # conn is a database connection
+    # Clubs is an array of clubnumbers to update; if null, update all clubs.
+    gmaps = googlemaps.Client(apikey)
+    myclub.setgmaps(gmaps)
+    c = conn.cursor()
+    selector = "SELECT clubnumber, clubname, place, address, city, state, zip, country, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs)"
+    if clubs:
+        clubs = '(%s)' % ','.join([repr(club) for club in clubs])
+        print('Updating %s' % clubs)
+        c.execute(selector + ' AND clubnumber IN ' + clubs)
+    else:
+        c.execute(selector)
+       
+    for (clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude)  in c.fetchall():
+        print (clubnumber, clubname)
+        print (address, city, state, zip)
+        gres = gmaps.geocode("%s, %s, %s %s" % (address, city, state, zip))
+        pprint.pprint(gres)
+        print ("=================")
+        club = myclub(clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude).update(gres, c)
+        
+    # And delete any clubs from GEO which aren't current
+    c.execute('DELETE FROM geo WHERE clubnumber NOT IN (SELECT clubnumber FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs))')
+    conn.commit()
             
         
 if __name__ == "__main__":
     
+    import tmparms
+    from tmutil import gotodatadir
     # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+    gotodatadir()
         
     reload(sys).setdefaultencoding('utf8')
-
+    sys.stdout = open('geocode.%s.txt' % datetime.datetime.now().strftime('%Y-%m-%d'), 'w')
+    
     parms = tmparms.tmparms()
     parms.parse()
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    c = conn.cursor()
-    c.execute("SELECT clubnumber, clubname, place, address, city, state, zip FROM clubs GROUP BY clubnumber ORDER BY lastdate DESC")
-    for (clubnumber, clubname, place, address, city, state, zip)  in c.fetchall():
-        clubs['%d' % clubnumber] = myclub(clubnumber, clubname, place, address, city, state, zip)
+    updateclubstocurrent(conn, [], parms.googlemapsapikey)
     
-
-
-    infile = open('codeit.txt', 'r')
-    line = infile.readline()
-    while line:
-        (clubnumber, clubname) = line.split(None,1)
-        ret = []
-        while True:
-            line = infile.readline()
-            if line[0] == '[':
-                break
-        ret.append(line)
-        while True:
-            line = infile.readline()
-            if line[0] == '=':
-                break
-            ret.append(line)
-        club = clubs[clubnumber]
-        club.update(''.join(ret), c)
-        line = infile.readline()
     
-    conn.commit()    
-

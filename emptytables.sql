@@ -5,5 +5,5 @@ drop table if exists clubchanges;
 drop table if exists distperf;
 drop table if exists areaperf;
 drop table if exists loaded;
-drop table if exists geo;
+#drop table if exists geo;
 source tmstats.sql;
