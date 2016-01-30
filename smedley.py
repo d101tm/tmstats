@@ -40,6 +40,9 @@ conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 
 today = datetime.now()
+# If we're in the next year, make "today" last year.
+if today.month < parms.fromend:
+    today = today.replace(year=today.year-1)
 startmonth = '%d-%0.2d-01' % (today.year, parms.fromend)
 endmonth = '%d-%0.2d-01' % (today.year, parms.toend)
 
