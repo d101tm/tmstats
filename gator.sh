@@ -125,8 +125,6 @@ if [[ "$dorun" = "yes" ]] ; then
     
     ### Run programs in support of District special offerings
     
-    # Run March Madness (TODO: Add it)
-    # Run Nothin' but Net (TODO: Add it)
     # Run Share the Wealth when the time comes
     
     if (( $haveperf == 0 )) ; then
@@ -144,6 +142,11 @@ if [[ "$dorun" = "yes" ]] ; then
         ../sanity.py
     fi
     
+    if (( $haveperf == 0 )) ; then
+        echo "Running 1-2 Punch"
+        ../punch12.py
+    fi
+     
     ### Run other statistics
     if (( $haveperf == 0 )) ; then
         echo "Running club sizes"
