@@ -88,7 +88,7 @@ if __name__ == "__main__":
     for c in curs.fetchall():
         clubs.append(myclub(*c))
 
-    winners = [c for c in clubs if c.net >= 5]
+    winners = [c for c in clubs if c.net >= 5 and c.clubnumber != 2571179]
     punch1 = {}
     for c in winners:
 	punch1[c.clubnumber] = True
