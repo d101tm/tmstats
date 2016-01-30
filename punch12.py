@@ -132,11 +132,11 @@ if __name__ == "__main__":
         
         # Monkeypatch the output routine
         myclub.tablepart = myclub.novaluepart
-    
+            
         winners = [c for c in clubs if c.clubnumber in punch1]
         if len(winners) > 0:
             outfile.write("<h4>Punch 2 Winners</h4>\n")
-            showclubswithoutvalues(clubs, outfile)
+            showclubswithoutvalues(winners, outfile)
             
     else:
         outfile.write('</p>')
