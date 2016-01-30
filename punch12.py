@@ -64,8 +64,6 @@ if __name__ == "__main__":
     curs = conn.cursor()
 
     today = datetime.now()
-    today = today.replace(year=today.year-1)
-    print today
     endmonth = '%d-%0.2d-01' % (today.year, parms.toend)
     startmonth = '%d-%0.2d-01' % (today.year - (1 if parms.toend < parms.fromend else 0), parms.fromend)
 
@@ -81,7 +79,6 @@ if __name__ == "__main__":
         final = True
     else:
         # No data returned; use today's data instead
-        print firstpart + " WHERE entrytype = 'L'" + having
         curs.execute(firstpart + " WHERE entrytype = 'L'" + having)
         final = False
 
@@ -115,13 +112,11 @@ if __name__ == "__main__":
     
     
         firstpart = 'SELECT c.clubnumber, c.clubname, c.aprrenewals, c.division, c.area FROM distperf c INNER JOIN (select clubnumber, clubname, activemembers FROM clubperf WHERE entrytype = "M" AND monthstart="%s") b ON b.clubnumber = c.clubnumber WHERE c.aprrenewals >= b.activemembers AND c.aprrenewals > 0' % renewbase
-        print firstpart + ' AND entrytype="M" and monthstart="%s";' % renewbyend
         curs.execute(firstpart + ' AND entrytype="M" AND monthstart=%s', (renewbyend,))
         if curs.rowcount:
             final = True
         else:
             # Not at the end; get today's data
-            print firstpart + ' AND entrytype="L";'
             curs.execute(firstpart + ' AND entrytype="L"') 
             final = False
         status = "final" if final else "updated daily"
