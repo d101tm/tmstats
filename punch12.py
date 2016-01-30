@@ -100,7 +100,7 @@ if __name__ == "__main__":
   
     # Now, move on to Punch 2
     
-        outfile.write("""<p>Clubs qualifying for Part 1 which <b>also</b> renew (by April 1st) as many members as they had at the end of February qualify for Part 2 of the District 4 "1-2 Punch Award" and receive an additional $50 in District Credit.""")  
+        outfile.write("""<p>&nbsp;</p><p>Clubs qualifying for Part 1 which <b>also</b> renew (by April 1st) as many members as they had at the end of February qualify for Part 2 of the District 4 "1-2 Punch Award" and receive an additional $50 in District Credit.""")  
     
     renewbase = '%d-%0.2d-01' % (today.year - (1 if parms.renewbyend < parms.renewbase else 0), parms.renewbase)
     renewbyend = '%d-%0.2d-01' % (today.year, parms.renewbyend)
@@ -132,6 +132,7 @@ if __name__ == "__main__":
     
         winners = [c for c in clubs]
         if len(winners) > 0:
+            outfile.write("<h4>Punch 2 Winners</h4>\n")
             showclubswithoutvalues(clubs, outfile)
             
     else:
