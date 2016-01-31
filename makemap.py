@@ -5,16 +5,17 @@
 import dbconn, tmutil, sys, os
 from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs
-from overridepositions import Relocate, overrideClubPositions
+from overridepositions import overrideClubPositions
+
 
 def inform(*args, **kwargs):
-    """ Print information to 'file' unless suppressed by the -quiet option.
-          suppress is the minimum number of 'quiet's that need be specified for
-          this message NOT to be printed. """
-    suppress = kwargs.get('suppress', 1)
+    """ Print information to 'file', depending on the verbosity level. 
+        'level' is the minimum verbosity level at which this message will be printed. """
+    level = kwargs.get('level', 0)
     file = kwargs.get('file', sys.stderr)
+    verbosity = kwargs.get('verbosity', 0)
     
-    if parms.quiet < suppress:
+    if verbosity >= level:
         print >> file, ' '.join(args)
         
 def makeCard(club):
@@ -98,77 +99,46 @@ class Bounds:
         
     def bounds(self, latpadding=0.005, longpadding=0.001):
         return 'new g.LatLngBounds(%s, %s)' % (self.southwest(latpadding, longpadding), self.northeast(latpadding, longpadding))
-
-if __name__ == "__main__":
- 
-    import tmparms
-    from tmutil import gotodatadir
-    gotodatadir()
         
-    reload(sys).setdefaultencoding('utf8')
-    
-    # Handle parameters
-    parms = tmparms.tmparms()
-    parms.add_argument('--quiet', '-q', action='count')
-    parms.add_argument('--outfile', dest='outfile', default='markers.js')
-    parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
-    parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
-    parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
-    # Add other parameters here
-    parms.parse() 
-    
-    # Promote information from parms.makemap if not already specified
-    parms.mapoverride = parms.mappoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
-    parms.pindir = parms.pindir if parms.pindir else parms.makemap.get('pindir',None)
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
-    
-    # Get the clubs
-    clubs = Club.getClubsOn(curs)
-    
-    # Process new alignment, if needed
-    if parms.newAlignment:
-        overrideClubs(clubs, parms.newAlignment)
-    
-    # Remove suspended clubs
-    clubs = removeSuspendedClubs(clubs, curs)
-    
-    # If there are overrides to club positioning, handle them now
-    if parms.mapoverride:
-        overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
-
-    outfile = open(parms.outfile, 'w')
-    
-    # Start by putting in the buildMap call, since it will vary from District to District
-
+def setClubCoordinatesFromGEO(clubs, curs):
+    # Also removes any clubs NOT in GEO table
+    geoclubs = {}
+    curs.execute("SELECT clubnumber, latitude, longitude FROM geo")
+    for (clubnumber, latitude, longitude) in curs.fetchall():
+        clubnumber = '%d' % clubnumber
+        geoclubs[clubnumber] = True
+        if clubnumber in clubs:
+            club = clubs[clubnumber]
+            club.latitude = latitude
+            club.longitude = longitude  
+    allclubs = clubs.keys()
+    for c in allclubs:
+        if c not in geoclubs:
+            del clubs[c]
         
-    # Replace the latitude/longitude information from WHQ with info from the GEO table, and also create 
-    #   the directory of clubs by location, and the data for each club
+        
+def makemap(outfile, clubs, parms):
+    #   Create the directory of clubs by location, and the card data for each club
     clubsByLocation = {}
     boundsByDivision = {}
     districtBounds = Bounds()
-    curs.execute("SELECT clubnumber, latitude, longitude FROM geo")
-    for (clubnumber, latitude, longitude) in curs.fetchall():
-        if clubnumber in Relocate.relocations:
-            relo = Relocate.relocations[clubnumber]
-            latitude = relo.latitude
-            longitude = relo.longitude
-        club = clubs['%d' % clubnumber]
-        club.latitude = latitude
-        club.longitude = longitude
-        club.coords = '(%f,%f)' % (latitude, longitude)
+    for c in sorted(clubs.keys()): 
+        club = clubs[c] 
+        club.latitude = float(club.latitude)
+        club.longitude = float(club.longitude)  # In case the values in the database are funky
+        if club.latitude == 0.0 or club.longitude == 0.0:
+            print 'no position for', club.clubnumber, club.clubname
+        club.coords = '(%f,%f)' % (club.latitude, club.longitude)
         club.card = makeCard(club)
         if club.coords not in clubsByLocation:
             clubsByLocation[club.coords] = []
         if club.division != '0D':
             if club.division not in boundsByDivision:
                 boundsByDivision[club.division] = Bounds()
-            boundsByDivision[club.division].extend(latitude, longitude)
-        districtBounds.extend(latitude, longitude)
+            boundsByDivision[club.division].extend(club.latitude, club.longitude)
+        districtBounds.extend(club.latitude, club.longitude)
         clubsByLocation[club.coords].append(club) 
-    
+
     
     
         
@@ -266,12 +236,12 @@ if __name__ == "__main__":
     # Now, write out the markers (combining multiple clubs at the same location)
     for l in clubsByLocation.values():
         if len(l) > 1:
-            inform('%d clubs at %s' % (len(l), l[0].coords))
+            inform('%d clubs at %s' % (len(l), l[0].coords), level=1, file=sys.stdout, verbosity=parms.verbosity)
             clubinfo = []
             divs = []
             for club in l:
-                inform('%s%s %s' % (club.division, club.area, club.clubname), file=sys.stdout)
-                inform('   %s' % (club.address), file=sys.stdout)
+                inform('%s%s %s' % (club.division, club.area, club.clubname), file=sys.stdout, level=2, verbosity=parms.verbosity)
+                inform('   %s' % (club.address), file=sys.stdout, level=2, verbosity=parms.verbosity)
                 clubinfo.append('new iwTab("%s", "%s")' % (club.clubname, makeCard(club)))
                 if club.division not in divs:
                     divs.append(club.division)
@@ -280,7 +250,7 @@ if __name__ == "__main__":
                 icon = divs[0] + 'M'
             else:
                 icon = ''.join(sorted(divs))
-            inform(icon, file=sys.stdout)
+            inform(icon, file=sys.stdout, level=2, verbosity=parms.verbosity)
             if parms.pindir:
                 try:
                     open('%s/%s.png' % (parms.pindir, icon), 'r')
@@ -303,6 +273,61 @@ if __name__ == "__main__":
                 icon = ''
             clubinfo = '[new iwTab("%s", "%s")]' % (club.clubname, makeCard(club))
             outfile.write('addMarker("%s", "%s",%s,%s,%s);\n' % (club.clubname, icon, club.latitude, club.longitude, clubinfo))
+
+
+if __name__ == "__main__":
+ 
+    import tmparms
+    from tmutil import gotodatadir
+    gotodatadir()
+        
+    reload(sys).setdefaultencoding('utf8')
+    
+    # Handle parameters
+    parms = tmparms.tmparms()
+    parms.add_argument('--quiet', '-q', action='count', default=0)
+    parms.add_argument('--verbose', '-v', action='count', default=0)
+    parms.add_argument('--outfile', dest='outfile', default='markers.js')
+    parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
+    parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
+    parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
+    # Add other parameters here
+    parms.parse() 
+    
+    # Compute verbosity level.  Default is zero.
+    parms.verbosity = parms.verbose - parms.quiet
+
+    
+    # Promote information from parms.makemap if not already specified
+    parms.mapoverride = parms.mappoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
+    parms.pindir = parms.pindir if parms.pindir else parms.makemap.get('pindir',None)
+   
+    # Connect to the database        
+    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
+    curs = conn.cursor()
+    
+    # Get the clubs
+    clubs = Club.getClubsOn(curs)
+    
+    # Process new alignment, if needed
+    if parms.newAlignment:
+        overrideClubs(clubs, parms.newAlignment)
+    
+    # Remove suspended clubs
+    clubs = removeSuspendedClubs(clubs, curs)
+
+
+    # Add current coordinates and remove clubs without coordinates
+    setClubCoordinatesFromGEO(clubs, curs)
+    
+    # If there are overrides to club positioning, handle them now
+    if parms.mapoverride:
+        overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
+
+    
+    outfile = open(parms.outfile, 'w')
+    
+    makemap(outfile, clubs, parms)
 
     outfile.close()
    

@@ -4,7 +4,7 @@
 
 import dbconn, tmutil, sys, os
 import math
-from overridepositions import Relocate, overrideClubPositions
+from overridepositions import overrideClubPositions
 import csv
 
 
@@ -129,10 +129,6 @@ if __name__ == "__main__":
     # Now, compute bounds and center
     bounds = Bounds()
     for c in clubs.values():
-        if c.clubnumber in Relocate.relocations:
-            relo = Relocate.relocations[c.clubnumber]
-            c.latitude = relo.latitude
-            c.longitude = relo.longitude
         bounds.extend(c.latitude, c.longitude)
         
     bounds.clat = (bounds.north + bounds.south) / 2.0
@@ -162,7 +158,7 @@ if __name__ == "__main__":
         c = clubs[away.pop(0)]
         print c.clubname
         c.distances.sort(key=lambda l:l[1])
-        group = []
+        group = [c.clubnumber]   # Start with THIS club
         while len(group) < groupmax and len(c.distances) > 0:
             (cnum, dist) = c.distances.pop(0)  # Take off the first item
             if cnum in away:
@@ -172,16 +168,20 @@ if __name__ == "__main__":
                     break  # and we're done with this one
                 group.append(cnum)
                 del away[away.index(cnum)]
+                print len(away), 'clubs left in away'
         groups.append(group)
         print len(group), 'clubs in group;', len(away), 'left to look at'        
     
+    divletters = ['','B','G','J','F','C']
+    
     outfile = open('grouped.csv', 'wb')
     writer = csv.writer(outfile)
-    writer.writerow(['group', 'clubnumber', 'clubname', 'oldarea', 'address', 'city', 'state', 'zip', 'latitude', 'longitude' ])
+    writer.writerow(['newdiv', 'newarea', 'clubnumber', 'clubname', 'oldarea', 'address', 'city', 'state', 'zip', 'latitude', 'longitude' ])
     for i in xrange(len(groups)):
         groupnum = i+1
         for cnum in groups[i]:
             c = clubs[cnum]
-            writer.writerow((groupnum, cnum, c.clubname, '%s%s' % (c.division, c.area), c.address, c.city, c.state, c.zip, c.latitude, c.longitude))
+            
+            writer.writerow((divletters[groupnum], 1, cnum, c.clubname, '%s%s' % (c.division, c.area), c.address, c.city, c.state, c.zip, c.latitude, c.longitude))
     outfile.close()
     
