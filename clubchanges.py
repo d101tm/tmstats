@@ -68,7 +68,7 @@ if __name__ == "__main__":
     
 
   
-    namestocompare = ['place', 'address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime', 'area', 'division', 'district']
+    namestocompare = ['place', 'address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime', 'area', 'division', 'district', 'latitude', 'longitude']
     # Get information for clubs as of the "from" date:
     oldclubs = Club.getClubsOn(curs, date=fromdate, goodnames=namestocompare)
     oldclubs = removeSuspendedClubs(oldclubs, curs, date=fromdate)

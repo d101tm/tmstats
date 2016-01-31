@@ -38,7 +38,7 @@ conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 
 today = datetime.now()
-endmonth = '%d-%0.2d-01' % (today.year, parms.toend)
+endmonth = '%d-%0.2d-01' % (today.year - 1 if (today.month < parms.toend) else 0, parms.toend)
 
 outfile = parms.outfile
 
@@ -70,7 +70,7 @@ if len(winners) > 0:
     outfile.write("<h4>Early Achievers</h4>\n")
     showclubswithvalues(winners, "Goals", outfile)
     
-if len(almost) > 0:
+if len(almost) > 0 and not final:
     outfile.write("<p>&nbsp;</p>")
     outfile.write("<p>These clubs have achieved 4 of the 5 DCP goals needed to join the Early Achievers.</p>")
     showclubswithvalues(almost, "Goals", outfile)

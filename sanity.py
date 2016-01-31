@@ -42,9 +42,16 @@ if __name__ == "__main__":
     
     # We want data for the earlier of "finaldate" or the most recent in the database
     mostrecent = latest.getlatest('distperf', conn)[1]
+    # Anchor the final date to the proper TM year
+    curs.execute("SELECT MAX(tmyear) FROM lastfor")
+    tmyear = curs.fetchone()[0]
+    finaldate = '%d%s' % (tmyear,finaldate[4:])
     asof = min(finaldate, mostrecent)
     asofd = datetime.strptime(asof, "%Y-%m-%d")
-    asofnice = asofd.strftime("%B") + " " + asofd.strftime("%d").lstrip('0')
+    if (asof == finaldate):
+        asofnice = 'final'
+    else:
+        asofnice = 'for ' + asofd.strftime("%B") + " " + asofd.strftime("%d").lstrip('0')
     
     # Now, get the clubs which qualify
     clubs = []
@@ -57,7 +64,7 @@ if __name__ == "__main__":
         
     parms.outfile.write('<h3 id="sanity">September Sanity</h3>\n')
     parms.outfile.write('<p>Clubs renewing at least 75% of their base membership by September 15 receive $50 in District Credit.\n')
-    parms.outfile.write('This report is for %s.</p>\n' % asofnice)
+    parms.outfile.write('This report is %s.</p>\n' % asofnice)
     showclubswithvalues(clubs, 'Renewed', parms.outfile)
     
     
