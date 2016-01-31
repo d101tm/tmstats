@@ -1,0 +1,23 @@
+%YAML 1.1
+---
+district: 4
+
+# dbuser, dbpass, dbname, and dbhost are for the MySQL database connection
+# dbhost defaults to localhost, so I omit it here.
+dbuser: d4tmadmn_tmstats
+dbpass: your database password goes here
+dbname: d4tmadmn_tmstats
+
+# officers is a one-page Google spreadsheet with Area and Division Directors.
+# It is used by "buildareapage.py" (and its format is documented there)
+
+officers: https://docs.google.com/spreadsheets/d/<sheetid>/pub?gid=0&single=true&output=csv
+
+#newAlignment: 2015-16Alignment.xlsx
+googlemapsapikey: goes here
+
+makemap:
+    mapoverride: https://docs.google.com/spreadsheets/d/<sheetid>/export?format=csv&usp=sharing
+    pindir: ../../map/pins   # omit to use standard Google markers
+
+
