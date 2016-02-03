@@ -36,6 +36,7 @@ if __name__ == "__main__":
     parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     parms.add_argument('--testalign', dest='testalign', default='grouped.csv')
+    parms.add_argument('--district', dest='district')
     # Add other parameters here
     parms.parse() 
     
@@ -68,16 +69,16 @@ if __name__ == "__main__":
     # Process new grouping
     if parms.testalign:
         import csv
-        infile = open(parms.testalign, 'rb')
+        infile = open(parms.testalign, 'rbU')
         reader = csv.reader(infile)
         newclubs = {}
         newdivs = {}
         clubsbypos = {}
         line = reader.next()  # Skip header
         for line in reader:
-            newdiv = line[0]
-            newarea = line[1]
-            clubnum = line[2]
+            newdiv = line[3][0]
+            newarea = line[3][1:]
+            clubnum = line[0]
             newclubs[clubnum] = (newdiv, newarea)
             c = clubs[clubnum]
             c.division = newdiv
