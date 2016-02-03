@@ -4,6 +4,7 @@
 import  datetime,  os, sys,  math, time
 import dbconn, tmparms, latest, os, sys, argparse
 from tmutil import stringify
+import csv
 
 from operator import attrgetter
 
@@ -522,6 +523,7 @@ reload(sys).setdefaultencoding('utf8')
 # Define args and parse command line
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
+parms.add_argument("--proforma", dest="proforma", default=None, help="CSV file with alignment information to create a 'pro-forma' report with a new alignment.")
 parms.parse()
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
@@ -613,7 +615,24 @@ for (clubnumber, charterdate, clubname) in curs.fetchall():
         print 'Club %s (%d) not in performance reports, ignored.' % (clubname, clubnumber)
         
     
-# @TODO:  Here's where we'd process club overrides.
+# Pro-forma processing:
+if parms.proforma:
+    pfile = open(parms.proforma, 'rbU')
+    reader = csv.DictReader(pfile)
+    keepers = set()
+    for row in reader:
+        clubnum = int(row['clubnumber'])
+        club = clubs[clubnum]
+        keepers.add(clubnum)
+        club.division = row['newarea'][0]
+        club.area = row['newarea'][1:]
+    pfile.close()
+    # And get rid of any clubs not in the proforma file
+    clubnumbers = clubs.keys()
+    for c in clubnumbers:
+        if c not in keepers:
+            del clubs[c]
+    
 
 # And now, finish setting up the structure (creating Areas and Divisions, for example)
 for club in clubs.values():
@@ -651,31 +670,32 @@ for (clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward,
                 divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist,
                 totaldistdivisionclubs,
                 distinguisheddivision) in curs.fetchall():
-    c = clubs[clubnumber]
-    c.octRenewal = octoberrenewals  # October renewal
-    c.parentdiv.octRenewal += c.octRenewal
-    c.parentarea.octRenewal += c.octRenewal
-    c.aprRenewal = aprilrenewals  # May renewal
-    c.parentdiv.aprRenewal += c.aprRenewal
-    c.parentarea.aprRenewal += c.aprRenewal
-    c.novVisit = novvisitaward # 1st series visits
-    c.parentdiv.novVisit += c.novVisit
-    c.parentarea.novVisit += c.novVisit
-    c.mayVisit = mayvisitaward # 2nd series visits
-    c.parentdiv.mayVisit += c.mayVisit
-    c.parentarea.mayVisit += c.mayVisit
-    c.parentarea.base = areaclubbase
-    c.parentarea.paidgoals = [areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist ]
-    c.parentarea.paid = totalpaidareaclubs
-    c.parentarea.distgoals = [areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist]
-    c.parentarea.dist = totaldistareaclubs
-    c.parentarea.status = distinguishedarea
-    c.parentdiv.base = divisionclubbase
-    c.parentdiv.paidgoals = [divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist]
-    c.parentdiv.paid = totalpaiddivisionclubs
-    c.parentdiv.distgoals = [divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist]
-    c.parentdiv.dist = totaldistdivisionclubs
-    c.parentdiv.status = distinguisheddivision
+    if clubnumber in clubs:
+        c = clubs[clubnumber]
+        c.octRenewal = octoberrenewals  # October renewal
+        c.parentdiv.octRenewal += c.octRenewal
+        c.parentarea.octRenewal += c.octRenewal
+        c.aprRenewal = aprilrenewals  # May renewal
+        c.parentdiv.aprRenewal += c.aprRenewal
+        c.parentarea.aprRenewal += c.aprRenewal
+        c.novVisit = novvisitaward # 1st series visits
+        c.parentdiv.novVisit += c.novVisit
+        c.parentarea.novVisit += c.novVisit
+        c.mayVisit = mayvisitaward # 2nd series visits
+        c.parentdiv.mayVisit += c.mayVisit
+        c.parentarea.mayVisit += c.mayVisit
+        c.parentarea.base = areaclubbase
+        c.parentarea.paidgoals = [areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist ]
+        c.parentarea.paid = totalpaidareaclubs
+        c.parentarea.distgoals = [areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist]
+        c.parentarea.dist = totaldistareaclubs
+        c.parentarea.status = distinguishedarea
+        c.parentdiv.base = divisionclubbase
+        c.parentdiv.paidgoals = [divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist]
+        c.parentdiv.paid = totalpaiddivisionclubs
+        c.parentdiv.distgoals = [divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist]
+        c.parentdiv.dist = totaldistdivisionclubs
+        c.parentdiv.status = distinguisheddivision
 
 
 # Now get the monthly membership for each interesting month and put it in the right place in the club.
@@ -683,7 +703,8 @@ for (clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward,
 curs.execute("select clubnumber, activemembers, month(monthstart) from clubperf where entrytype in ('M', 'L') and monthstart >= %s and monthstart <= %s", (interesting[0], interesting[-1]))
        
 for (clubnumber, activemembers, month) in curs.fetchall():
-    clubs[clubnumber].monthly[monthtoindex(month)] = activemembers
+    if clubnumber in clubs:
+        clubs[clubnumber].monthly[monthtoindex(month)] = activemembers
     
 # Now, get the current (or end-of-year, if a past year) information for each club.
 
@@ -697,19 +718,20 @@ else:
 
 fetched = {}
 for row in curs.fetchall():
-    c = clubs[row[0]]
-    if row[0] in fetched:
-        print "club %s (%s) is already here" % (c.name, c.clubnumber)
-    fetched[row[0]] = True
-    c.status = row[1]
-    c.base = row[2]
-    c.current = row[3]
-    c.goals = row[4]
-    ## Continue by assigning DCP info
-    c.dcpitems = [row[i] for i in dcprange]
-    c.dcpStatus = row[fieldnames.index('clubdistinguishedstatus')]
-    c.parentarea.counters[c.dcpStatus] += 1
-    c.parentdiv.counters[c.dcpStatus] += 1
+    if row[0] in clubs:
+        c = clubs[row[0]]
+        if row[0] in fetched:
+            print "club %s (%s) is already here" % (c.name, c.clubnumber)
+        fetched[row[0]] = True
+        c.status = row[1]
+        c.base = row[2]
+        c.current = row[3]
+        c.goals = row[4]
+        ## Continue by assigning DCP info
+        c.dcpitems = [row[i] for i in dcprange]
+        c.dcpStatus = row[fieldnames.index('clubdistinguishedstatus')]
+        c.parentarea.counters[c.dcpStatus] += 1
+        c.parentdiv.counters[c.dcpStatus] += 1
 
 
 
