@@ -201,10 +201,12 @@ if __name__ == "__main__":
     if parms.mapoverride:
         overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
         
-    # Now, remove A1-A4
+    # Now, remove A1-A4 until later
     all = clubs.keys()
+    diva = {}
     for c in all:
         if clubs[c].division == 'A' and clubs[c].area in ('1', '2', '3', '4'):
+            diva[c] = clubs[c]
             del clubs[c]
     
     # And compute distances, then sort clubs by their distance from the center
@@ -236,14 +238,25 @@ if __name__ == "__main__":
                 del away[away.index(cnum)]
                 #print len(away), 'clubs left in away'
         divs.append(div)
-        print '%d clubs assigned to division %d; %d left to look at.' % (len(div), divnum, len(away))
+        #print '%d clubs assigned to division %d; %d left to look at.' % (len(div), divnum, len(away))
     
-    divletters = ['','B','G','J','F','C']
+    divletters = ['','B','G','J','F','C','A']
+    
+    # Now, put division A back
+    divs.append(diva)
+    for c in diva:
+        clubs[c] = diva[c]
+    numdivs += 1    
     
     # Now, do clustering for each division.  We want to evenly divide Green, Yellow, and Red clubs.
     for divnum in xrange(numdivs):
         thisdiv = divs[divnum]
         divname = divletters[divnum+1]
+        if divname == 'A':
+            print 'doing A'
+            numareas = 4
+        else:
+            numareas = 5
         # Assign distances for this division
         computeDistances(thisdiv)
         away = [c for c in sorted(thisdiv, reverse=True, key=lambda c:thisdiv[c].centraldistance)]
@@ -315,6 +328,24 @@ if __name__ == "__main__":
                      
                 
             print '%d clubs assigned to area %d; %d left to look at.' % (len(area.clubs), areanum, len(away))
+            
+        # Now, renumber the areas from South to North.
+        southmost = {}
+        for i in xrange(len(areas)):
+            area = areas[i]
+            southmost[i] = min(clubs[club].latitude for club in area.clubs)
+        print southmost
+        southmost = sorted(southmost, key=southmost.__getitem__)
+        print southmost
+        for i in xrange(len(southmost)):
+            print 'Processing area %d, which becomes %d' % (southmost[i], i)
+            area = areas[southmost[i]]
+            area.number = i
+            for club in area.clubs:
+                c = clubs[club]
+                print c.clubname, 'was in', c.newarea, 'moving to %s%d' % (c.newarea[0], i+1)
+                clubs[club].newarea = '%s%d' % (clubs[club].newarea[0], i+1)
+                print c.clubname, 'moved to', c.newarea
         
         
     
