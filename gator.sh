@@ -165,6 +165,11 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Creating Triple Crown"
         ../triplecrown.py > triplecrown.html
     fi
+
+    if (( $haveperf == 0 )) ; then
+        echo "Running President's Club"
+        ../presidentsclub.py > presidentsclub.html
+    fi
     
     ### Run daily housekeeping
     if (( $haveclubs == 0 )) ; then
