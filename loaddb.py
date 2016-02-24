@@ -150,6 +150,10 @@ def doHistoricalClubs(conn, mapkey):
     lastdate = curs.fetchone()[0]
     curs.execute('SELECT c.clubnumber FROM clubs c INNER JOIN geo g ON g.clubnumber = c.clubnumber AND (c.address != g.address OR c.city != g.city OR c.state != g.state OR c.zip != g.zip OR c.country != g.country OR c.latitude != g.whqlatitude OR c.longitude != g.whqlongitude) WHERE lastdate = %s', (lastdate,))
     clubstoupdate = ['%d' % c[0] for c in curs.fetchall()]
+    # And get new clubs, too
+    curs.execute('SELECT clubnumber FROM clubs WHERE lastdate = %s AND clubnumber NOT IN (SELECT clubnumber FROM geo)', (lastdate,))
+    for c in curs.fetchall():
+        clubstoupdate.append('%d' % c[0])
     if clubstoupdate:
         geocode.updateclubstocurrent(conn, clubstoupdate, mapkey)
         
