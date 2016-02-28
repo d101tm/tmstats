@@ -233,6 +233,12 @@ def makemap(outfile, clubs, parms):
             moveMap(%s, %s)});
         """ % (div, this.center(), this.bounds()))
         
+    # Figure out if we show details
+    try:
+        showdetails = parms.showdetails
+    except AttributeError:
+        showdetails = False
+        
     # Now, write out the markers (combining multiple clubs at the same location)
     for l in clubsByLocation.values():
         if len(l) > 1:
@@ -259,7 +265,14 @@ def makemap(outfile, clubs, parms):
                     icon = 'missing'
             else:
                 icon = ''
-            outfile.write('addMarker("%d clubs meet here", "%s",%s,%s,%s);\n' % (len(l), icon, club.latitude, club.longitude, clubinfo))
+            if showdetails:
+                markertext = []
+                for c in l:
+                    markertext.append('%s (%s, %s%s)' % (c.clubname, c.color, c.division, c.area))
+                markertext = '\\n'.join(markertext)
+                outfile.write('addMarker("%s", "%s",%s,%s,%s);\n' % (markertext, icon, club.latitude, club.longitude, clubinfo))
+            else:
+                outfile.write('addMarker("%d clubs meet here", "%s",%s,%s,%s);\n' % (len(l), icon, club.latitude, club.longitude, clubinfo))
         else:
             club = l[0]
             if parms.pindir:
@@ -272,7 +285,10 @@ def makemap(outfile, clubs, parms):
             else:
                 icon = ''
             clubinfo = '[new iwTab("%s", "%s")]' % (club.clubname, makeCard(club))
-            outfile.write('addMarker("%s", "%s",%s,%s,%s);\n' % (club.clubname, icon, club.latitude, club.longitude, clubinfo))
+            if showdetails:
+                outfile.write('addMarker("%s (%s)", "%s",%s,%s,%s);\n' % (club.clubname, club.color, icon, club.latitude, club.longitude, clubinfo))
+            else:
+                outfile.write('addMarker("%s", "%s",%s,%s,%s);\n' % (club.clubname, icon, club.latitude, club.longitude, clubinfo))
 
 
 if __name__ == "__main__":

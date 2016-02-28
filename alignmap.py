@@ -73,19 +73,20 @@ if __name__ == "__main__":
     if parms.testalign:
         import csv
         infile = open(parms.testalign, 'rbU')
-        reader = csv.reader(infile)
+        reader = csv.DictReader(infile)
         newclubs = {}
         newdivs = {}
         clubsbypos = {}
         line = reader.next()  # Skip header
         for line in reader:
-            newdiv = line[3][0]
-            newarea = line[3][1:]
-            clubnum = line[0]
+            newdiv = line['newarea'][0]
+            newarea = line['newarea'][1:]
+            clubnum = line['clubnumber']
             newclubs[clubnum] = (newdiv, newarea)
             c = clubs[clubnum]
             c.division = newdiv
             c.area = newarea
+            c.color = line['color']
             if newdiv not in newdivs:
                 newdivs[newdiv] = []
             latitude = float(c.latitude)
@@ -102,6 +103,7 @@ if __name__ == "__main__":
 
     outfile = open(parms.outfile, 'w')
     
+    parms.showdetails = True
     makemap(outfile, clubs, parms)
     
     outfile.write("""
