@@ -145,27 +145,56 @@ if __name__ == "__main__":
                 polygons[div] = []
             polygons[div].append(Polygon(poly))
             
+    def dopoly(outfile, outline, div, num=0):
+        if num > 0:
+            varname = '%s%d' % (div, num)
+        else:
+            varname = div 
+        outfile.write("""
+        var div%s = [
+        """ % varname)
+        outfile.write(',\n'.join(['new g.LatLng(%s, %s)' % p for p in outline.exterior.coords]))
+        outfile.write("""];
+        DrawHull(div%s, fillcolors["%s"]);
+        """ % (varname,d))
+            
     for d in polygons:
         outline = polygons[d][0]
         for p in polygons[d][1:]:
             outline = outline.union(p)
         outline = outline.intersection(d101)
-        outfile.write("""
-        var div%s = [
-        """ % d)
+
         if outline.type == 'Polygon':
-            outfile.write(',\n'.join(['new g.LatLng(%s, %s)' % p for p in outline.exterior.coords]))
+            dopoly(outfile, outline, d)
         else:
+             num = 0
              for poly in outline.geoms:
-                 res = []
-                 res.append(',\n'.join(['new g.LatLng(%s, %s)' % p for p in poly.exterior.coords]))
-             outfile.write(',\n'.join(res))
-        outfile.write("""];
-        DrawHull(div%s, fillcolors["%s"]);
-        """ % (d,d))
-        
-       
+                 num += 1
+                 dopoly(outfile, poly, d, num)
+
+    # Finally, draw the D101 boundary
     
+    outfile.write("""
+    
+    
+    function DrawBoundary(hullPoints) {
+         polyline = new google.maps.Polygon({
+          map: map,
+          paths:hullPoints, 
+          fillColor:'#FFFFC0',
+          strokeWidth:2, 
+          fillOpacity:0.2, 
+          strokeColor:'#000000',
+          strokeOpacity:0.7
+         })
+         };
+
+    var d101 = [
+    """)
+    outfile.write(',\n'.join(['new g.LatLng(%s, %s)' % p for p in d101.exterior.coords]))
+    outfile.write("""];
+    DrawBoundary(d101);
+    """)
     
 
     outfile.close()
