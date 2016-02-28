@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
@@ -8,7 +8,10 @@ from tmutil import overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
 from makemap import makemap, setClubCoordinatesFromGEO
 from geometry import convexHull
-
+import pytess
+from shapely.ops import cascaded_union
+from shapely.geometry import Polygon
+from d101 import d101
 
 def inform(*args, **kwargs):
     """ Print information to 'file', depending on the verbosity level. 
@@ -117,15 +120,46 @@ if __name__ == "__main__":
          };
     """)
     
+    # Now, compute the new divisions.
+    d101 = Polygon(d101)
+    
+    sites = {}         # (lat,lng) ==> Division
+    for c in clubs.values():
+        point = (c.latitude, c.longitude)
+        if point in sites:
+            if c.division != sites[point]:
+                sites[point] += c.division
+        else:
+            sites[point] = c.division
+            
+    points = [loc for loc in sites.keys() if len(sites[loc]) == 1]
+    voronoipolys = pytess.voronoi(points, buffer_percent=200)
+           
 
-    # Compute the convex hull for each division and write it to the file
-   
-    for d in newdivs:
-        hull = convexHull(newdivs[d])
+    # Compute the union of polygons for each division and write it to the file
+    polygons = {}
+    for (point, poly) in voronoipolys:
+        if point in sites:
+            div = sites[point]
+            if div not in polygons:
+                polygons[div] = []
+            polygons[div].append(Polygon(poly))
+            
+    for d in polygons:
+        outline = polygons[d][0]
+        for p in polygons[d][1:]:
+            outline = outline.union(p)
+        outline = outline.intersection(d101)
         outfile.write("""
         var div%s = [
         """ % d)
-        outfile.write(',\n'.join(['new g.LatLng(%s, %s)' % p for p in hull]))
+        if outline.type == 'Polygon':
+            outfile.write(',\n'.join(['new g.LatLng(%s, %s)' % p for p in outline.exterior.coords]))
+        else:
+             for poly in outline.geoms:
+                 res = []
+                 res.append(',\n'.join(['new g.LatLng(%s, %s)' % p for p in poly.exterior.coords]))
+             outfile.write(',\n'.join(res))
         outfile.write("""];
         DrawHull(div%s, fillcolors["%s"]);
         """ % (d,d))
