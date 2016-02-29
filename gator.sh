@@ -222,7 +222,7 @@ if [[ "$dorun" = "yes" ]] ; then
             echo "award letters not sent - not on proper host"
     else
             echo "Processing award letters"
-            echo ../sendawardmail.py
+            ../sendawardmail.py
     fi
     
     rm marker
