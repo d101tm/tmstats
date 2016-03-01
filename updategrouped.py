@@ -2,7 +2,7 @@
 """ Update the grouped.csv file with current information from the database.  Does NOT change 'newarea'!
 """
 
-import dbconn, tmutil, sys, os, csv
+import dbconn, tmutil, sys, os, csv, datetime
 
 clubs = {} 
 
@@ -52,6 +52,7 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
+    parms.add_argument('--file', dest='file', default='d101align.csv')
     # Add other parameters here
     parms.parse() 
    
@@ -81,7 +82,7 @@ if __name__ == "__main__":
 
             
     # Now, get the 'newarea' information from the old file.
-    infile = open('grouped.csv', 'rbU')
+    infile = open(parms.file, 'rbU')
     reader = csv.DictReader(infile)
     for row in reader:
         try:
@@ -89,9 +90,10 @@ if __name__ == "__main__":
         except KeyError:
             print row['clubnumber'], 'not found'
     infile.close()
-    
+    os.rename(parms.file, datetime.datetime.today().strftime('%Y-%m-%d') + '.' + 
+parms.file)
     # And write out the results
-    outfile = open('regrouped.csv', 'wb')
+    outfile = open(parms.file, 'wb')
     writer = csv.writer(outfile)
     writer.writerow(myclub.outfields)
     # Sort the clubs by newarea and clubnumber
