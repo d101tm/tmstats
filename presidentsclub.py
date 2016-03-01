@@ -14,7 +14,7 @@ class myclub:
         self.goalsmet = goalsmet
 
     def tablepart(self):
-        return ('    <td>%s</td><td>%s</td><td>%d</td>' % (self.area, self.clubname, self.goalsmet))
+        return ('    <td>%s</td><td>%s</td>' % (self.area, self.clubname))
 
     def key(self):
         return (self.area, self.clubnumber)
