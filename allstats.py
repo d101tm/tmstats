@@ -524,7 +524,9 @@ reload(sys).setdefaultencoding('utf8')
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
 parms.add_argument("--proforma", dest="proforma", default=None, help="CSV file with alignment information to create a 'pro-forma' report with a new alignment.")
+parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
 parms.parse()
+
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 district = '%02d' % parms.district 
@@ -739,7 +741,7 @@ for row in curs.fetchall():
 
 outfiles = Outputfiles()
 
-outfile = outfiles.add(open("stats.html", "w"))
+outfile = outfiles.add(open(parms.outfile, "w"))
     
     
 freshness.append('Find current Educational Achievments at <a href="http://tinyurl.com/d4tmeduc">http://tinyurl.com/d4tmeduc</a>')
@@ -748,15 +750,22 @@ freshness.append('Find current Club Coach assignments at <a href="http://tinyurl
 # One division at a time, please...
 for d in sorted(divisions.keys()):
     divfn = "div%s.html" % d.lower()
-    divfile = outfiles.add(open(divfn, "w"))
+    if not parms.proforma:
+        divfile = outfiles.add(open(divfn, "w"))
+    else:
+        divfile = None
     thisdiv = divisions[d]
    
-    if (d != '0D'):
-        outfiles.write('<h1 name="Div%s"><a href="%s">Division %s</a></h1>' % (d.lower(), divfn, d))
+    if not parms.proforma:
+        if (d != '0D'):
+            outfiles.write('<h1 name="Div%s"><a href="%s">Division %s</a></h1>' % (d.lower(), divfn, d))
+        else:
+            outfiles.write('<h1 name="Div%s"><a href="%s">Clubs Awaiting Alignment</a></h1>' % (d.lower(), divfn))
     else:
-        outfiles.write('<h1 name="Div%s"><a href="%s">Clubs Awaiting Alignment</a></h1>' % (d.lower(), divfn))
-    
-    
+        if (d != '0D'):
+            outfiles.write('<h1 name="Div%s">Division %s</h1>' % (d.lower(), d))
+        else:
+            outfiles.write('<h1 name="Div%s">Clubs Awaiting Alignment</h1>' % (d.lower(),))
     
     outfiles.write('<table class="divtable">\n')
     outfiles.write('<tbody><tr><td class="areacell">')
@@ -783,7 +792,7 @@ for d in sorted(divisions.keys()):
 
     outfiles.write('</table>\n')
     
-    if (d != '0D'):
+    if (d != '0D') and not parms.proforma:
         outfiles.write('<h2>Division and Area Summary</h2>')
     
         # Now, write the status and to-dos in a nice format
@@ -873,7 +882,8 @@ for d in sorted(divisions.keys()):
         
     outfiles.write('<div class="finale"><p>' + '<br />'.join(freshness) + '</p>')
     outfiles.write('<p>Click <a href="stats.html">here</a> for full District report.</p></div>')
-    outfiles.close(divfile)
+    if divfile:
+        outfiles.close(divfile)
  
 
 outfiles.close(outfile)
