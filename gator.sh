@@ -146,6 +146,11 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running 1-2 Punch"
         ../punch12.py
     fi
+
+    if (( $haveperf == 0 )) ; then
+        echo "Running March Madness"
+        ../madness.py
+    fi
      
     ### Run other statistics
     if (( $haveperf == 0 )) ; then
