@@ -44,20 +44,38 @@ if __name__ == "__main__":
     mostrecent = latest.getlatest('distperf', conn)[1]
     # Anchor the final date to the proper TM year
     curs.execute("SELECT MAX(tmyear) FROM lastfor")
-    tmyear = curs.fetchone()[0] + 1
-    finaldate = '%d%s' % (tmyear,finaldate[4:])
+    tmyear = curs.fetchone()[0] 
+    finaldate = '%d%s' % (tmyear+1,finaldate[4:])
     asof = min(finaldate, mostrecent)
     asofd = datetime.strptime(asof, "%Y-%m-%d")
     if (asof == finaldate):
         asofnice = 'final'
     else:
         asofnice = 'for ' + asofd.strftime("%B") + " " + asofd.strftime("%d").lstrip('0')
+
+    curs.execute("SELECT MAX(loadedfor) FROM loaded WHERE tablename = 'clubs'")
+    clubdate = curs.fetchone()[0].strftime("%Y-%m-%d") 
+    clubdate = min(finaldate, clubdate)
     
     # Now, get the clubs which qualify
+    # We compute using the base as of the first July data we have
+    curs.execute("SELECT MIN(asof) FROM clubperf WHERE monthstart = '%d-07-01'" % tmyear)
+    firstdate = curs.fetchone()[0]
+
+
     clubs = []
-    curs.execute("SELECT c.clubnumber, c.clubname,  100.0 * (d.aprrenewals / c.membase) as pct, c.division, c.area   from clubperf c  inner join distperf d on c.clubnumber = d.clubnumber and c.asof = %s and d.asof = %s having pct >= 75 order by c.division, c.area;", (asof, asof))
+    curs.execute("SELECT d.clubnumber, d.clubname,  100.0 * (d.aprrenewals / c.membase) as pct, d.division, d.area   from clubperf c  inner join distperf d on c.clubnumber = d.clubnumber and c.asof = %s and d.asof = %s having pct >= 75", (firstdate, asof))
     for c in curs.fetchall():
         clubs.append(myclub(*c))
+
+    # Now, add clubs which chartered this year.  We use their charter membership as their base.
+    query = "SELECT d.clubnumber, d.clubname, 100.0 * (d.aprrenewals / d.totalcharter) AS pct, d.division, d.area FROM  (SELECT clubnumber, charterdate FROM clubs WHERE charterdate >= '%s' AND firstdate <= '%s' AND lastdate >= '%s') c INNER JOIN distperf d ON c.clubnumber = d.clubnumber AND d.asof = '%s' HAVING pct >= 75"% (firstdate, clubdate, clubdate, asof)
+    curs.execute(query)
+
+    for c in curs.fetchall():
+        clubs.append(myclub(*c))
+
+
     clubs.sort(key=lambda c: c.key())
     
     # And write the report.
