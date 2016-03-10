@@ -7,10 +7,7 @@ from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
 from makemap import makemap, setClubCoordinatesFromGEO
-from geometry import convexHull
-import pytess
-from shapely.ops import cascaded_union
-from shapely.geometry import Polygon
+
 
 def inform(*args, **kwargs):
     """ Print information to 'file', depending on the verbosity level. 
@@ -125,6 +122,9 @@ if __name__ == "__main__":
     makemap(outfile, clubs, parms)
     
     if parms.makedivisions:
+        import pytess
+        from shapely.ops import cascaded_union
+        from shapely.geometry import Polygon
     
         outfile.write("""
     
