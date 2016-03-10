@@ -148,6 +148,7 @@ class Outputfiles:
         .green {background-color: lightgreen; font-weight: bold;}
         .yellow {background-color: yellow;}
         .red {background-color: red;}
+        .likelytoclose {color: white;}
         .rightalign {text-align: right;}
         .sep {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
         .greyback {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
@@ -278,19 +279,26 @@ class Club:
                 color = "suspended"
             self.parentarea.addtocounter(color)
             self.parentdiv.addtocounter(color)
+            namecolor = color
+            try:
+                if self.likelytoclose:
+                    namecolor += " likelytoclose"
+            except AttributeError:
+                print "no attribute"
+                
             if self.eventDate and len(self.eventDate) > 1:
-                ret += td(self.name, color, docclass="name")
+                ret += td(self.name, namecolor, docclass="name")
                 if self.suspended:
                     ret += td("Susp %s" % self.eventDate, docclass="edate")
                 else:
                     ret += td("Charter %s " % self.eventDate, docclass="edate")
             elif self.current < 8:
-                ret += td(self.name, color, docclass="name")
+                ret += td(self.name, namecolor, docclass="name")
                 ret += td("Below Minimum!", docclass="belowmin")
                 self.parentarea.addtocounter('below')
                 self.parentdiv.addtocounter('below')
             else:
-                ret += td(self.name, color, docclass="name wide", colspan="2")
+                ret += td(self.name, namecolor, docclass="name wide", colspan="2")
             ret += td(' ', docclass="sep")
             
         ret += "\n    "
@@ -628,6 +636,8 @@ if parms.proforma:
         keepers.add(clubnum)
         club.division = row['newarea'][0]
         club.area = row['newarea'][1:]
+        if 'likelytoclose' in reader.fieldnames:
+            club.likelytoclose = row['likelytoclose']
     pfile.close()
     # And get rid of any clubs not in the proforma file
     clubnumbers = clubs.keys()
