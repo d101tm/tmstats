@@ -10,7 +10,7 @@ class myclub:
     
     fields = ['clubnumber', 'clubname', 'latitude', 'longitude', 'place', 'address', 'city', 'state', 'zip', 'country', 'area', 'division', 'meetingday', 'meetingtime', 'color', 'goalsmet', 'activemembers']
     
-    outfields = ['clubnumber', 'clubname', 'oldarea', 'newarea', 'color', 'goalsmet', 'activemembers', 'meetingday', 'meetingtime', 'place', 'address', 'city', 'state', 'zip', 'country',  'latitude', 'longitude', ]
+    outfields = ['clubnumber', 'clubname', 'oldarea', 'newarea', 'likelytoclose', 'color', 'goalsmet', 'activemembers', 'meetingday', 'meetingtime', 'place', 'address', 'city', 'state', 'zip', 'country',  'latitude', 'longitude', ]
     
     def __init__(self, *args):
         # Assign values
@@ -81,14 +81,25 @@ if __name__ == "__main__":
         
 
             
-    # Now, get the 'newarea' information from the old file.
+    # Now, get the 'newarea' and 'likelytoclose' information from the old file.
     infile = open(parms.file, 'rbU')
     reader = csv.DictReader(infile)
     for row in reader:
         try:
-            clubs[row['clubnumber']].newarea = row['newarea']
+            c = clubs[row['clubnumber']]
         except KeyError:
-            print row['clubnumber'], 'not found'
+            print row['clubnumber'], not found
+            continue
+
+        if 'newarea' in reader.fieldnames:
+            c.newarea = row['newarea']
+        else:
+            c.newarea = ''
+        if 'likelytoclose' in reader.fieldnames:
+            c.likelytoclose = row['likelytoclose']
+        else:
+            c.likelytoclose = ''
+
     infile.close()
     os.rename(parms.file, datetime.datetime.today().strftime('%Y-%m-%d') + '.' + 
 parms.file)
