@@ -3,6 +3,7 @@
 
 import datetime, re
 from copy import deepcopy
+from tmutil import getTMYearFromDB
 
 npatt = re.compile('\W+', re.UNICODE)  # Get rid of anything that isn't a Unicode alphameric
 
@@ -91,7 +92,8 @@ class Club:
             date = self.stringify(curs.fetchone()[0])
             curs.execute("SELECT * FROM clubs WHERE firstdate <= %s AND lastdate >= %s", (date, date))
         else:
-            curs.execute("SELECT clubs.* FROM clubs INNER JOIN (SELECT clubnumber, MAX(lastdate) AS m FROM clubs GROUP BY clubnumber) lasts ON lasts.m = clubs.lastdate AND lasts.clubnumber = clubs.clubnumber;")
+            tmyearstart = '%d-07-01' % getTMYearFromDB(curs)
+            curs.execute("SELECT clubs.* FROM clubs INNER JOIN (SELECT clubnumber, MAX(lastdate) AS m FROM clubs GROUP BY clubnumber) lasts ON lasts.m = clubs.lastdate AND lasts.clubnumber = clubs.clubnumber WHERE lasts.m >= %s", (tmyearstart,))
         # Get the fieldnames before we get anything else:
         fieldnames = [f[0] for f in curs.description]
         if 'fieldnames' not in self.__dict__:
