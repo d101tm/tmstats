@@ -10,22 +10,22 @@ from makemap import makemap, setClubCoordinatesFromGEO
 
 
 def inform(*args, **kwargs):
-    """ Print information to 'file', depending on the verbosity level. 
+    """ Print information to 'file', depending on the verbosity level.
         'level' is the minimum verbosity level at which this message will be printed. """
     level = kwargs.get('level', 0)
     file = kwargs.get('file', sys.stderr)
-    
+
     if parms.verbosity >= level:
         print >> file, ' '.join(args)
 
 if __name__ == "__main__":
- 
+
     import tmparms
     from tmutil import gotodatadir
     gotodatadir()
-        
+
     reload(sys).setdefaultencoding('utf8')
-    
+
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count', default=0)
@@ -39,11 +39,11 @@ if __name__ == "__main__":
     parms.add_argument('--makedivisions', dest='makedivisions', action='store_true')
     parms.add_argument('--nomakedivisions', dest='nomakedivisions', action='store_true')
     # Add other parameters here
-    parms.parse() 
-    
+    parms.parse()
+
     # Compute verbosity level.  Default is zero.
     parms.verbosity = parms.verbose - parms.quiet
-    
+
     # Make choices for unspecified options depending on the District
     if parms.district == '4':
         if parms.makedivisions or parms.nomakedivisions:
@@ -55,29 +55,29 @@ if __name__ == "__main__":
         parms.outfile = 'd%snewmarkers.js' % parms.district
 
 
-    
+
     # Promote information from parms.makemap if not already specified
     parms.mapoverride = parms.mappoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
     parms.pindir = parms.pindir if parms.pindir else parms.makemap.get('pindir',None)
-   
-    # Connect to the database        
+
+    # Connect to the database
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
-    
+
     # Get the clubs
     clubs = Club.getClubsOn(curs)
-    
+
     # Remove suspended clubs
     clubs = removeSuspendedClubs(clubs, curs)
-    
+
     # Get coordinates
     setClubCoordinatesFromGEO(clubs, curs)
-    
+
     # If there are overrides to club positioning, handle them now
     if parms.mapoverride:
         overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
-        
-    
+
+
     # Process new grouping
     if parms.testalign:
         import csv
@@ -98,6 +98,14 @@ if __name__ == "__main__":
             c.color = line['color']
             if newdiv not in newdivs:
                 newdivs[newdiv] = []
+
+            # Info in the alignment file takes priority
+            for item in ('latitude', 'longitude', 'place', 'address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime'):
+                if line[item]:
+                    c.__dict__[item] = line[item]
+
+
+
             latitude = float(c.latitude)
             longitude = float(c.longitude)
             coords = (latitude, longitude)
@@ -105,47 +113,47 @@ if __name__ == "__main__":
             newdivs[newdiv].append(coords)
         for c in clubs.keys():
             if c not in newclubs:
-                del clubs[c]  
-        for c in clubs.keys():  
+                del clubs[c]
+        for c in clubs.keys():
             try:
                 clubs[c].color
             except AttributeError:
                 print '%s (%s) does not have a color' % (clubs[c].clubname, c)
                 clubs[c].color = ''
 
-    
+
 
 
     outfile = open(parms.outfile, 'w')
-    
+
     parms.showdetails = True
     makemap(outfile, clubs, parms)
-    
+
     if parms.makedivisions:
         import pytess
         from shapely.ops import cascaded_union
         from shapely.geometry import Polygon
-    
+
         outfile.write("""
-    
-    
+
+
         function DrawHull(hullPoints, color) {
              polyline = new google.maps.Polygon({
               map: map,
-              paths:hullPoints, 
+              paths:hullPoints,
               fillColor:color,
-              strokeWidth:2, 
-              fillOpacity:0.5, 
+              strokeWidth:2,
+              fillOpacity:0.5,
               strokeColor:color,
               strokeOpacity:0.7
              })
              };
         """)
-    
+
         # Now, compute the new divisions.
         from d101 import d101
         d101 = Polygon(d101)
-    
+
         sites = {}         # (lat,lng) ==> Division
         for c in clubs.values():
             point = (c.latitude, c.longitude)
@@ -154,10 +162,10 @@ if __name__ == "__main__":
                     sites[point] += c.division
             else:
                 sites[point] = c.division
-            
+
         points = [loc for loc in sites.keys() if len(sites[loc]) == 1]
         voronoipolys = pytess.voronoi(points, buffer_percent=200)
-           
+
 
         # Compute the union of polygons for each division and write it to the file
         polygons = {}
@@ -167,12 +175,12 @@ if __name__ == "__main__":
                 if div not in polygons:
                     polygons[div] = []
                 polygons[div].append(Polygon(poly))
-            
+
         def dopoly(outfile, outline, div, num=0):
             if num > 0:
                 varname = '%s%d' % (div, num)
             else:
-                varname = div 
+                varname = div
             outfile.write("""
             var div%s = [
             """ % varname)
@@ -180,7 +188,7 @@ if __name__ == "__main__":
             outfile.write("""];
             DrawHull(div%s, fillcolors["%s"]);
             """ % (varname,d))
-            
+
         for d in polygons:
             outline = polygons[d][0]
             for p in polygons[d][1:]:
@@ -196,17 +204,17 @@ if __name__ == "__main__":
                      dopoly(outfile, poly, d, num)
 
         # Finally, draw the D101 boundary
-    
+
         outfile.write("""
-    
-    
+
+
         function DrawBoundary(hullPoints) {
              polyline = new google.maps.Polygon({
               map: map,
-              paths:hullPoints, 
+              paths:hullPoints,
               fillColor:'#FFFFC0',
-              strokeWidth:2, 
-              fillOpacity:0.2, 
+              strokeWidth:2,
+              fillOpacity:0.2,
               strokeColor:'#000000',
               strokeOpacity:0.7
              })
@@ -218,7 +226,6 @@ if __name__ == "__main__":
         outfile.write("""];
         DrawBoundary(d101);
         """)
-    
+
 
     outfile.close()
-   
