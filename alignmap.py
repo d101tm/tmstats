@@ -164,6 +164,12 @@ if __name__ == "__main__":
                 sites[point] = c.division
 
         points = [loc for loc in sites.keys() if len(sites[loc]) == 1]
+
+        # Gross hack to put Gilroy in Division A
+        Gilroy = (37.005782, -121.568275)
+        sites[Gilroy] = 'A'
+        points.append(Gilroy)
+
         voronoipolys = pytess.voronoi(points, buffer_percent=200)
 
 
