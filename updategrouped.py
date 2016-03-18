@@ -64,7 +64,10 @@ if __name__ == "__main__":
     # Get data from clubs
     curs.execute('SELECT MAX(lastdate) FROM CLUBS')
     lastdate = curs.fetchone()[0]
-    whereclause = 'WHERE c.division IN ("A", "B", "F", "G", "J") AND c.city NOT LIKE "%%Palo Alto%%" AND c.lastdate = "%s"' % lastdate
+    if parms.file.startswith('d4'):
+        whereclause = 'where (c.division IN ("C", "D", "E", "H", "I") OR c.city LIKE "%%Palo Alto%%") AND c.lastdate = "%s"' % lastdate
+    else:
+        whereclause = 'WHERE c.division IN ("A", "B", "F", "G", "J") AND c.city NOT LIKE "%%Palo Alto%%" AND c.lastdate = "%s"' % lastdate
     c2 = conn.cursor()
     curs.execute('SELECT g.clubnumber, g.clubname, g.latitude, g.longitude, g.place, g.address, g.city, g.state, g.zip, g.country, c.area, c.division, c.meetingday, c.meetingtime FROM geo g INNER JOIN clubs c on g.clubnumber = c.clubnumber ' + whereclause)
     for row in curs.fetchall():
@@ -89,7 +92,7 @@ if __name__ == "__main__":
         try:
             c = clubs[row['clubnumber']]
         except KeyError:
-            print row['clubnumber'], not found
+            print row['clubnumber'], 'not found'
             continue
 
         if 'newarea' in reader.fieldnames:
@@ -120,6 +123,19 @@ if __name__ == "__main__":
                     c.__dict__[item] = value
         infile.close()
 
+    # Sort the clubs by newarea and clubnumber
+    for c in clubs:
+        try:
+            clubs[c].newarea
+        except AttributeError:
+            print 'club', c, clubs[c].clubname, 'does not have a new area.  Putting it in XX.'
+            clubs[c].newarea = 'XX'
+        try:
+            clubs[c].likelytoclose
+        except AttributeError:
+            print 'club', c, clubs[c].clubname, 'does not have likelytoclose.'
+            clubs[c].likelytoclose = 'Yes'
+    outclubs = sorted(clubs.values(), key=lambda c:'%s %9s' % (c.newarea, c.clubnumber))
     # OK, protect the old file and write the new one.    
     os.rename(parms.file, datetime.datetime.today().strftime('%Y-%m-%d') + '.' +
 parms.file)
@@ -127,8 +143,7 @@ parms.file)
     outfile = open(parms.file, 'wb')
     writer = csv.writer(outfile)
     writer.writerow(myclub.outfields)
-    # Sort the clubs by newarea and clubnumber
-    outclubs = sorted(clubs.values(), key=lambda c:'%s %9s' % (c.newarea, c.clubnumber))
+
     for c in outclubs:
         writer.writerow(c.out())
     outfile.close()
