@@ -284,7 +284,7 @@ class Club:
                 if self.likelytoclose:
                     namecolor += " likelytoclose"
             except AttributeError:
-                print "no attribute"
+                pass
                 
             if self.eventDate and len(self.eventDate) > 1:
                 ret += td(self.name, namecolor, docclass="name")
