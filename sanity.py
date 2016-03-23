@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """ Generate the September Sanity report for the What's Trending page. """
     

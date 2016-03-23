@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Populate the 'lastfor' table in the database. """
 import dbconn, tmutil, sys, os, datetime
 

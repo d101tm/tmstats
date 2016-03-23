@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Load the performance information already gathered into a database. 
     Run from the directory containing the YML file for parms and the CSV files 
        (but in TextMate, run from the source directory).

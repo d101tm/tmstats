@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Send an email contained in a file. """
 import tmparms, os, sys, argparse, smtplib
 from email.mime.text import MIMEText

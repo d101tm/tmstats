@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Check currency of all four tables for the date specified.
     If no date is specified, we want the 'clubs' table to be current for today;
       the other tables can be for today OR yesterday because they are one day behind on Toastmasters.

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 """ If there's a new Excel file in the Webmaster's roster directory,
     get it (if more than one, only get the latest).
     Otherwise, exit with a status of 1. """

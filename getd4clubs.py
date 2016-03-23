@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # @@TODO:  Combine "export" into this program.
 # @@TODO:  Create areas from Divisions.
