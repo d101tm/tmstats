@@ -62,7 +62,7 @@ if __name__ == "__main__":
     curs = conn.cursor()
 
     # Get data from clubs
-    curs.execute('SELECT MAX(lastdate) FROM CLUBS')
+    curs.execute('SELECT MAX(lastdate) FROM clubs')
     lastdate = curs.fetchone()[0]
     if parms.file.startswith('d4'):
         whereclause = 'where (c.division IN ("C", "D", "E", "H", "I") OR c.city LIKE "%%Palo Alto%%") AND c.lastdate = "%s"' % lastdate
