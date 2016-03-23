@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Make the 'Congratulations!' slide and the list of award-winners."""
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 

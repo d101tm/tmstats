@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Creates a "DEC Snapshot" for the alignment process
     Uses "alignment.xlsx" and the latest available files in the data directory
     """

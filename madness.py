@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Generate the "March Madness" report based on the current club statistics. """
 import csv, sys, yaml, urllib, re, os.path
 from club import Club

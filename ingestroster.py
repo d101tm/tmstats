@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Ingest the roster into the database.  Completely replaces the
     roster table every time. """
 

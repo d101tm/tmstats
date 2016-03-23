@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Creates the "Share the Wealth" report """
  
 import xlsxwriter, csv, sys, os, codecs, cStringIO, re

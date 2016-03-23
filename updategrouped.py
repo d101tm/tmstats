@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Update the grouped.csv file with current information from the database.  Does NOT change 'newarea'!
 """
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import dbconn, tmparms, os, sys
 from datetime import date, datetime
 from tmutil import showclubswithvalues, showclubswithoutvalues

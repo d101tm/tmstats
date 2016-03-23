@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Generate the "Distinguished Clubs" report based on the current club statistics. """
 
 import csv, sys, yaml, urllib, re, os.path

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Find club changes. 
 
     Create an HTML file with changes in club information between two dates, based on Toastmasters' Find-a-Club data.

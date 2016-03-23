@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Reset database to specified date """
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
