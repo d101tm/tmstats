@@ -20,7 +20,12 @@ def inform(*args, **kwargs):
 def openarea(outfile, area):
     outfile.write('<div class="area">\n')
     outfile.write('<h4>Area %s</h4>\n' % area)
-    outfile.write('<table class="areatable"><tbody>\n')
+    outfile.write('<table class="areatable">\n')
+    outfile.write('<thead>\n')
+    outfile.write('<tr>\n')
+    outfile.write('<th class="cnum">Number</th><th class="cname">Name</th><th class="color">Color</th><th class="members">Members</th><th class="goals">Goals</th><th class="loc">Location</th><th class="mtg">Time</th>\n')
+    outfile.write('</tr>\n')
+    outfile.write('</thead><tbody>\n')
     
 def closearea(outfile):
     outfile.write('</tbody></table>\n')
@@ -62,18 +67,25 @@ if __name__ == "__main__":
     <style type="text/css">
     
     
-     body {font-size: 10pt; font-family: Arial }
+     body {font-family: Arial }
     
 
     .area {margin-bottom: 12pt; width: 100%; page-break-inside: avoid; display: block;}
 
     .division {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
-      .areatable {border: 1px solid black; border-collapse: collapse;}
+      .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse;}
       .myrow td {vertical-align: top; padding-left: 3px; padding-right: 3px; border: 1px solid black;}
+      th {font-weight: bold; border: 1px solid black; border-collaps: collapse;}
       .ghost {background-color: #C0C0C0;}
       .myrow {border: 1px solid black; border-collapse: collapse;}
       .cnum {text-align: right; width: 7%;}
       .cname {text-align: left; width: 15%;}
+      .color {text-align: left; width: 5%;}
+      .red {background-color: red;}
+      .yellow {background-color: yellow;}
+      .green {background-color: green;}
+      .goals {text-align: right; width: 5%;}
+      .members {text-align: right; width: 5%;}
       .mtg {text-align: left; width: 25%;}
       .loc {text-align: left; width: 30%;}
     </style>
@@ -100,6 +112,9 @@ if __name__ == "__main__":
         row['closing'] = '<br />(Probably closing)' if row['likelytoclose'] else ''
         outrow.append('<tr class="myrow%s">' % (' ghost' if row['likelytoclose'] else ''))
         outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}{closing}</td>')
+        outrow.append('  <td class="color {color}">{color}</td>\n')
+        outrow.append('  <td class="members">{activemembers}</td>\n')
+        outrow.append('  <td class="goals">{goalsmet}</td>\n')
         outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
         outrow.append('  <td class="mtg">{meetingday}<br />{meetingtime}</td>')
         outrow.append('</tr>')
