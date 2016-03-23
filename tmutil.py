@@ -2,7 +2,6 @@
 """ Utility functions for the TMSTATS suite """
 from datetime import date, timedelta, datetime
 import csv, cStringIO, codecs
-import xlrd
 import os
 
 def gotodatadir():
@@ -97,6 +96,7 @@ class UnicodeWriter:
 def overrideClubs(clubs, newAlignment):
     """ Updates 'clubs' to reflect the alignment in the newAlignment spreadsheet.
         Typically used at a TM year boundary. """
+    import xlrd
     book = xlrd.open_workbook(newAlignment)
     
 
