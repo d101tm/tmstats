@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Create the "awards by division" and "awards by type" CSVs
 

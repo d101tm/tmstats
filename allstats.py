@@ -4,6 +4,7 @@
 import  datetime,  os, sys,  math, time
 import dbconn, tmparms, latest, os, sys, argparse
 from tmutil import stringify
+import csv
 
 from operator import attrgetter
 
@@ -147,6 +148,7 @@ class Outputfiles:
         .green {background-color: lightgreen; font-weight: bold;}
         .yellow {background-color: yellow;}
         .red {background-color: red;}
+        .likelytoclose {color: white;}
         .rightalign {text-align: right;}
         .sep {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
         .greyback {background-color: #E0E0E0; padding-left: 3px; padding-right: 3px;}
@@ -277,19 +279,26 @@ class Club:
                 color = "suspended"
             self.parentarea.addtocounter(color)
             self.parentdiv.addtocounter(color)
+            namecolor = color
+            try:
+                if self.likelytoclose:
+                    namecolor += " likelytoclose"
+            except AttributeError:
+                pass
+                
             if self.eventDate and len(self.eventDate) > 1:
-                ret += td(self.name, color, docclass="name")
+                ret += td(self.name, namecolor, docclass="name")
                 if self.suspended:
                     ret += td("Susp %s" % self.eventDate, docclass="edate")
                 else:
                     ret += td("Charter %s " % self.eventDate, docclass="edate")
             elif self.current < 8:
-                ret += td(self.name, color, docclass="name")
+                ret += td(self.name, namecolor, docclass="name")
                 ret += td("Below Minimum!", docclass="belowmin")
                 self.parentarea.addtocounter('below')
                 self.parentdiv.addtocounter('below')
             else:
-                ret += td(self.name, color, docclass="name wide", colspan="2")
+                ret += td(self.name, namecolor, docclass="name wide", colspan="2")
             ret += td(' ', docclass="sep")
             
         ret += "\n    "
@@ -522,7 +531,10 @@ reload(sys).setdefaultencoding('utf8')
 # Define args and parse command line
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
+parms.add_argument("--proforma", dest="proforma", default=None, help="CSV file with alignment information to create a 'pro-forma' report with a new alignment.")
+parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
 parms.parse()
+
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 district = '%02d' % parms.district 
@@ -613,7 +625,26 @@ for (clubnumber, charterdate, clubname) in curs.fetchall():
         print 'Club %s (%d) not in performance reports, ignored.' % (clubname, clubnumber)
         
     
-# @TODO:  Here's where we'd process club overrides.
+# Pro-forma processing:
+if parms.proforma:
+    pfile = open(parms.proforma, 'rbU')
+    reader = csv.DictReader(pfile)
+    keepers = set()
+    for row in reader:
+        clubnum = int(row['clubnumber'])
+        club = clubs[clubnum]
+        keepers.add(clubnum)
+        club.division = row['newarea'][0]
+        club.area = row['newarea'][1:]
+        if 'likelytoclose' in reader.fieldnames:
+            club.likelytoclose = row['likelytoclose']
+    pfile.close()
+    # And get rid of any clubs not in the proforma file
+    clubnumbers = clubs.keys()
+    for c in clubnumbers:
+        if c not in keepers:
+            del clubs[c]
+    
 
 # And now, finish setting up the structure (creating Areas and Divisions, for example)
 for club in clubs.values():
@@ -651,31 +682,32 @@ for (clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward,
                 divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist,
                 totaldistdivisionclubs,
                 distinguisheddivision) in curs.fetchall():
-    c = clubs[clubnumber]
-    c.octRenewal = octoberrenewals  # October renewal
-    c.parentdiv.octRenewal += c.octRenewal
-    c.parentarea.octRenewal += c.octRenewal
-    c.aprRenewal = aprilrenewals  # May renewal
-    c.parentdiv.aprRenewal += c.aprRenewal
-    c.parentarea.aprRenewal += c.aprRenewal
-    c.novVisit = novvisitaward # 1st series visits
-    c.parentdiv.novVisit += c.novVisit
-    c.parentarea.novVisit += c.novVisit
-    c.mayVisit = mayvisitaward # 2nd series visits
-    c.parentdiv.mayVisit += c.mayVisit
-    c.parentarea.mayVisit += c.mayVisit
-    c.parentarea.base = areaclubbase
-    c.parentarea.paidgoals = [areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist ]
-    c.parentarea.paid = totalpaidareaclubs
-    c.parentarea.distgoals = [areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist]
-    c.parentarea.dist = totaldistareaclubs
-    c.parentarea.status = distinguishedarea
-    c.parentdiv.base = divisionclubbase
-    c.parentdiv.paidgoals = [divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist]
-    c.parentdiv.paid = totalpaiddivisionclubs
-    c.parentdiv.distgoals = [divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist]
-    c.parentdiv.dist = totaldistdivisionclubs
-    c.parentdiv.status = distinguisheddivision
+    if clubnumber in clubs:
+        c = clubs[clubnumber]
+        c.octRenewal = octoberrenewals  # October renewal
+        c.parentdiv.octRenewal += c.octRenewal
+        c.parentarea.octRenewal += c.octRenewal
+        c.aprRenewal = aprilrenewals  # May renewal
+        c.parentdiv.aprRenewal += c.aprRenewal
+        c.parentarea.aprRenewal += c.aprRenewal
+        c.novVisit = novvisitaward # 1st series visits
+        c.parentdiv.novVisit += c.novVisit
+        c.parentarea.novVisit += c.novVisit
+        c.mayVisit = mayvisitaward # 2nd series visits
+        c.parentdiv.mayVisit += c.mayVisit
+        c.parentarea.mayVisit += c.mayVisit
+        c.parentarea.base = areaclubbase
+        c.parentarea.paidgoals = [areapaidclubgoalfordist, areapaidclubgoalforselectdist, areapaidclubgoalforpresdist ]
+        c.parentarea.paid = totalpaidareaclubs
+        c.parentarea.distgoals = [areadistclubgoalfordist, areadistclubgoalforselectdist, areadistclubgoalforpresdist]
+        c.parentarea.dist = totaldistareaclubs
+        c.parentarea.status = distinguishedarea
+        c.parentdiv.base = divisionclubbase
+        c.parentdiv.paidgoals = [divisionpaidclubgoalfordist, divisionpaidclubgoalforselectdist, divisionpaidclubgoalforpresdist]
+        c.parentdiv.paid = totalpaiddivisionclubs
+        c.parentdiv.distgoals = [divisiondistclubgoalfordist, divisiondistclubgoalforselectdist, divisiondistclubgoalforpresdist]
+        c.parentdiv.dist = totaldistdivisionclubs
+        c.parentdiv.status = distinguisheddivision
 
 
 # Now get the monthly membership for each interesting month and put it in the right place in the club.
@@ -683,7 +715,8 @@ for (clubnumber, octoberrenewals, aprilrenewals, novvisitaward, mayvisitaward,
 curs.execute("select clubnumber, activemembers, month(monthstart) from clubperf where entrytype in ('M', 'L') and monthstart >= %s and monthstart <= %s", (interesting[0], interesting[-1]))
        
 for (clubnumber, activemembers, month) in curs.fetchall():
-    clubs[clubnumber].monthly[monthtoindex(month)] = activemembers
+    if clubnumber in clubs:
+        clubs[clubnumber].monthly[monthtoindex(month)] = activemembers
     
 # Now, get the current (or end-of-year, if a past year) information for each club.
 
@@ -697,19 +730,20 @@ else:
 
 fetched = {}
 for row in curs.fetchall():
-    c = clubs[row[0]]
-    if row[0] in fetched:
-        print "club %s (%s) is already here" % (c.name, c.clubnumber)
-    fetched[row[0]] = True
-    c.status = row[1]
-    c.base = row[2]
-    c.current = row[3]
-    c.goals = row[4]
-    ## Continue by assigning DCP info
-    c.dcpitems = [row[i] for i in dcprange]
-    c.dcpStatus = row[fieldnames.index('clubdistinguishedstatus')]
-    c.parentarea.counters[c.dcpStatus] += 1
-    c.parentdiv.counters[c.dcpStatus] += 1
+    if row[0] in clubs:
+        c = clubs[row[0]]
+        if row[0] in fetched:
+            print "club %s (%s) is already here" % (c.name, c.clubnumber)
+        fetched[row[0]] = True
+        c.status = row[1]
+        c.base = row[2]
+        c.current = row[3]
+        c.goals = row[4]
+        ## Continue by assigning DCP info
+        c.dcpitems = [row[i] for i in dcprange]
+        c.dcpStatus = row[fieldnames.index('clubdistinguishedstatus')]
+        c.parentarea.counters[c.dcpStatus] += 1
+        c.parentdiv.counters[c.dcpStatus] += 1
 
 
 
@@ -717,7 +751,7 @@ for row in curs.fetchall():
 
 outfiles = Outputfiles()
 
-outfile = outfiles.add(open("stats.html", "w"))
+outfile = outfiles.add(open(parms.outfile, "w"))
     
     
 freshness.append('Find current Educational Achievments at <a href="http://tinyurl.com/d4tmeduc">http://tinyurl.com/d4tmeduc</a>')
@@ -726,15 +760,22 @@ freshness.append('Find current Club Coach assignments at <a href="http://tinyurl
 # One division at a time, please...
 for d in sorted(divisions.keys()):
     divfn = "div%s.html" % d.lower()
-    divfile = outfiles.add(open(divfn, "w"))
+    if not parms.proforma:
+        divfile = outfiles.add(open(divfn, "w"))
+    else:
+        divfile = None
     thisdiv = divisions[d]
    
-    if (d != '0D'):
-        outfiles.write('<h1 name="Div%s"><a href="%s">Division %s</a></h1>' % (d.lower(), divfn, d))
+    if not parms.proforma:
+        if (d != '0D'):
+            outfiles.write('<h1 name="Div%s"><a href="%s">Division %s</a></h1>' % (d.lower(), divfn, d))
+        else:
+            outfiles.write('<h1 name="Div%s"><a href="%s">Clubs Awaiting Alignment</a></h1>' % (d.lower(), divfn))
     else:
-        outfiles.write('<h1 name="Div%s"><a href="%s">Clubs Awaiting Alignment</a></h1>' % (d.lower(), divfn))
-    
-    
+        if (d != '0D'):
+            outfiles.write('<h1 name="Div%s">Division %s</h1>' % (d.lower(), d))
+        else:
+            outfiles.write('<h1 name="Div%s">Clubs Awaiting Alignment</h1>' % (d.lower(),))
     
     outfiles.write('<table class="divtable">\n')
     outfiles.write('<tbody><tr><td class="areacell">')
@@ -761,7 +802,7 @@ for d in sorted(divisions.keys()):
 
     outfiles.write('</table>\n')
     
-    if (d != '0D'):
+    if (d != '0D') and not parms.proforma:
         outfiles.write('<h2>Division and Area Summary</h2>')
     
         # Now, write the status and to-dos in a nice format
@@ -851,7 +892,8 @@ for d in sorted(divisions.keys()):
         
     outfiles.write('<div class="finale"><p>' + '<br />'.join(freshness) + '</p>')
     outfiles.write('<p>Click <a href="stats.html">here</a> for full District report.</p></div>')
-    outfiles.close(divfile)
+    if divfile:
+        outfiles.close(divfile)
  
 
 outfiles.close(outfile)

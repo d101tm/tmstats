@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Get the CLUBS data from WHQ using the JSON interface and build a CSV file. """
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.

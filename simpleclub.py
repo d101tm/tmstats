@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ Simple class to maintain information about a club.
 """
 

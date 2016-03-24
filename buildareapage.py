@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Build the Areas and Divisions page for the website """
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Get Educational Awards
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     url = "http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%d&s=Club&sortOrder=0" % parms.district
     data = ''.join(urllib.urlopen(url).readlines())
     # Parse it
-    soup = BeautifulSoup(data)
+    soup = BeautifulSoup(data, 'html.parser')
 
     awards = []
     # We want siblings of the first table row of class "content"

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 """ Try to convert the Toastmasters training page into something tolerable """
 from bs4 import BeautifulSoup
 import sys, re, xlsxwriter

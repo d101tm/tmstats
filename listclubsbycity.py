@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Create the "Club Listing By City" as an includable HTML file. 
     Also create the CSS/JS and actual HTML as separate pieces for Joomla.
     And create narrow versions to be phone-friendly. """

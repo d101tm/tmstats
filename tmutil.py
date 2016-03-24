@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Utility functions for the TMSTATS suite """
 from datetime import date, timedelta, datetime
 import csv, cStringIO, codecs

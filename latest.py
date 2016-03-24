@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Print the latest date and the month that goes with it, based on
     the 'loaded' table.  
 

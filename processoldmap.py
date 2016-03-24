@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """Populate the 'map' table based on the current map on D4TM.ORG."""
 

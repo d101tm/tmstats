@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Send mail congratulating award recipients. """
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 

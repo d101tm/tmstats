@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """ Handle parameters for the TMSTATS family of programs.
     Parameters can come on the command line or from the tmstats.yml file.
     

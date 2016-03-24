@@ -151,7 +151,7 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running March Madness"
         ../madness.py
     fi
-     
+
     ### Run other statistics
     if (( $haveperf == 0 )) ; then
         echo "Running club sizes"
