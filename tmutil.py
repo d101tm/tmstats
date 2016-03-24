@@ -2,6 +2,7 @@
 """ Utility functions for the TMSTATS suite """
 from datetime import date, timedelta, datetime
 import csv, cStringIO, codecs
+import xlrd
 import os
 
 def gotodatadir():
@@ -37,7 +38,10 @@ def cleandate(indate):
         indate[2] = "0" + indate[2]
     return '-'.join(indate)
     
-
+def getTMYearFromDB(curs):
+    curs.execute("SELECT MAX(tmyear) FROM lastfor")
+    return curs.fetchone()[0]
+    
 def numToString(x):
     try:
         return '%s' % int(x)
@@ -96,7 +100,6 @@ class UnicodeWriter:
 def overrideClubs(clubs, newAlignment):
     """ Updates 'clubs' to reflect the alignment in the newAlignment spreadsheet.
         Typically used at a TM year boundary. """
-    import xlrd
     book = xlrd.open_workbook(newAlignment)
     
 
@@ -159,8 +162,7 @@ def removeSuspendedClubs(clubs, curs, date=None):
     if date:
         curs.execute("SELECT clubnumber FROM distperf WHERE suspenddate != '' AND asof = (select min(d) FROM (SELECT %s AS d UNION ALL SELECT MAX(asof) FROM distperf) q)", (date,))
     else:
-        curs.execute("SELECT MAX(tmyear) FROM lastfor")
-        tmyear = curs.fetchone()[0]
+        tmyear = getTMYearFromDB(curs)
         curs.execute("SELECT distperf_id FROM lastfor WHERE tmyear = %s", (tmyear,))
         idlist = ','.join(['%d' % ans[0] for ans in curs.fetchall()])
         curs.execute("SELECT clubnumber FROM distperf WHERE id IN (" + idlist + ") AND suspenddate != ''")
