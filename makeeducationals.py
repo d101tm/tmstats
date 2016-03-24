@@ -211,4 +211,3 @@ if __name__ == "__main__":
         
     cmd = makeCongratulations(count, parms.district, timestamp, parms)
     subprocess.call(' '.join(cmd),shell=True)
-        

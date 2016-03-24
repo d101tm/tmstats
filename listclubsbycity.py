@@ -207,7 +207,7 @@ for city in sorted(cities.keys()):
         data['state'] = club.state
         data['zip'] = club.zip
         allclubinfo.append(clubtemplate % data)
-	allnarrowinfo.append(narrowtemplate % data)
+        allnarrowinfo.append(narrowtemplate % data)
         
     info['clubs'] = '\n'.join(allclubinfo)
     outfile.write(citytemplate % info)

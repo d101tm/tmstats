@@ -121,4 +121,4 @@ if __name__ == "__main__":
                     line.append(val)    # District isn't quoted.
             f.write(','.join(line))
             f.write('\n')
-        f.close()    
+        f.close()

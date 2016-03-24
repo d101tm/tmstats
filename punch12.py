@@ -91,7 +91,7 @@ if __name__ == "__main__":
     winners = [c for c in clubs if c.net >= 5 and c.clubnumber != 2571179]
     punch1 = {}
     for c in winners:
-	punch1[c.clubnumber] = True
+        punch1[c.clubnumber] = True
 
     outfile.write("""<h3 id="12punch">1-2 Punch Winners</h3>
 <p>Clubs which add at least 5 new members in January and February qualify for Part 1 of the District 4 "1-2 Punch Award" and receive $25 in District Credit.  This report is %s.</p>""" % status)

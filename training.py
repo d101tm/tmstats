@@ -284,18 +284,18 @@ if __name__ == "__main__":
     incol1 = (1 + len(lucky)) / 2# Number of items in the first column.  
     left = 0  # Start with the zero'th item
     for i in range(incol1):
-    	club = lucky[i]
-    	outfile.write('<tr>\n')
-    	outfile.write('  <td>%s%d</td><td>%s</td>\n' % (club[0], int(club[1]), club[2]))
-    	outfile.write('  <td>&nbsp;</td>\n')
-    	try:
-    		club = lucky[i+incol1]   # For the right column
-    	except IndexError:
-    		#outfile.write('<td>&nbsp;</td><td>&nbsp;</td>\n')    # Close up the row neatly
-    		outfile.write('</tr>\n')
-    		break
-    	outfile.write('  <td>%s%d</td><td>%s</td>\n' % (club[0], int(club[1]), club[2]))
-    	outfile.write('</tr>\n')
+        club = lucky[i]
+        outfile.write('<tr>\n')
+        outfile.write('  <td>%s%d</td><td>%s</td>\n' % (club[0], int(club[1]), club[2]))
+        outfile.write('  <td>&nbsp;</td>\n')
+        try:
+            club = lucky[i+incol1]   # For the right column
+        except IndexError:
+            #outfile.write('<td>&nbsp;</td><td>&nbsp;</td>\n')    # Close up the row neatly
+            outfile.write('</tr>\n')
+            break
+        outfile.write('  <td>%s%d</td><td>%s</td>\n' % (club[0], int(club[1]), club[2]))
+        outfile.write('</tr>\n')
 
     outfile.write("""  </tbody>
     </table>

@@ -30,4 +30,4 @@ def overrideClubPositions(clubs, overridefile, apikey):
                     reloinfo.process(gres)
                     club.latitude = reloinfo.latitude
                     club.longitude = reloinfo.longitude
-    data.close()    
+    data.close()

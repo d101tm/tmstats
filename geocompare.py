@@ -11,71 +11,71 @@ from uncodeit import myclub
 
 style = """
 .deltatable {
-	margin:0px;padding:0px;
-	width:100%;
-	border:1px solid #000000;
+        margin:0px;padding:0px;
+        width:100%;
+        border:1px solid #000000;
 }.deltatable table{
     border-collapse: collapse;
         border-spacing: 0;
-	width:100%;
-	height:100%;
-	margin:0px;padding:0px;
+        width:100%;
+        height:100%;
+        margin:0px;padding:0px;
 }.deltatable tr:last-child td:last-child {
-	-moz-border-radius-bottomright:0px;
-	-webkit-border-bottom-right-radius:0px;
-	border-bottom-right-radius:0px;
+        -moz-border-radius-bottomright:0px;
+        -webkit-border-bottom-right-radius:0px;
+        border-bottom-right-radius:0px;
 }
 .deltatable table tr:first-child td:first-child {
-	-moz-border-radius-topleft:0px;
-	-webkit-border-top-left-radius:0px;
-	border-top-left-radius:0px;
+        -moz-border-radius-topleft:0px;
+        -webkit-border-top-left-radius:0px;
+        border-top-left-radius:0px;
 }
 .deltatable table tr:first-child td:last-child {
-	-moz-border-radius-topright:0px;
-	-webkit-border-top-right-radius:0px;
-	border-top-right-radius:0px;
+        -moz-border-radius-topright:0px;
+        -webkit-border-top-right-radius:0px;
+        border-top-right-radius:0px;
 }.deltatable tr:last-child td:first-child{
-	-moz-border-radius-bottomleft:0px;
-	-webkit-border-bottom-left-radius:0px;
-	border-bottom-left-radius:0px;
+        -moz-border-radius-bottomleft:0px;
+        -webkit-border-bottom-left-radius:0px;
+        border-bottom-left-radius:0px;
 }.deltatable tr:hover td{
-	background-color:#ffffff;
-		
+        background-color:#ffffff;
+                
 
 }
 .deltatable td{
-	vertical-align:top;
-	
-	background-color:#ffffff;
+        vertical-align:top;
+        
+        background-color:#ffffff;
 
-	border:1px solid #000000;
-	border-width:0px 1px 1px 0px;
-	text-align:left;
-	padding:3px;
-	font-size:14px;
-	font-family:Arial;
-	font-weight:normal;
-	color:#000000;
+        border:1px solid #000000;
+        border-width:0px 1px 1px 0px;
+        text-align:left;
+        padding:3px;
+        font-size:14px;
+        font-family:Arial;
+        font-weight:normal;
+        color:#000000;
 }.deltatable tr:last-child td{
-	border-width:0px 1px 0px 0px;
+        border-width:0px 1px 0px 0px;
 }.deltatable tr td:last-child{
-	border-width:0px 0px 1px 0px;
+        border-width:0px 0px 1px 0px;
 }.deltatable tr:last-child td:last-child{
-	border-width:0px 0px 0px 0px;
+        border-width:0px 0px 0px 0px;
 }
 .deltatable tr:first-child td{
-		background:-o-linear-gradient(bottom, #cccccc 5%, #cccccc 100%);	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #cccccc), color-stop(1, #cccccc) );
-	background:-moz-linear-gradient( center top, #cccccc 5%, #cccccc 100% );
+                background:-o-linear-gradient(bottom, #cccccc 5%, #cccccc 100%);        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #cccccc), color-stop(1, #cccccc) );
+        background:-moz-linear-gradient( center top, #cccccc 5%, #cccccc 100% );
 
 
-	background-color:#cccccc;
-	border:0px solid #000000;
-	text-align:center;
-	border-width:0px 0px 1px 1px;
-	font-size:14px;
-	font-family:Arial;
-	font-weight:bold;
-	color:#000000;
+        background-color:#cccccc;
+        border:0px solid #000000;
+        text-align:center;
+        border-width:0px 0px 1px 1px;
+        font-size:14px;
+        font-family:Arial;
+        font-weight:bold;
+        color:#000000;
 }
 
 .h1 {text-align: center;}

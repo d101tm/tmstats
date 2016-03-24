@@ -358,7 +358,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
                 try:
                     curs.execute('INSERT IGNORE INTO clubchanges (clubnumber, changedate, item, old, new) VALUES (%s, %s, %s, %s, %s)', (club.clubnumber, cdate, item, old, new))
                 except Exception, e:
-		            print e
+                     print e
             clubhist[club.clubnumber] = club
             if different(club, clubhist[club.clubnumber], dbheaders[:-2]):
                 print 'it\'s different after being set.'
