@@ -13,6 +13,12 @@ def gotodatadir():
         os.chdir('data')   # Fails if there is no data directory; that is intentional.
 
 
+def neaten(date):
+    return date.strftime(' %m/%d').replace(' 0','').replace('/0','/').strip()
+
+def dateAsWords(date):
+    return date.strftime('%B %d').replace(' 0', ' ')
+
 def cleandate(indate):
     if '/' in indate:
         indate = indate + '/' + date.today().strftime("%Y")  # Default to this year
@@ -37,17 +43,41 @@ def cleandate(indate):
     if len(indate[2]) == 1:
         indate[2] = "0" + indate[2]
     return '-'.join(indate)
-    
+
+def getMonthEnd(month, year=date.today().year):
+    if month == 12:
+        return date(year, month, 31)
+    else:
+        return date(year, month+1, 1) - timedelta(days=1)
+
+
 def getTMYearFromDB(curs):
     curs.execute("SELECT MAX(tmyear) FROM lastfor")
     return curs.fetchone()[0]
-    
+
+def getMonthStart(month, curs, tmyear=None):
+    if not tmyear:
+        tmyear = getTMYearFromDB(curs)
+    if month <= 6:
+        tmyear += 1
+    return '%d-%0.2d-01' % (tmyear, month)
+
+def isMonthFinal(month, curs, table='clubperf'):
+    monthstart = getMonthStart(month, curs)
+    curs.execute('SELECT COUNT(*) FROM %s WHERE monthstart = "%s" AND entrytype = "M"' % (table, monthstart))
+    return 0 != curs.fetchone()[0]
+
+def haveDataFor(date, curs, table='clubperf'):
+    curs.execute('SELECT COUNT(*) FROM %s WHERE asof = "%s"' % (table, date))
+    return 0 != curs.fetchone()[0]
+
+
 def numToString(x):
     try:
         return '%s' % int(x)
     except ValueError:
         return ''
-    
+
 
 def stringify(value):
     """ Convert values to strings """
@@ -61,11 +91,11 @@ def stringify(value):
 
     return value
 
-        
+
 def daybefore(indate):
     """ Toastmasters data is for the day BEFORE the file was created. """
-    return (datetime.strptime(cleandate(indate), '%Y-%m-%d') - timedelta(1)).strftime('%Y-%m-%d') 
-    
+    return (datetime.strptime(cleandate(indate), '%Y-%m-%d') - timedelta(1)).strftime('%Y-%m-%d')
+
 class UnicodeWriter:
     """
     A CSV writer which will write rows to CSV file "f",
@@ -95,13 +125,13 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
-            
+
 
 def overrideClubs(clubs, newAlignment):
     """ Updates 'clubs' to reflect the alignment in the newAlignment spreadsheet.
         Typically used at a TM year boundary. """
     book = xlrd.open_workbook(newAlignment)
-    
+
 
     # Start with the Alignment sheet
     align = book.sheet_by_name('Alignment')
@@ -112,7 +142,7 @@ def overrideClubs(clubs, newAlignment):
     distcol = 7
     areacol = 8
     divcol = 9
-    
+
     # Walk down looking for a valid club number
     rownum = 0
 
@@ -133,14 +163,14 @@ def overrideClubs(clubs, newAlignment):
                 #print 'Change: %s (%s) from %s to %s' % (club.clubname, club.clubnumber, was, now)
                 pass
         rownum += 1
-        
+
     # Now, handle the suspended club list
-    # Find the first sheet which starts with 'Suspended' 
+    # Find the first sheet which starts with 'Suspended'
     names = book.sheet_names()
     sheetnum = 0
     while not names[sheetnum].startswith('Suspended'):
         sheetnum += 1
-        
+
     if sheetnum <= len(names):
         susp = book.sheet_by_index(sheetnum)
         rownum = 0
@@ -151,12 +181,12 @@ def overrideClubs(clubs, newAlignment):
                 #print 'Suspended: %s (%s)' % (clubs[clubnum].clubname, clubs[clubnum].clubnumber)
                 del clubs[clubnum]
             rownum += 1
-            
+
     return clubs
-    
+
 def removeSuspendedClubs(clubs, curs, date=None):
     """ Removes suspended clubs from the clubs array.
-        If date=None, removes currently suspended clubs; otherwise, removes clubs which were 
+        If date=None, removes currently suspended clubs; otherwise, removes clubs which were
         suspended as of that date.
         Uses the 'distperf' table for the suspension information. """
     if date:
@@ -172,10 +202,10 @@ def removeSuspendedClubs(clubs, curs, date=None):
         if clubnum in clubs:
             del clubs[clubnum]
     return clubs
-    
+
 def showclubswithvalues(clubs, valuename, outfile):
     """ Outputs clubs in a 2-column table. """
-    
+
     outfile.write("""<table class="DSSctable">
   <thead>
   <tr>
@@ -205,17 +235,17 @@ def showclubswithvalues(clubs, valuename, outfile):
         except IndexError:
             outfile.write('\n  </tr>\n')
             break
-        outfile.write('\n    <td>&nbsp;</td>\n')    
+        outfile.write('\n    <td>&nbsp;</td>\n')
         outfile.write(club.tablepart())
         outfile.write('\n  </tr>\n')
-        
+
     outfile.write("""  </tbody>
 </table>
 """)
 
 def showclubswithoutvalues(clubs, outfile):
     """ Outputs clubs in a 2-column table. """
-    
+
     outfile.write("""<table class="DSSbtable">
   <thead>
   <tr>
@@ -245,10 +275,10 @@ def showclubswithoutvalues(clubs, outfile):
         except IndexError:
             outfile.write('\n  </tr>\n')
             break
-        outfile.write('\n    <td>&nbsp;</td>\n')    
+        outfile.write('\n    <td>&nbsp;</td>\n')
         outfile.write(club.tablepart())
         outfile.write('\n  </tr>\n')
-        
+
     outfile.write("""  </tbody>
 </table>
 """)
