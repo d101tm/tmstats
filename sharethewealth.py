@@ -1,167 +1,185 @@
 #!/usr/bin/env python
 """ Creates the "Share the Wealth" report """
- 
-import xlsxwriter, csv, sys, os, codecs, cStringIO, re
-import dbconn, tmparms
-from tmutil import cleandate, UnicodeWriter, daybefore, stringify
 
-class clubinfo:
-    def __init__(self, clubnumber, clubname):
+import xlsxwriter, csv, sys, os, codecs, cStringIO, re
+import dbconn, tmparms, datetime
+from tmutil import cleandate, UnicodeWriter, daybefore, stringify, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords
+
+
+class myclub:
+    """ Just enough club info to sort the list nicely """
+    def __init__(self, clubnumber, clubname, division, area, growth):
+        self.area = area
+        self.division = division
         self.clubnumber = clubnumber
         self.clubname = clubname
-        self.start = 0
-        self.end = 0
-        self.delta = 0
-
-        
-
-# Make it easy to run under TextMate
-if 'TM_DIRECTORY' in os.environ:
-    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
-reload(sys).setdefaultencoding('utf8')
-
-# Handle parameters
-enddate = min('2015-06-30', cleandate('today'))
-parms = tmparms.tmparms()
-parms.parser.add_argument("--startdate", dest='startdate', default='2015-05-19')
-parms.parser.add_argument("--enddate", dest='enddate', default=enddate)
-parms.parse()
-#print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
-conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-curs = conn.cursor()
-
-parms.enddate = cleandate(parms.enddate)
-parms.startdate = cleandate(parms.startdate)
-
-curs.execute("SELECT max(loadedfor) FROM loaded WHERE tablename='distperf'")
-latest = stringify(curs.fetchone()[0])
-parms.enddate = min(parms.enddate, latest)
-
-print 'checking from %s to %s' % (parms.startdate, parms.enddate)
-friendlyenddate = parms.enddate[5:].replace('-','/')
-friendlystartdate = parms.startdate[5:].replace('-','/')
-
-# Open both output files
-divfile = open('sharethewealth.csv', 'wb')
-divwriter = UnicodeWriter(divfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-clubfile = open('sharethewealthclubs.html', 'w')
-clubfile.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-<meta http-equiv="Content-Style-Type" content="text/css">
-<title>Share The Wealth</title>
-<style type="text/css">
+        self.growth = growth
 
 
-        html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
-              font-size: 75%;}
-      
-        table {width: 75%; font-size: 14px; border-width: 1px; border-spacing: 1px; border-collapse: collapse; border-style: solid;}
-        td, th {border-color: black; border-width: 1px;  vertical-align: middle;
-            padding: 2px; padding-right: 5px; padding-left: 5px; border-style: solid;}
+    def tablepart(self):
+        return ('    <td>%s</td><td>%s</td>' % (self.area, self.clubname))
 
-        .name {text-align: left; font-weight: bold; width: 40%;}
-        .number {text-align: right; width: 5%;}
-        
-        .bold {font-weight: bold;}
-        .italic {font-style: italic;}
-        .leader {background-color: aqua;}
-        
-        
-        </style>
-</head>
-<body>
-<h1>Share The Wealth Report</h1>
-<p>Clubs receive $5 in District 4 Credit for every new member added May 20 - June 30.  These statistics will continue to be updated until Toastmasters finalizes the June 30th membership numbers in late July.</p>
-<p>The club or clubs in each division which adds the most new members in that division will receive an additional $25 Credit; current leaders are highlighted in the table below.</p>
-""")
-divheaders = ['Division', 'New Members']
-clubheaders = ['Division', 'Area', 'Club', 'Club Name', 'New Members on %s' % friendlystartdate, 'New Members reported on %s' % friendlyenddate, 'Members Added']
-divwriter.writerow(divheaders)
+    def key(self):
+        return (self.division, self.area, self.clubnumber)
 
 
-# Get performance information from the database for the start date
-clubs = {}
-divisions = {}
-curs.execute("SELECT clubnumber, clubname, newmembers FROM distperf WHERE asof=%s", (parms.startdate,))
-for (clubnumber, clubname, newmembers) in curs.fetchall():
-    clubs[clubnumber] = clubinfo(clubnumber, clubname)
-    clubs[clubnumber].start = newmembers
-    clubs[clubnumber].end = newmembers  # So any clubs which fall off end with a zero delta
-    
-# Write the table header for the club report
-clubfile.write("""
-<table>
-   <thead>
-     <tr>
-""")
-for h in clubheaders:
-    style = ' style="text-align: left;"' if h=='Club Name' else ''
-    clubfile.write("""
-        <th%s>%s</th>
-""" % (style, h))
-clubfile.write("""
-     </tr>
-   </thead>
-   <tbody>
-""")
-    
-# Now, get information for the end data
-clubsinorder = []
-divmax = {}
-curs.execute("SELECT clubnumber, clubname, area, division, newmembers FROM distperf WHERE asof=%s ORDER BY division, area, clubnumber", (parms.enddate,))
-for (clubnumber, clubname, area, division, newmembers) in curs.fetchall():
-    if clubnumber not in clubs:
-        clubs[clubnumber] = clubinfo(clubnumber, clubname)
-    clubsinorder.append(clubnumber)
-    
 
-    club = clubs[clubnumber]
-    club.area = area
-    club.division = division
-    club.end = newmembers
-    club.delta = club.end - club.start
-    if club.delta > 0:
-        if division not in divisions:
+if __name__ == "__main__":
+    from tmutil import gotodatadir
+    gotodatadir()
+    reload(sys).setdefaultencoding('utf8')
+
+    # Handle parameters
+    parms = tmparms.tmparms()
+    parms.parser.add_argument("--basedate", dest='basedate', default='M3')
+    parms.parser.add_argument("--finaldate", dest='finaldate', default='M5')
+    parms.parse()
+    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
+    curs = conn.cursor()
+
+    # See if we have the data needed to run and build the base part of the query
+    if parms.basedate.upper().startswith('M'):
+        basemonth = int(parms.basedate[1:])
+        if not isMonthFinal(basemonth, curs):
+            sys.exit(1)
+        basepart = 'monthstart = "%s" AND entrytype = "M"' % getMonthStart(basemonth, curs)
+        msgdate = getMonthEnd(basemonth)
+    else:
+        basedate = cleandate(parms.basedate)
+        if not haveDataFor(basedate, curs):
+            sys.exit(1)
+        basepart = 'asof = "%s"' % basedate
+        msgdate = datetime.datetime.strptime(basedate, '%Y-%m-%d')
+    msgbase = dateAsWords(msgdate)
+
+    # Figure out the end date and build that part of the query
+    final = False
+    if parms.finaldate.upper().startswith('M'):
+        finalmonth = int(parms.finaldate[1:])
+        if isMonthFinal(finalmonth, curs):
+            finalpart = 'monthstart = "%s" AND entrytype = "M"' % getMonthStart(finalmonth, curs)
+            final = True
+        else:
+            finalpart = 'entrytype = "L"'
+        msgdate = getMonthEnd(finalmonth)
+    else:
+        finaldate = cleandate(parms.finaldate)
+        yesterday = cleandate('yesterday')
+        final = finaldate <= yesterday
+        finalpart = 'asof = "%s"' % min(finaldate,yesterday)
+        msgdate = datetime.datetime.strptime(finaldate, '%Y-%m-%d')
+    msgfinal = dateAsWords(msgdate)
+
+
+    # OK, now find clubs with 1 or more members added
+    query = 'SELECT c.clubnumber, c.clubname, c.division, c.area,  (c.activemembers - c.membase) - (b.activemembers - b.membase) AS growth FROM clubperf c INNER JOIN (SELECT clubnumber, activemembers, membase FROM clubperf WHERE %s) b ON b.clubnumber = c.clubnumber WHERE %s HAVING growth > 0 ORDER BY c.division, c.area, c.clubnumber' % (basepart, finalpart)
+    print query
+    sys.exit()
+    curs.execute(query)
+
+    # Create the data for the output files.
+    clubs = {}
+    divisions = {}
+    divmax = {}
+    for (clubnumber, clubname, division, area, growth) in curs.fetchall():
+        clubs[clubnumber] = myclub(clubnumber, clubname, division, area, growth)
+        if division not in divisions and (not division.startswith('0')):
             divisions[division] = 0
             divmax[division] = 0
-        if club.delta > divmax[division]:
-            divmax[division] = club.delta
-        divisions[division] += club.delta
-        
-divmax['0D'] = 999999 # Avoid special casing...
-        
-for clubnumber in clubsinorder:
-    club = clubs[clubnumber]
-    if club.delta > 0:
-        clubfile.write('      <tr%s>\n' % (' class="leader"' if club.delta == divmax[club.division] else ''))
+        divisions[division] += growth
+        if growth > divmax[division]:
+            divmax[division] = growth
+
+
+
+
+
+    # Open both output files
+    divfile = open('sharethewealth.csv', 'wb')
+    divwriter = UnicodeWriter(divfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    clubfile = open('sharethewealthclubs.html', 'w')
+    clubfile.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+    <html>
+    <head>
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <title>Share The Wealth</title>
+    <style type="text/css">
+
+
+            html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
+                  font-size: 75%;}
+
+            table {width: 75%; font-size: 14px; border-width: 1px; border-spacing: 1px; border-collapse: collapse; border-style: solid;}
+            td, th {border-color: black; border-width: 1px;  vertical-align: middle;
+                padding: 2px; padding-right: 5px; padding-left: 5px; border-style: solid;}
+
+            .name {text-align: left; font-weight: bold; width: 40%;}
+            .number {text-align: right; width: 5%;}
+
+            .bold {font-weight: bold;}
+            .italic {font-style: italic;}
+            .leader {background-color: aqua;}
+
+
+            </style>
+    </head>
+    <body>
+    """)
+    clubfile.write("""
+    <h1>Share The Wealth Report</h1>
+    <p>Clubs receive $5 in District Credit for every new member added after %s through %s.  These statistics are %s.</p>
+    <p>The club or clubs in each division which adds the most new members in that division will receive an additional $25 Credit; current leaders are highlighted in the table below.</p>
+    """ % (msgbase, msgfinal, 'final' if final else 'updated daily'))
+    divheaders = ['Division', 'New Members']
+    clubheaders = ['Division', 'Area', 'Club', 'Club Name', 'Members Added']
+    divwriter.writerow(divheaders)
+
+
+
+
+    # Write the table header for the club report
+    clubfile.write("""
+    <table>
+       <thead>
+         <tr>
+    """)
+    for h in clubheaders:
+        style = ' style="text-align: left;"' if h=='Club Name' else ''
+        clubfile.write("""
+            <th%s>%s</th>
+    """ % (style, h))
+    clubfile.write("""
+         </tr>
+       </thead>
+       <tbody>
+    """)
+
+
+    for club in sorted(clubs.values(), key=lambda c:c.key):
+        clubfile.write('      <tr%s>\n' % (' class="leader"' if club.growth == divmax[club.division] else ''))
         clubfile.write('        <td class="number">%s</td>\n' % club.division)
         clubfile.write('        <td class="number">%s</td>\n' % club.area)
         clubfile.write('        <td class="number">%s</td>\n' % club.clubnumber)
-        clubfile.write('        <td class="name%s">%s</td>\n' % (" bold italic" if club.delta == divmax[club.division] else "", club.clubname))
-        clubfile.write('        <td class="number">%s</td>\n' % club.start)
-        clubfile.write('        <td class="number">%s</td>\n' % club.end)
-        clubfile.write('        <td class="number%s">%s</td>\n' % (" bold italic" if club.delta == divmax[club.division] else "", club.delta))
+        clubfile.write('        <td class="name%s">%s</td>\n' % (" bold italic" if club.growth == divmax[club.division] else "", club.clubname))
+        clubfile.write('        <td class="number%s">%s</td>\n' % (" bold italic" if club.growth == divmax[club.division] else "", club.growth))
         clubfile.write('     </tr>\n')
 
-                            
-# Close out the club file
-clubfile.write("""  </tbody>
-</table>
-</body>
-</html>
-""")
 
-divs = sorted([d for d in divisions.keys() if not d.startswith('0')])
-for d in divs:
-    divwriter.writerow((d, '%d' % divisions[d]))
-    
-# @@HACK@@: The JA_Google Chart module chokes when the last line ends with a line end.  Let's remove it.
+    # Close out the club file
+    clubfile.write("""  </tbody>
+    </table>
+    </body>
+    </html>
+    """)
 
-divfile.seek(-2, os.SEEK_END)
-divfile.truncate()
-        
-clubfile.close()
-divfile.close()
-    
+    divs = sorted([d for d in divisions.keys() if not d.startswith('0')])
+    for d in divs:
+        divwriter.writerow((d, '%d' % divisions[d]))
+
+    # @@HACK@@: The JA_Google Chart module chokes when the last line ends with a line end.  Let's remove it.
+
+    divfile.seek(-2, os.SEEK_END)
+    divfile.truncate()
+
+    clubfile.close()
+    divfile.close()
