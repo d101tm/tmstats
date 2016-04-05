@@ -3,24 +3,26 @@
 
 import xlsxwriter, csv, sys, os, codecs, cStringIO, re
 import dbconn, tmparms, datetime
-from tmutil import cleandate, UnicodeWriter, daybefore, stringify, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords
+from tmutil import cleandate, UnicodeWriter, daybefore, stringify, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords, neaten
 
 
 class myclub:
     """ Just enough club info to sort the list nicely """
-    def __init__(self, clubnumber, clubname, division, area, growth):
+    def __init__(self, clubnumber, clubname, division, area, endnum, startnum, growth):
         self.area = area
         self.division = division
         self.clubnumber = clubnumber
         self.clubname = clubname
         self.growth = growth
+        self.endnum = endnum
+        self.startnum = startnum
 
 
     def tablepart(self):
         return ('    <td>%s</td><td>%s</td>' % (self.area, self.clubname))
 
     def key(self):
-        return (self.division, self.area, self.clubnumber)
+        return '%s%2s%8s' % (self.division, self.area, self.clubnumber)
 
 
 
@@ -44,12 +46,14 @@ if __name__ == "__main__":
             sys.exit(1)
         basepart = 'monthstart = "%s" AND entrytype = "M"' % getMonthStart(basemonth, curs)
         msgdate = getMonthEnd(basemonth)
+        friendlybase = 'New Members on %s' % neaten(msgdate)
     else:
         basedate = cleandate(parms.basedate)
         if not haveDataFor(basedate, curs):
             sys.exit(1)
         basepart = 'asof = "%s"' % basedate
         msgdate = datetime.datetime.strptime(basedate, '%Y-%m-%d')
+        friendlybase = 'New Members on %s' % neaten(msgdate)
     msgbase = dateAsWords(msgdate)
 
     # Figure out the end date and build that part of the query
@@ -62,37 +66,38 @@ if __name__ == "__main__":
         else:
             finalpart = 'entrytype = "L"'
         msgdate = getMonthEnd(finalmonth)
+        friendlyend = 'New Members on %s' % neaten(msgdate)
     else:
         finaldate = cleandate(parms.finaldate)
         yesterday = cleandate('yesterday')
         final = finaldate <= yesterday
         finalpart = 'asof = "%s"' % min(finaldate,yesterday)
         msgdate = datetime.datetime.strptime(finaldate, '%Y-%m-%d')
+        friendlyend = 'New Members Reported on %s' % neaten(msgdate)
     msgfinal = dateAsWords(msgdate)
 
 
     # OK, now find clubs with 1 or more members added
-    query = 'SELECT c.clubnumber, c.clubname, c.division, c.area,  (c.activemembers - c.membase) - (b.activemembers - b.membase) AS growth FROM clubperf c INNER JOIN (SELECT clubnumber, activemembers, membase FROM clubperf WHERE %s) b ON b.clubnumber = c.clubnumber WHERE %s HAVING growth > 0 ORDER BY c.division, c.area, c.clubnumber' % (basepart, finalpart)
-    print query
-    sys.exit()
+    query = 'SELECT c.clubnumber, c.clubname, c.division, c.area, c.newmembers, b.newmembers FROM distperf c LEFT OUTER JOIN (SELECT clubnumber, newmembers FROM distperf WHERE %s) b ON b.clubnumber = c.clubnumber WHERE %s  ORDER BY c.division, c.area, c.clubnumber' % (basepart, finalpart)
     curs.execute(query)
 
     # Create the data for the output files.
     clubs = {}
     divisions = {}
     divmax = {}
-    for (clubnumber, clubname, division, area, growth) in curs.fetchall():
-        clubs[clubnumber] = myclub(clubnumber, clubname, division, area, growth)
-        if division not in divisions and (not division.startswith('0')):
-            divisions[division] = 0
-            divmax[division] = 0
-        divisions[division] += growth
-        if growth > divmax[division]:
-            divmax[division] = growth
+    for (clubnumber, clubname, division, area, endnum, startnum) in curs.fetchall():
+        if not startnum:
+            startnum = 0      # Handle clubs added during the period
+        growth = endnum - startnum
 
-
-
-
+        if growth > 0:
+            clubs[clubnumber] = myclub(clubnumber, clubname, division, area, endnum, startnum, growth)
+            if division not in divisions and (not division.startswith('0')):
+                divisions[division] = 0
+                divmax[division] = 0
+            divisions[division] += growth
+            if growth > divmax[division]:
+                divmax[division] = growth
 
     # Open both output files
     divfile = open('sharethewealth.csv', 'wb')
@@ -131,7 +136,7 @@ if __name__ == "__main__":
     <p>The club or clubs in each division which adds the most new members in that division will receive an additional $25 Credit; current leaders are highlighted in the table below.</p>
     """ % (msgbase, msgfinal, 'final' if final else 'updated daily'))
     divheaders = ['Division', 'New Members']
-    clubheaders = ['Division', 'Area', 'Club', 'Club Name', 'Members Added']
+    clubheaders = ['Division', 'Area', 'Club', 'Club Name', friendlybase, friendlyend, 'Members Added']
     divwriter.writerow(divheaders)
 
 
@@ -155,12 +160,14 @@ if __name__ == "__main__":
     """)
 
 
-    for club in sorted(clubs.values(), key=lambda c:c.key):
+    for club in sorted(clubs.values(), key=lambda c:c.key()):
         clubfile.write('      <tr%s>\n' % (' class="leader"' if club.growth == divmax[club.division] else ''))
         clubfile.write('        <td class="number">%s</td>\n' % club.division)
         clubfile.write('        <td class="number">%s</td>\n' % club.area)
         clubfile.write('        <td class="number">%s</td>\n' % club.clubnumber)
         clubfile.write('        <td class="name%s">%s</td>\n' % (" bold italic" if club.growth == divmax[club.division] else "", club.clubname))
+        clubfile.write('        <td class="number">%s</td>\n' % club.startnum)
+        clubfile.write('        <td class="number">%s</td>\n' % club.endnum)
         clubfile.write('        <td class="number%s">%s</td>\n' % (" bold italic" if club.growth == divmax[club.division] else "", club.growth))
         clubfile.write('     </tr>\n')
 
