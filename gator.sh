@@ -175,6 +175,11 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running President's Club"
         ../presidentsclub.py > presidentsclub.html
     fi
+
+    if (( $haveperf == 0 )) ; then
+        echo "Running Share The Wealth"
+        ../sharethewealth.py --base M3 --final M5
+    fi
     
     ### Run daily housekeeping
     if (( $haveclubs == 0 )) ; then
