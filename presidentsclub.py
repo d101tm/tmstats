@@ -60,9 +60,9 @@ if __name__ == "__main__":
         winners.append(myclub(*c))
 
 
-    outfile.write("""<h3 id="early">President's Club</h3>
+    outfile.write("""<h3 id="presidentsclub">Presidents Club</h3>
     <p>
-    Clubs achieving President's Distinguished status by April 15 join the President's Club.  This report is %s.</p>
+    Clubs achieving President's Distinguished status by April 15 join the Presidents Club.  This report is %s.</p>
     """ % status)
 
     if len(winners) > 0:
