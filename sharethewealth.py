@@ -57,23 +57,26 @@ if __name__ == "__main__":
     msgbase = dateAsWords(msgdate)
 
     # Figure out the end date and build that part of the query
-    final = False
+    yesterday = cleandate('yesterday')
     if parms.finaldate.upper().startswith('M'):
         finalmonth = int(parms.finaldate[1:])
+        msgdate = getMonthEnd(finalmonth)
         if isMonthFinal(finalmonth, curs):
             finalpart = 'monthstart = "%s" AND entrytype = "M"' % getMonthStart(finalmonth, curs)
             final = True
+            reportdate = msgdate
         else:
+            final = False
             finalpart = 'entrytype = "L"'
-        msgdate = getMonthEnd(finalmonth)
-        friendlyend = 'New Members on %s' % neaten(msgdate)
+            reportdate = yesterday
     else:
         finaldate = cleandate(parms.finaldate)
-        yesterday = cleandate('yesterday')
         final = finaldate <= yesterday
-        finalpart = 'asof = "%s"' % min(finaldate,yesterday)
+        reportdate = min(finaldate,yesterday)
+        finalpart = 'asof = "%s"' % min(reportdate)
         msgdate = datetime.datetime.strptime(finaldate, '%Y-%m-%d')
-        friendlyend = 'New Members Reported on %s' % neaten(msgdate)
+    reportdate = datetime.datetime.strptime(reportdate, '%Y-%m-%d')
+    friendlyend = 'New Members on %s' % neaten(reportdate)
     msgfinal = dateAsWords(msgdate)
 
 
