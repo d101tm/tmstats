@@ -17,13 +17,16 @@ def inform(*args, **kwargs):
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
-def openarea(outfile, area):
+def openarea(outfile, area, color):
     outfile.write('<div class="area">\n')
     outfile.write('<h4>Area %s</h4>\n' % area)
     outfile.write('<table class="areatable">\n')
     outfile.write('<thead>\n')
     outfile.write('<tr>\n')
-    outfile.write('<th class="cnum">Number</th><th class="cname">Name</th><th class="color">Color</th><th class="members">Members</th><th class="goals">Goals</th><th class="loc">Location</th><th class="mtg">Time</th>\n')
+    outfile.write('<th class="cnum">Number</th><th class="cname">Name</th>')
+    if color:
+        outfile.write('<th class="color">Color</th>')
+    outfile.write('<th class="members">Members</th><th class="goals">Goals</th><th class="loc">Location</th><th class="mtg">Time</th>\n')
     outfile.write('</tr>\n')
     outfile.write('</thead><tbody>\n')
     
@@ -51,6 +54,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--infile', default='d101align.csv')
     parms.add_argument('--outfile', default='d101location.html')
+    parms.add_argument('--color', action='store_true')
     # Add other parameters here
     parms.parse() 
    
@@ -105,14 +109,15 @@ if __name__ == "__main__":
         if thisdiv != div:
             opendiv(outfile, div)
         if thisarea != area:
-            openarea(outfile, area)
+            openarea(outfile, area, parms.color)
         thisarea = area
         thisdiv = div
         outrow = []
         row['closing'] = '<br />(Probably closing)' if row['likelytoclose'] else ''
         outrow.append('<tr class="myrow%s">' % (' ghost' if row['likelytoclose'] else ''))
         outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}{closing}</td>')
-        outrow.append('  <td class="color {color}">{color}</td>\n')
+        if parms.color:
+            outrow.append('  <td class="color {color}">{color}</td>\n')
         outrow.append('  <td class="members">{activemembers}</td>\n')
         outrow.append('  <td class="goals">{goalsmet}</td>\n')
         outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
