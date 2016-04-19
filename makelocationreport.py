@@ -3,6 +3,7 @@
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
 import dbconn, tmutil, sys, os, csv
+from tmutil import distance_on_unit_sphere 
 
 
 def inform(*args, **kwargs):
@@ -17,17 +18,37 @@ def inform(*args, **kwargs):
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
-def openarea(outfile, area):
-    outfile.write('<div class="area">\n')
-    outfile.write('<h4>Area %s</h4>\n' % area)
-    outfile.write('<table class="areatable">\n')
-    outfile.write('<thead>\n')
-    outfile.write('<tr>\n')
-    outfile.write('<th class="cnum">Number</th><th class="cname">Name</th><th class="color">Color</th><th class="members">Members</th><th class="goals">Goals</th><th class="loc">Location</th><th class="mtg">Time</th>\n')
-    outfile.write('</tr>\n')
-    outfile.write('</thead><tbody>\n')
+def computeMaxDistance(locations):
+    """locations is an array of clubname/lat/long tuples"""
+    maxd = 0
+    for i in range(len(locations)):
+        (c1, lat1, lng1) = locations[i]
+        for (c2, lat2, lng2) in locations[i+1:]:
+            d = distance_on_unit_sphere(float(lat1), float(lng1), float(lat2), float(lng2))
+            if (d > maxd):
+                maxd = d
+                maxc1 = c1
+                maxc2 = c2
+    return (maxd, maxc1, maxc2)
     
-def closearea(outfile):
+
+def openarea(outfile, area, color):
+    ret = []
+    ret.append('<div class="area">\n')
+    ret.append('<h4>Area %s (%%.2f miles between %%s and %%s)</h4>\n' % area)
+    ret.append('<table class="areatable">\n')
+    ret.append('<thead>\n')
+    ret.append('<tr>\n')
+    ret.append('<th class="cnum">Number</th><th class="cname">Name</th>')
+    if color:
+        ret.append('<th class="color">Color</th>')
+    ret.append('<th class="members">Members</th><th class="goals">Goals</th><th class="loc">Location</th><th class="mtg">Time</th>\n')
+    ret.append('</tr>\n')
+    ret.append('</thead><tbody>\n')
+    return ret
+    
+def closearea(outfile, text, locations):
+    outfile.write(''.join(text) % computeMaxDistance(locations))
     outfile.write('</tbody></table>\n')
     outfile.write('</div>\n')
     
@@ -51,6 +72,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--infile', default='d101align.csv')
     parms.add_argument('--outfile', default='d101location.html')
+    parms.add_argument('--color', action='store_true')
     # Add other parameters here
     parms.parse() 
    
@@ -95,32 +117,36 @@ if __name__ == "__main__":
     reader = csv.DictReader(open(parms.infile, 'rbU'))
     thisdiv = ''
     thisarea = ''
+    locations = []
     for row in reader:
         area = row['newarea']
         div = area[0]
         if thisarea and thisarea != area:
-            closearea(outfile)
+            closearea(outfile, accum, locations)
+            locations = []
         if thisdiv and thisdiv != div:
             closediv(outfile)
         if thisdiv != div:
             opendiv(outfile, div)
         if thisarea != area:
-            openarea(outfile, area)
+            accum = openarea(outfile, area, parms.color)
         thisarea = area
         thisdiv = div
         outrow = []
         row['closing'] = '<br />(Probably closing)' if row['likelytoclose'] else ''
         outrow.append('<tr class="myrow%s">' % (' ghost' if row['likelytoclose'] else ''))
         outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}{closing}</td>')
-        outrow.append('  <td class="color {color}">{color}</td>\n')
+        if parms.color:
+            outrow.append('  <td class="color {color}">{color}</td>\n')
         outrow.append('  <td class="members">{activemembers}</td>\n')
         outrow.append('  <td class="goals">{goalsmet}</td>\n')
         outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
         outrow.append('  <td class="mtg">{meetingday}<br />{meetingtime}</td>')
         outrow.append('</tr>')
-        outfile.write(('\n'.join(outrow)).format(**row))
+        accum.append(('\n'.join(outrow)).format(**row))
+        locations.append((row['clubname'], row['latitude'], row['longitude']))
         
-    closearea(outfile)
+    closearea(outfile, accum, locations)
     closediv(outfile)
     outfile.write("</body></html>\n")
     outfile.close()
