@@ -43,7 +43,8 @@ if __name__ == "__main__":
     # We want data from either the final date or the latest available, whichever is earlier
     curs.execute("SELECT MAX(asof) FROM clubperf")
     latest = stringify(curs.fetchone()[0])
-    targetdate = min(latest, cleandate(parms.finaldate))
+    parms.finaldate = cleandate(parms.finaldate)
+    targetdate = min(latest, parms.finaldate)
     final = (targetdate == parms.finaldate)
     
     # Open the output file
