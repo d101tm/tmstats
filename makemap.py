@@ -100,8 +100,8 @@ class Bounds:
     def bounds(self, latpadding=0.005, longpadding=0.001):
         return 'new g.LatLngBounds(%s, %s)' % (self.southwest(latpadding, longpadding), self.northeast(latpadding, longpadding))
 
-def setClubCoordinatesFromGEO(clubs, curs):
-    # Also removes any clubs NOT in GEO table
+def setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=True):
+    # Also removes any clubs NOT in GEO table unless told otherwise
     geoclubs = {}
     curs.execute("SELECT clubnumber, latitude, longitude FROM geo")
     for (clubnumber, latitude, longitude) in curs.fetchall():
@@ -111,10 +111,11 @@ def setClubCoordinatesFromGEO(clubs, curs):
             club = clubs[clubnumber]
             club.latitude = latitude
             club.longitude = longitude
-    allclubs = clubs.keys()
-    for c in allclubs:
-        if c not in geoclubs:
-            del clubs[c]
+    if removeNotInGeo:
+        allclubs = clubs.keys()
+        for c in allclubs:
+            if c not in geoclubs:
+                del clubs[c]
 
 
 def makemap(outfile, clubs, parms):

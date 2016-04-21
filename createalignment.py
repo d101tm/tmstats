@@ -2,8 +2,8 @@
 """ Create alignment work file based on:
 
     * Information from the tmstats database
-    * Limited to clubs in the 'newAlignment' Google spreadsheet
-    * Information in the 'newAlignment' spreadsheet overrides info from tmstats 
+    * Limited to clubs in the latest CSV file in the 'newAlignment' Dropbox directory 
+    * Information in that CSV file overrides info from tmstats 
     
     The output work file is used by other programs in the alignment process such as 'alignmap' and 'makelocationreport'
     """
@@ -11,6 +11,88 @@
 import dbconn, tmutil, sys, os, csv
 import requests
 from simpleclub import Club
+import dropbox
+import json
+from datetime import datetime
+from makemap import setClubCoordinatesFromGEO
+from overridepositions import overrideClubPositions
+
+
+state_file = 'alignstate.txt'
+appinfo_file = 'aligntokens.txt'
+
+def authorize():
+    appinfo = open(appinfo_file,'r')
+    for l in appinfo.readlines():
+        (name, value) = l.split(':',1)
+        name = name.strip().lower()
+        value = value.strip()
+        if name == 'app key':
+            appkey = value
+        elif name == 'app secret':
+            appsecret = value
+    appinfo.close()
+    flow = dropbox.client.DropboxOAuth2FlowNoRedirect(appkey, appsecret)
+    # Have the user sign in and authorize this token
+    authorize_url = flow.start()
+    print '1. Go to: ' + authorize_url
+    print '2. Click "Allow" (you might have to log in first)'
+    print '3. Copy the authorization code.'
+    code = raw_input("Enter the authorization code here: ").strip()
+    token, user_id = flow.finish(code)
+    out = open(state_file, 'w')
+    out.write('oauth2:%s\n' % token)
+    out.close()
+    return token
+
+def getlatest():
+    """ Returns a list of lines from the latest alignment spreadsheet in
+        the D101 Alignment directory. """
+    token = None
+    try:
+        tokinfo = open(state_file, 'r')
+        for l in tokinfo.readlines():
+            if ':' in l:
+                (name, value) = l.strip().split(':')
+                if name == 'oauth2':
+                    token = value
+                elif name == 'delta_cursor':
+                    delta_cursor = value
+        tokinfo.close()
+    except IOError:
+        pass
+    if not token:
+        token = authorize()
+
+    # If we get here, we are authorized.
+    client = dropbox.client.DropboxClient(token)
+
+    # The only files we care about are in the appropriate directory in Dropbox
+    path = '/D101 Alignment'
+
+    lastfile = None
+    lasttime = datetime.min   # For easy comparisons
+    folder_metadata = client.metadata(path)
+    
+    # Find the latest file
+    
+    for item in folder_metadata['contents']:
+        filename = item['path']
+        ext = os.path.splitext(filename)[1]
+        if ext in ['.csv']:
+            # We care about CSV files, but only the latest.
+            # We assume consistency in timezone from Dropbox...
+            modified = ' '.join(item['modified'].split()[1:5])
+            
+            filetime = datetime.strptime(modified, "%d %b %Y %H:%M:%S")
+            if (filetime > lasttime):
+                lastfile = filename
+                lasttime = filetime
+                lastext = ext
+
+    print 'Using', lastfile, 'modified at', lasttime
+    return client.get_file(lastfile).read().splitlines()
+
 
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
@@ -36,10 +118,11 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
-    parms.add_argument('--newAlignment', default='https://docs.google.com/spreadsheets/d/1K0LMRNvzB38hz-tVSRyOUhT-e8y-bgsNrLzhQnp6UaA/pub?gid=872194435&single=true&output=csv')
     parms.add_argument('--outfile', default='d101align.csv')
+    parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     # Add other parameters here
     parms.parse() 
+    
    
     # Connect to the database        
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
@@ -47,6 +130,11 @@ if __name__ == "__main__":
     
     # Get all defined clubs from the database.
     clubs = Club.getClubsOn(curs)
+    # Get coordinates
+    setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=False)
+    # If there are overrides to club positioning, handle them now
+    if parms.mapoverride:
+        overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
     ourclubs = {}
     
     # Now, add info from clubperf (and create club.oldarea for each club)
@@ -61,21 +149,22 @@ if __name__ == "__main__":
     
     # Remove any clubs NOT in the newAlignment; patch in newarea and likelytoclose; override anything else specified.
     # Get the alignment CSV from Google Sheets
-    alignment = csv.DictReader(requests.get(parms.newAlignment).text.split('\r\n'))
+    alignment = csv.DictReader(getlatest())
     fields = alignment.fieldnames
     overridestart = fields.index('likelytoclose') + 1
     for row in alignment:
         clubnumber = row['clubnumber']
         c = clubs[clubnumber]
         c.newarea = row['newarea']
-        c.likelytoclose = row['likelytoclose']
+        c.likelytoclose = row['likelytoclose'].strip()
         for f in fields[overridestart:]:
-            v = row[f]
+            v = row[f].strip()
             if v:
                 print 'overriding', f, 'for', c.clubname, 'with', v
                 c.__dict__[f] = v
         ourclubs[clubnumber] = c
 
+    
     # Now, create the output file, sorted by newarea (because that's what we need later on)
     outfields =  'clubnumber	clubname	oldarea	newarea	likelytoclose	color	goalsmet	activemembers	meetingday	meetingtime	place	address	city	state	zip	country	latitude	longitude'.split()
     outfile = open(parms.outfile, 'w')

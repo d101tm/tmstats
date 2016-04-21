@@ -67,16 +67,17 @@ if __name__ == "__main__":
     # Get the clubs
     clubs = Club.getClubsOn(curs)
 
-    # Remove suspended clubs
-    clubs = removeSuspendedClubs(clubs, curs)
-
+    # Remove suspended clubs unless there's a test alignment
+    if not parms.testalign:
+        clubs = removeSuspendedClubs(clubs, curs)
+    
     # Get coordinates
-    setClubCoordinatesFromGEO(clubs, curs)
+    setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=False)
 
     # If there are overrides to club positioning, handle them now
     if parms.mapoverride:
         overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
-
+    
 
     # Process new grouping
     if parms.testalign:
