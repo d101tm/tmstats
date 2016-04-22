@@ -12,7 +12,7 @@ if [[ $? ]] ; then
         cp d101proforma.html ~/files/alignment
         cp d101newmarkers.js ~/files/alignment
         cp d101location.html ~/files/alignment
-        cp d101index.html ~/files/alignment
+        cp d101index.html ~/files/alignment/index.html
     else
         echo "Copying to d101tm.org"
         scp d101proforma.html d101tm.org:files/alignment/
