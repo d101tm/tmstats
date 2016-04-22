@@ -1,7 +1,7 @@
 #!/bin/sh
 cd data
 ../createalignment.py 
-../alignmap.py --pindir /Users/david/src/map/pins --district 101 --testalign d101align.csv  --nomakedivisions
+../alignmap.py --pindir pins --district 101 --testalign d101align.csv  --nomakedivisions
 ../allstats.py --outfile d101proforma.html --proforma d101align.csv
 ../makelocationreport.py --color --infile d101align.csv
 ../makealignmentpage.py > d101index.html
