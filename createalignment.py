@@ -16,6 +16,7 @@ import json
 from datetime import datetime
 from makemap import setClubCoordinatesFromGEO
 from overridepositions import overrideClubPositions
+import time, calendar
 
 
 state_file = 'alignstate.txt'
@@ -45,9 +46,9 @@ def authorize():
     out.close()
     return token
 
-def getlatest():
+def getlatest(curs):
     """ Returns a list of lines from the latest alignment spreadsheet in
-        the D101 Alignment directory. """
+        the D101 Alignment directory. Also builds file with source data. """
     token = None
     try:
         tokinfo = open(state_file, 'r')
@@ -71,7 +72,7 @@ def getlatest():
     path = '/D101 Alignment'
 
     lastfile = None
-    lasttime = datetime.min   # For easy comparisons
+    lasttime = time.localtime(0)   # For easy comparisons
     folder_metadata = client.metadata(path)
     
     # Find the latest file
@@ -83,14 +84,21 @@ def getlatest():
             # We care about CSV files, but only the latest.
             # We assume consistency in timezone from Dropbox...
             modified = ' '.join(item['modified'].split()[1:5])
-            
-            filetime = datetime.strptime(modified, "%d %b %Y %H:%M:%S")
+            print modified
+            filetime = time.strptime(modified, '%d %b %Y %H:%M:%S')
             if (filetime > lasttime):
                 lastfile = filename
                 lasttime = filetime
                 lastext = ext
-
+                
+            # Convert the timestamp to local.  There must be an easier way!
+            lasttime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(calendar.timegm(lasttime)))
+            
     print 'Using', lastfile, 'modified at', lasttime
+    with open('alignmentsource.txt', 'w') as outfile:
+        outfile.write('<p>The source for the alignment is %s, updated at %s</p>\n' % (lastfile.split('/')[-1], lasttime))
+        curs.execute('SELECT MAX(asof) FROM clubperf')
+        outfile.write('<p>Using Toastmasters data as of %s</p>' % curs.fetchone()[0])
     return client.get_file(lastfile).read().splitlines()
 
 
@@ -149,7 +157,7 @@ if __name__ == "__main__":
     
     # Remove any clubs NOT in the newAlignment; patch in newarea and likelytoclose; override anything else specified.
     # Get the alignment CSV from Google Sheets
-    alignment = csv.DictReader(getlatest())
+    alignment = csv.DictReader(getlatest(curs))
     fields = alignment.fieldnames
     overridestart = fields.index('likelytoclose') + 1
     for row in alignment:
