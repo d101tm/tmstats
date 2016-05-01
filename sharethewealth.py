@@ -95,12 +95,18 @@ if __name__ == "__main__":
 
         if growth > 0:
             clubs[clubnumber] = myclub(clubnumber, clubname, division, area, endnum, startnum, growth)
-            if division not in divisions and (not division.startswith('0')):
+            if division not in divisions:
                 divisions[division] = 0
                 divmax[division] = 0
             divisions[division] += growth
             if growth > divmax[division]:
                 divmax[division] = growth
+
+    # Ensure that "Division 0D" doesn't have a leading club
+    try:
+        divmax['0D'] += 1
+    except KeyError:
+        pass
 
     # Open both output files
     divfile = open('sharethewealth.csv', 'wb')
