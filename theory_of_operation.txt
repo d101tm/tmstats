@@ -1,0 +1,111 @@
+# Theory of Operation for TMSTATS
+
+There are many programs and datasources used by the __tmstats__ suite.  This document explains them.
+
+## Directory Structure ##
+
+The programs should all be in one directory (I'll call it __tmstats__); data files for the programs, including the all-important __tmstats.yml__ file, belong in a subdirectory named __data__ of the tmstats directory.  Most of the programs will chdir to the data subdirectory of the current directory if one exists; otherwise, they'll use the current directory as their __working directory__, so the driver script would need to ensure that the current directory is set to the data directory before invoking any of the programs.
+
+The programs do the "cd to data" trick to make it easier to test them from (for example) an editor, without having to get the editor to change to the right directory before invoking the program.
+
+The "gotodatadir()" routine in tmutil.py handles this.  At this time, the programs which _do not_ use this routine are:
+
+    allstats.py
+    awardtallies.py
+    buildareapage.py
+    clubchanges.py
+    clubsfromjson.py
+    clubsizes.py
+    codeit.py
+    currency.py
+    d101.py
+    dbconn.py
+    earlyachievers.py
+    geteducationals.py
+    getperformancefiles.py
+    latest.py
+    listclubsbycity.py
+    loaddb.py
+    madness.py
+    makeeducationals.py
+    nothinbutnet.py
+    overridepositions.py
+    populatelastfor.py
+    processoldmap.py
+    resetdbto.py
+    sanity.py
+    sendmail.py
+    simpleclub.py
+    smedley.py
+    snapshot.py
+    tmparms.py
+    triplecrown.py
+    uncodeit.py
+
+## Common argument parser ##
+
+The programs in the suite use a common [argparse](https://docs.python.org/2/library/argparse.html)-based argument parser (in tmparms.py) to which they add any additional positional or keyword parameters they need.  The common parameters are:
+
+| Parameter | Default | Meaning | 
+| --------- | ------- | ------- |
+| --YMLfile | tmstats.yml | The filename of the "YML file", relative to the working directory, which contains the default values for the environment | 
+| --dbname  | | For connection to MySQL | 
+| --dbhost  | localhost | For connection to MySQL | 
+| --dbuser  |  | For connection to MySQL | 
+| --dbpass  |  | For connection to MySQL (You should normally specify this in the YML file, not here)
+
+The parser returns an object of type "tmparms" whose attributes correspond to the values read from the YML file, as overridden by paramaters defined by the program and specified when the program is invoked.
+
+## The "YML file" ##
+
+Most of the information that differs between installations of __tmstats__ is held in a central control file.  This file is written using [YAML 1.1](http://yaml.org/spec/1.1/).  Some of the common values that programs expect to find here are:
+
+| Key | Meaning |
+| --- | ------- |
+| district | The Toastmasters District for which the suite is being run |
+| dbname | For connection to MySQL | 
+| dbhost | For connection to MySQL | 
+| dbuser | For connection to MySQL | 
+| dbpass | For connection to MySQL | 
+| officers | The URL of the CSV published form of a Google Spreadsheet with Division and Area Directors |
+| newAlignment | The filename of an XLSX file containing information about alignment to override that provided by Toastmasters.  Typically used at the beginning of a Toastmasters year.  (**TODO** change this to a Google spreadsheet) |
+| googlemapsapikey | Used by the various mapping programs |
+| makemap | Contains subkeys "mapoverride" and "pindir" |
+| makemap.mapoverride | The URL of the CSV published form of a Google Spreadsheet with information about club meeting locations and times which is used in preference to that obtained from Toastmasters. |
+| makemap.pindir | The filename of a directory containing pins for the maps (one pin for each possible Area) |
+
+Note that filenames in the YML file are relative to the working directory (unless, of course, they are absolute filenames).
+
+Programs MAY choose to allow values from the YML file to be overridden by defining them as parameters to the parser, but in most cases, the values in the YML file do not correspond to parameters to the programs.
+
+## Driver Script
+
+Each installation of the __tmstats__ suite needs its own driver script to adapt to local conditions (such as versions of Python and the eventual destination of the output files).  There are two driver scripts in the package:
+
+* gator.sh (used by District 4 Toastmasters on HostGator)
+* dreamhost.sh (used by District 101 Toastmasters on Dreamhost)
+
+The __gator.sh__ script was written before I knew how to use a virtual environment; it also has to do a lot to cope with the downlevel Python environment on HostGator (2.6.6 by default, latest available 2.7.8).
+
+Neither script is very pretty; I use a lot of brute-force and ignorance.
+
+
+
+### Basic Logic ###
+
+The driver script is typically invoked from cron(1) once an hour.  Toastmasters typically posts new data by 7am Pacific Time, so the script exits immediatelly (unless forced to do so by a parameter) before 7am or after 11pm.  The scripts set TZ=PST8PDT to match Toastmasters' time.
+
+The existing scripts accept one positional parameter, which can be one of:
+
+| Parameter | Meaning |
+| --------- | ------- |
+| force     | run unconditionally; move daily data files into history.zip |
+| test      | run unconditionally; don't move daily data files into history.zip |
+
+If the parameter isn't specified, the script only runs between 7am and 11pm Pacific, and only if it hasn't run successfully that day.
+
+If the script needs to run, it invokes __updateit.sh__ to fetch new data from Toastmasters and load it into the MySQL database specified in the YML file.  If updateit.sh is successful (as verifed by __currency.py__, which makes sure that the database has current data for today), the driver script then invokes individual programs to create the various reports, maps, and other output files, and then copies those files to the places needed by the web server.  The driver script may also send email to the Webmaster or others to notify them of what happened - it's up to you!
+
+### updateit.sh
+
+
