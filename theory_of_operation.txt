@@ -4,7 +4,7 @@ There are many programs and datasources used by the __tmstats__ suite.  This doc
 
 ## Directory Structure ##
 
-The programs should all be in one directory (I'll call it __tmstats__); data files for the programs, including the all-important __tmstats.yml__ file, belong in a subdirectory named __data__ of the tmstats directory.  Most of the programs will chdir to the data subdirectory of the current directory if one exists; otherwise, they'll use the current directory as their __working directory__, so the driver script would need to ensure that the current directory is set to the data directory before invoking any of the programs.
+The programs should all be in one directory (I'll call it __tmstats__); data files for the programs, including the all-important [tmstats.yml][], belong in a subdirectory named __data__ of the tmstats directory.  Most of the programs will chdir to the data subdirectory of the current directory if one exists; otherwise, they'll use the current directory as their __working directory__, so the driver script would need to ensure that the current directory is set to the data directory before invoking any of the programs.
 
 The programs do the "cd to data" trick to make it easier to test them from (for example) an editor, without having to get the editor to change to the right directory before invoking the program.
 
@@ -46,37 +46,16 @@ The "gotodatadir()" routine in tmutil.py handles this.  At this time, the progra
 
 The programs in the suite use a common [argparse](https://docs.python.org/2/library/argparse.html)-based argument parser (in tmparms.py) to which they add any additional positional or keyword parameters they need.  The common parameters are:
 
-| Parameter | Default | Meaning | 
+| Parameter | Default | Meaning |
 | --------- | ------- | ------- |
-| --YMLfile | tmstats.yml | The filename of the "YML file", relative to the working directory, which contains the default values for the environment | 
-| --dbname  | | For connection to MySQL | 
-| --dbhost  | localhost | For connection to MySQL | 
-| --dbuser  |  | For connection to MySQL | 
+| --YMLfile | tmstats.yml | The filename of the master data file, normally [tmstats.yml][], relative to the working directory, which contains the default values for the environment |
+| --dbname  | | For connection to MySQL |
+| --dbhost  | localhost | For connection to MySQL |
+| --dbuser  |  | For connection to MySQL |
 | --dbpass  |  | For connection to MySQL (You should normally specify this in the YML file, not here)
 
 The parser returns an object of type "tmparms" whose attributes correspond to the values read from the YML file, as overridden by paramaters defined by the program and specified when the program is invoked.
 
-## The "YML file" ##
-
-Most of the information that differs between installations of __tmstats__ is held in a central control file.  This file is written using [YAML 1.1](http://yaml.org/spec/1.1/).  Some of the common values that programs expect to find here are:
-
-| Key | Meaning |
-| --- | ------- |
-| district | The Toastmasters District for which the suite is being run |
-| dbname | For connection to MySQL | 
-| dbhost | For connection to MySQL | 
-| dbuser | For connection to MySQL | 
-| dbpass | For connection to MySQL | 
-| officers | The URL of the CSV published form of a Google Spreadsheet with Division and Area Directors |
-| newAlignment | The filename of an XLSX file containing information about alignment to override that provided by Toastmasters.  Typically used at the beginning of a Toastmasters year.  (**TODO** change this to a Google spreadsheet) |
-| googlemapsapikey | Used by the various mapping programs |
-| makemap | Contains subkeys "mapoverride" and "pindir" |
-| makemap.mapoverride | The URL of the CSV published form of a Google Spreadsheet with information about club meeting locations and times which is used in preference to that obtained from Toastmasters. |
-| makemap.pindir | The filename of a directory containing pins for the maps (one pin for each possible Area) |
-
-Note that filenames in the YML file are relative to the working directory (unless, of course, they are absolute filenames).
-
-Programs MAY choose to allow values from the YML file to be overridden by defining them as parameters to the parser, but in most cases, the values in the YML file do not correspond to parameters to the programs.
 
 ## Driver Script
 
@@ -104,8 +83,142 @@ The existing scripts accept one positional parameter, which can be one of:
 
 If the parameter isn't specified, the script only runs between 7am and 11pm Pacific, and only if it hasn't run successfully that day.
 
-If the script needs to run, it invokes __updateit.sh__ to fetch new data from Toastmasters and load it into the MySQL database specified in the YML file.  If updateit.sh is successful (as verifed by __currency.py__, which makes sure that the database has current data for today), the driver script then invokes individual programs to create the various reports, maps, and other output files, and then copies those files to the places needed by the web server.  The driver script may also send email to the Webmaster or others to notify them of what happened - it's up to you!
+If the script needs to run, it invokes __updateit.sh__ to fetch new data from Toastmasters and load it into the MySQL database specified in the YML file.  If updateit.sh is successful (as verifed by its exit status and __currency.py__, which makes sure that the database has current data for today), the driver script then invokes individual programs to create the various reports, maps, and other output files, and then copies those files to the places needed by the web server.  The driver script may also send email to the Webmaster or others to notify them of what happened - it's up to you!
+
 
 ### updateit.sh
 
+This script is invoked by the driver script.  It has the same "force" and "test" parameters as the driver (which passes the parameters along), with the same meaning.
+
+It creates variables $today and $yday (yesterday) with the appropriate dates in yyyy-mm-dd format.
+
+If we already have today's club information and yesterday's performance information (I __should__ have tied club information to the previous day for consistency, but I didn't), we exit unless forced to continue.
+
+__getperformancefiles.py__ is invoked to capture information from Toastmasters and put it into the appropriate CSV files.
+
+Next, the script calls __loaddb.py__ to load the CSV files into the database.  Note that loaddb.py loads _all_ CSV files with the proper names (clubs._yyyy-mm-dd_.csv and *perf._yyyy-mm-dd_.csv) into the database, not just the most recent.
+
+Next, the script calls __populatelastfor.py__ to update the "lastfor" table.  It normally only updates the current year's information, but if "force" was passed, it updates all years.
+
+Unless the "test" option was passed, the script then zips all of the CSV files it used or created except for the most current.
+
+Finally, the script invokes __geteducationals.py__ to update the educational achievements table.
+
+The exit status from the script is 0 if all is well, or the sum of:
+
+| value | meaning |
+| ----: | ------- |
+| 1     | loaddb.py made no changes to the database |
+| 2     | unable to get club information from Toastmasters |
+| 4     | unable to get performance information from Toastmasters |
+
+## The Programs ##
+
+Most of the programs are pretty straightforward; you can invoke any of them (unless otherwise noted) with "--help" to find out what parameters they accept.  I only explain the most important of the parameters in this document.  Almost all of them use the database.
+
+### alignmap.py ###
+
+This is a wrapper to __makemap.py__ which adds additional parameters and functions.  I will only describe the special parameters for this routine.
+
+| Parameter | Value |
+| --------- | ----- |
+| --testalign | name of a ["test alignment" file][] |
+| --makedivisions | if specified, the program computes division boundaries |
+| --nomakedivisions | if specified, the program does not compute division boundaries |
+
+By default, the program computes division boundaries for District 101, but not for District 4.  There are various hard-coded points in the program to adjust the District 101 boundaries to put Gilroy into Division A and to put Rancho San Antonio into Division E to make it contiguous.
+
+#### @@TODO@@  ####
+
+The program also honors the [--newAlignment][] parameter, which makes very little sense (--testalign should be the only thing it uses).
+
+
+
+### allstats.py ###
+
+Creates the consolidated report file showing club, area, division, and district performance.  Uses the data in the database.
+
+Specify "--proforma" with the name of a ["test alignment" file][] to create a pro-forma report for a possible new alignment.
+
+### awardtallies.py ###
+
+Creates CSV files with total "awards by division" and "awards by type".
+
+### buildareapage.py ###
+
+Builds an HTML fragment containing tables for the clubs in each area and the areas in each division.  Uses the ["officers" file][] specified in [tmstats.yml][].
+
+### clubchanges.py ###
+
+Create an HTML file with changes in club information between two dates, based on Toastmasters' Find-a-Club data.  There are up to three sections in the report:
+
+* Clubs which are no longer in the list from Toastmasters
+* Clubs which have been added to the list (with detailed infomation about each club)
+* Clubs whose information has been changed (by default, only the area, division, place, address, and meeting information is checked or displayed.)
+
+
+
+## Important data files ##
+
+
+### tmstats.yml ###
+
+Most of the information that differs between installations of __tmstats__ is held in a central control file (normally __tmstats.yml__).  This file is written using [YAML 1.1](http://yaml.org/spec/1.1/).  Some of the common values that programs expect to find here are:
+
+| Key | Meaning |
+| --- | ------- |
+| district | The Toastmasters District for which the suite is being run |
+| dbname | For connection to MySQL |
+| dbhost | For connection to MySQL |
+| dbuser | For connection to MySQL |
+| dbpass | For connection to MySQL |
+| officers | The URL of the CSV published form of the ["officers file"][] |
+| newAlignment | The filename of an XLSX file containing information about alignment to override that provided by Toastmasters.  Typically used at the beginning of a Toastmasters year.  (**TODO** change this to a Google spreadsheet) |
+| googlemapsapikey | Used by the various mapping programs |
+| makemap | Contains subkeys "mapoverride" and "pindir" |
+| makemap.mapoverride | The URL of the CSV published form of a Google Spreadsheet with information about club meeting locations and times which is used in preference to that obtained from Toastmasters. |
+| makemap.pindir | The filename of a directory containing pins for the maps (one pin for each possible Area) |
+
+Note that filenames in the YML file are relative to the working directory (unless, of course, they are absolute filenames).
+
+Programs MAY choose to allow values from the YML file to be overridden by defining them as parameters to the parser, but in most cases, the values in the YML file do not correspond to parameters to the programs.
+
+
+### "test alignment" file ###
+
+The "test alignment" file is a CSV file with the following columns (I only explain those that need it):
+
+| Column | Value |
+| ------ | ----- |
+| newarea | new area, as A1 or C4 |
+| clubnumber | |
+| clubname | a comment - the value is ignored |
+| color | Red (club under 12 members), Yellow (12-19 members), or Green (20 or more members) |
+| likelytoclose | Enter "Yes" if the club is likely to close before the new year |
+| latitude |
+| longitude |
+| place |
+| address |
+| city |
+| state |
+| zip |
+| country |
+| meetingday |
+| meetingtime |
+
+For those programs which use the test alignment file, only those clubs included in the file will be processed.  Clubs omitted from the file are silently dropped from the output.
+
+### --newAlignment ###
+
+This is an Excel (.XLSX) file matching the format of the Toastmasters alignment file for 2015-16.  It should be replaced by the simpler ["test alignment" file][], but that hasn't happened yet.  The __overrideClubs__ function in __tmutil.py__ processes this file.
+
+### "officers" file ###
+
+A Google spreadsheet containing the following columns:
+
+Title, First, Last, Email, Notes
+
+Title is of the form "Division _X_ Director" or "Area _Xn_ Director."
+
+The Notes column is ignored by the programs using this file.
 
