@@ -156,7 +156,7 @@ if __name__ == "__main__":
     
     
     # Remove any clubs NOT in the newAlignment; patch in newarea and likelytoclose; override anything else specified.
-    # Get the alignment CSV from Google Sheets
+    # Get the alignment CSV from Dropbox
     alignment = csv.DictReader(getlatest(curs))
     fields = alignment.fieldnames
     overridestart = fields.index('likelytoclose') + 1
