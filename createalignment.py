@@ -166,9 +166,12 @@ if __name__ == "__main__":
         c.newarea = row['newarea']
         c.likelytoclose = row['likelytoclose'].strip()
         for f in fields[overridestart:]:
-            v = row[f].strip()
+            try:
+                v = row[f].strip()
+            except AttributeError:
+                v = ''   # Handle missing items
             if v:
-                print 'overriding', f, 'for', c.clubname, 'with', v
+                print 'overriding', f, 'for', c.clubname, 'from', c.__dict__[f], 'to', v
                 c.__dict__[f] = v
         ourclubs[clubnumber] = c
 
