@@ -139,6 +139,7 @@ reload(sys).setdefaultencoding('utf8')
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument('--outfile', dest='outfile', default='areasanddivisions.html')
 parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
+parms.add_argument('--officers', dest='officers', help='URL of the CSV export form of a Google Spreadsheet with Area/Division Directors')
 parms.parse()
 
 # Connect to the database
