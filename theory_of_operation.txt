@@ -471,7 +471,7 @@ This file is created by [createalignment.py][] and contains a merger of informat
 
 ### --newAlignment ###
 
-This is an Excel (.XLSX) file matching the format of the Toastmasters alignment file for 2015-16.  It should be replaced by the simpler ["test alignment" file][], but that hasn't happened yet.  The [overrideClubs__ function in __tmutil.py][] processes this file.
+This is an Excel (.XLSX) file matching the format of the Toastmasters alignment file for 2015-16.  It should be replaced by the simpler ["test alignment" file][], but that hasn't happened yet.  The overrideClubs__ function in [tmutil.py][] processes this file.
 
 ### "officers" file ###
 
