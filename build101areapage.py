@@ -37,12 +37,12 @@ class Division():
     def html(self):
         res = []
         res.append('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="2em" body_line_height_tablet="2em" body_line_height_phone="2em"]' % self.name.upper())
+        res.append('<table class="divisiontable">')
 
         if self.director:
             res.append('%s' % self.director.html())
         else:
             res.append('<p>Division Director Position is Vacant</p>')
-        res.append('<table class="divisiontable">')
         for a in sorted(self.areas):
             res.append('  %s' % self.areas[a].html())
         res.append('</table>')
@@ -117,23 +117,12 @@ class Director():
 
         
     def html(self, isacting=False):
-        res = []
+        return """<tr>
+  <td align="center" colspan="2">%s%s %s %s (<a href="mailto:%s">%s</a>)</td>
+</tr>
+""" % ('<strong>Acting: </strong>' if isacting else '',self.position, self.first, self.last, self.email, self.email)
 
-        if self.photo:
-            res.append('<img src="/wp-content/%s"/>'% self.photo)
-        res.append('<br />')
-        if isacting:
-            res.append('<span class="dirtitle">%s</span>' % "Acting Director")
-        else:
-            res.append('<span class="dirtitle">%s</span>' % self.position)
-        res.append('<br />')
-        res.append('<span class="dirname">%s</span>' % self.fullname)
-        res.append('<br />')
-        res.append('<span class="diremail"><a href="mailto:%s">%s</a></span>' % (self.email, self.email))
-        res.append('<br />')
-
-        return '\n'.join(res)
-
+ 
         
 
     def __repr__(self):
@@ -190,6 +179,7 @@ for row in reader:
 
 # And now we go through the Divisions and Areas and build the output.
 outfile = open(parms.outfile, 'w')
+outfile.write("<p>Click on a Division to see the clubs and Areas it contains.</p>")
 outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="24"]
 """)
 for d in sorted(Division.divisions):
