@@ -75,7 +75,8 @@ if __name__ == "__main__":
         reportdate = min(finaldate,yesterday)
         finalpart = 'asof = "%s"' % min(reportdate)
         msgdate = datetime.datetime.strptime(finaldate, '%Y-%m-%d')
-    reportdate = datetime.datetime.strptime(reportdate, '%Y-%m-%d')
+    if isinstance(reportdate,str):
+    	reportdate = datetime.datetime.strptime(reportdate, '%Y-%m-%d')
     friendlyend = 'New Members on %s' % neaten(reportdate)
     msgfinal = dateAsWords(msgdate)
 
