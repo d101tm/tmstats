@@ -40,14 +40,14 @@ class Division():
         res.append('<table class="divisiontable">')
 
         if self.director:
-            res.append('%s' % self.director.html())
+            res.append(u'%s' % self.director.html())
         else:
             res.append('<p>Division Director Position is Vacant</p>')
         for a in sorted(self.areas):
             res.append('  %s' % self.areas[a].html())
         res.append('</table>')
         res.append('[/et_pb_tab]')
-        return '\n'.join(res)
+        return u'\n'.join(res)
 
 class Area():
     areas = {}
@@ -80,7 +80,7 @@ class Area():
             res.append("""  Area Director Position is Vacant""")
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append("""    %s: %s %s""" % (c.clubnumber, c.clubname, c.getLink()))
-        return '\n'.join(res)
+        return '\n'.join([value.decode('utf-8', 'xmlcharrefreplace') for value in res])
         
     def html(self):
         if self.area == '0A':
@@ -97,8 +97,9 @@ class Area():
         res.append('</td></tr>')
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append('<tr><td align="right">%s</td><td><a href="%s" target="_blank">%s</a></td></tr>' % (c.clubnumber, c.getLink(), c.clubname))
-        return '\n'.join(res)
-        
+
+        return u'\n'.join(res)
+
         
 class Director():
     def __init__(self, row):
@@ -118,7 +119,7 @@ class Director():
         
     def html(self, isacting=False):
         return """<tr>
-  <td align="center" colspan="2">%s%s %s %s (<a href="mailto:%s">%s</a>)</td>
+  <td align="left" colspan="2">%s%s %s %s (<a href="mailto:%s">%s</a>)</td>
 </tr>
 """ % ('<strong>Acting: </strong>' if isacting else '',self.position, self.first, self.last, self.email, self.email)
 
@@ -170,7 +171,7 @@ officers = urllib2.urlopen(parms.officers)
 reader = csv.DictReader(officers)
 for row in reader:
     for k in row:
-        row[k] = ' '.join(row[k].split()).strip()
+        row[k] = ' '.join(unicode(row[k],'utf-8').split()).strip()
     if row['Title'] and row['First']:
         Director(row)
         
@@ -178,14 +179,14 @@ for row in reader:
 
 
 # And now we go through the Divisions and Areas and build the output.
-outfile = open(parms.outfile, 'w')
+outfile = open(parms.outfile, 'wb')
 outfile.write("<p>Click on a Division to see the clubs and Areas it contains.</p>")
 outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="24"]
 """)
 for d in sorted(Division.divisions):
     if d.lower() != 'new':
         div = Division.divisions[d]
-        outfile.write(div.html())
+        outfile.write(div.html().encode('ascii','xmlcharrefreplace'))
         outfile.write('\n')
 
 outfile.write("""[/et_pb_tabs]
