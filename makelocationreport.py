@@ -2,7 +2,7 @@
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
-import dbconn, tmutil, sys, os, csv
+import dbconn, tmutil, sys, os, csv, re
 from tmutil import distance_on_unit_sphere 
 
 
@@ -48,7 +48,12 @@ def openarea(outfile, area, color):
     return ret
     
 def closearea(outfile, text, locations):
-    outfile.write(''.join(text) % computeMaxDistance(locations))
+    if len(locations) > 1:
+        outfile.write(''.join(text) % computeMaxDistance(locations))
+    else:
+        # This is gross and relies on knowing what "openarea" does.
+        text[1] = re.sub(r'\(.*\)', '', text[1])  # Remove distance
+        outfile.write(''.join(text))
     outfile.write('</tbody></table>\n')
     outfile.write('</div>\n')
     
