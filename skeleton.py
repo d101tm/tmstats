@@ -1,34 +1,23 @@
 #!/usr/bin/env python
-
-# This is a standard skeleton to use in creating a new program in the TMSTATS suite.
+""" Insert description of this program here """
 
 import dbconn, tmutil, sys, os
 
 
-def inform(*args, **kwargs):
-    """ Print information to 'file' unless suppressed by the -quiet option.
-          suppress is the minimum number of 'quiet's that need be specified for
-          this message NOT to be printed. """
-    suppress = kwargs.get('suppress', 1)
-    file = kwargs.get('file', sys.stderr)
-    
-    if parms.quiet < suppress:
-        print >> file, ' '.join(args)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
 if __name__ == "__main__":
  
     import tmparms
-    from tmutil import gotodatadir
-    # Make it easy to run under TextMate
-    gotodatadir()
+    tmutil.gotodatadir()           # Move to the proper data directory
         
     reload(sys).setdefaultencoding('utf8')
     
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--verbose', '-v', action='count')
     # Add other parameters here
     parms.parse() 
    
