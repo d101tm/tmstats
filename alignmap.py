@@ -38,6 +38,7 @@ if __name__ == "__main__":
     parms.add_argument('--district', dest='district')
     parms.add_argument('--makedivisions', dest='makedivisions', action='store_true')
     parms.add_argument('--nomakedivisions', dest='nomakedivisions', action='store_true')
+    parms.add_argument('--showdetails', dest='showdetails', action='store_true')
     # Add other parameters here
     parms.parse()
 
@@ -127,7 +128,6 @@ if __name__ == "__main__":
 
     outfile = open(parms.outfile, 'w')
 
-    parms.showdetails = True
     makemap(outfile, clubs, parms)
 
     if parms.makedivisions:
