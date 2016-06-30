@@ -323,7 +323,7 @@ class Club:
             try:
                 need = min(20, self.base + 5) - self.current
             except TypeError:
-                pass
+                need = 0
             if (not self.suspended) and (need > 0):
                 ret += td(need, forceclass="bold")
             else:
@@ -628,8 +628,19 @@ for (clubnumber, charterdate, clubname) in curs.fetchall():
     
 # New alignment processing
 if parms.newAlignment:
+    # If any clubs get created by overrideClubs, they are of the standard
+    #   simpleclub.Club type.  We need to create objects of the local Club
+    #   type instead, but keep the values.  
+    from simpleclub import Club as sClub
+    sClub.getClubsOn(curs)   # Ensure everything is defined
     from tmutil import overrideClubs
+    oldkeys = set(clubs.keys())
     clubs = overrideClubs(clubs, parms.newAlignment)
+    for c in clubs.keys():
+        if c not in oldkeys:
+            nclub = clubs[c]
+            # We must replace this with a club of the local type
+            clubs[c] = Club(nclub.clubnumber, nclub.clubname, nclub.area, nclub.division, nclub.district, nclub.suspenddate)
 
     
 
