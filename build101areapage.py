@@ -6,7 +6,7 @@
 import dbconn, tmparms, xlrd, csv
 import os, sys, urllib2
 from simpleclub import Club
-from tmutil import overrideClubs, removeSuspendedClubs
+from tmutil import overrideClubs, removeSuspendedClubs, gotodatadir
 
 class Division():
     divisions = {}
@@ -36,17 +36,18 @@ class Division():
         
     def html(self):
         res = []
-        res.append('<p>{tab %s|align_center|alias:%s}</p>' % (self.name.upper(), self.name))
-        res.append('<table class="table1">\n  <tbody>\n')
-        res.append('  <tr><th style="background-color: #f2df74;" colspan="2"><strong>Division %s</strong></th></tr>' % self.name.upper())
+        res.append('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="2em" body_line_height_tablet="2em" body_line_height_phone="2em"]' % self.name.upper())
+        res.append('<table class="divisiontable">')
+
         if self.director:
-            res.append('  %s' % self.director.html())
+            res.append(u'%s' % self.director.html())
         else:
-            res.append('<tr><td></td><td>Division Director Position is Vacant</td><tr>')
+            res.append('<p>Division Director Position is Vacant</p>')
         for a in sorted(self.areas):
             res.append('  %s' % self.areas[a].html())
-        res.append('  </tbody>\n</table>')
-        return '\n'.join(res)
+        res.append('</table>')
+        res.append('[/et_pb_tab]')
+        return u'\n'.join(res)
 
 class Area():
     areas = {}
@@ -79,27 +80,32 @@ class Area():
             res.append("""  Area Director Position is Vacant""")
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append("""    %s: %s %s""" % (c.clubnumber, c.clubname, c.getLink()))
-        return '\n'.join(res)
+        return '\n'.join([value.decode('utf-8', 'xmlcharrefreplace') for value in res])
         
     def html(self):
         if self.area == '0A':
             return ''
         res = []
         res.append('<tr><td style="background-color: #f2df74;" colspan="2"><strong>Area %s</strong></td></tr>' % self.name)
+        res.append('<tr><td>')
         if self.director:
             res.append(self.director.html())
         elif self.parent.director:
             res.append(self.parent.director.html(isacting=True))
         else:
-            res.append('<tr><td></td><td>Area Director Position is Vacant</td></tr>')
+            res.append('Area Director Position is Vacant')
+        res.append('</td></tr>')
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append('<tr><td align="right">%s</td><td><a href="%s" target="_blank">%s</a></td></tr>' % (c.clubnumber, c.getLink(), c.clubname))
-        return '\n'.join(res)
-        
+
+        return u'\n'.join(res)
+
         
 class Director():
-    def __init__(self, position, first, last, email):
-        part = position.split()
+    def __init__(self, row):
+        for f in row:
+            self.__dict__[f.lower().split()[0]] = row[f]
+        part = self.title.split()
         if part[0] == 'Division':
             division = part[1]
             Division.find(division).director = self
@@ -107,33 +113,26 @@ class Director():
             area = part[1][1]
             division = part[1][0]
             Area.find(division, area).director = self
-        self.first = first
-        self.last = last
-        self.email = email
         self.position = part[0] + ' ' + part[1] + ' Director'
+        self.fullname = self.first + ' ' + self.last
 
         
     def html(self, isacting=False):
         return """<tr>
-  <td align="right"><a href="mailto:%s" target="_blank">Email</a></td>
-  <td>%s%s %s %s</td>
+  <td align="left" colspan="2">%s%s %s %s (<a href="mailto:%s">%s</a>)</td>
 </tr>
-""" % ( self.email, '<strong>Acting: </strong>' if isacting else '',self.position, self.first, self.last)
+""" % ('<strong>Acting: </strong>' if isacting else '',self.position, self.first, self.last, self.email, self.email)
+
+ 
+        
 
     def __repr__(self):
-        return "%s %s %s: %s" % (self.position, self.first, self.last, self.email)
+        return "%s %s %s: %s" % (self.position, self.first, self.last, self.email, self.photo)
        
     
 
-
-
-# Make it easy to run under TextMate
-if 'TM_DIRECTORY' in os.environ:
-    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-
-    
-# Get around unicode problems
-reload(sys).setdefaultencoding('utf8')
+### Main Program ###
+gotodatadir()
 
 
 parms = tmparms.tmparms(description=__doc__)
@@ -172,18 +171,24 @@ officers = urllib2.urlopen(parms.officers)
 reader = csv.DictReader(officers)
 for row in reader:
     for k in row:
-        row[k] = ' '.join(row[k].split()).strip()
+        row[k] = ' '.join(unicode(row[k],'utf-8').split()).strip()
     if row['Title'] and row['First']:
-        Director(row['Title'], row['First'], row['Last'], row['Email'])
+        Director(row)
         
 
 
 
 # And now we go through the Divisions and Areas and build the output.
-outfile = open(parms.outfile, 'w')
+outfile = open(parms.outfile, 'wb')
+outfile.write("<p>Click on a Division to see the clubs and Areas it contains.</p>")
+outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="24"]
+""")
 for d in sorted(Division.divisions):
     if d.lower() != 'new':
         div = Division.divisions[d]
-        outfile.write(div.html())
+        outfile.write(div.html().encode('ascii','xmlcharrefreplace'))
         outfile.write('\n')
 
+outfile.write("""[/et_pb_tabs]
+
+""")

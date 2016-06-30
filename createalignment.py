@@ -128,6 +128,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--outfile', default='d101align.csv')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
+    parms.add_argument('--alignment', dest='alignment', default=None, help='Use this file instead of going to Dropbox.')
     # Add other parameters here
     parms.parse() 
     
@@ -157,18 +158,25 @@ if __name__ == "__main__":
     
     # Remove any clubs NOT in the newAlignment; patch in newarea and likelytoclose; override anything else specified.
     # Get the alignment CSV from Dropbox
-    alignment = csv.DictReader(getlatest(curs))
+    if not parms.alignment:
+        alignment = csv.DictReader(getlatest(curs))
+    else:
+        alignment = csv.DictReader(open(parms.alignment).read().splitlines())
     fields = alignment.fieldnames
-    overridestart = fields.index('likelytoclose') + 1
+    ignore = ['clubnumber', 'clubname', 'newarea', 'oldarea']
     for row in alignment:
         clubnumber = row['clubnumber']
         c = clubs[clubnumber]
         c.newarea = row['newarea']
-        c.likelytoclose = row['likelytoclose'].strip()
-        for f in fields[overridestart:]:
-            v = row[f].strip()
+        for f in fields:
+            if f in ignore:
+                continue 
+            try:
+                v = row[f].strip()
+            except AttributeError:
+                v = ''   # Handle missing items
             if v:
-                print 'overriding', f, 'for', c.clubname, 'with', v
+                print 'overriding', f, 'for', c.clubname, 'from', c.__dict__[f], 'to', v
                 c.__dict__[f] = v
         ourclubs[clubnumber] = c
 
