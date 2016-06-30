@@ -33,6 +33,7 @@ class Club:
         self.fieldnames = names
         self.badnames = ['firstdate', 'lastdate']
         self.goodnames = [n for n in names if n not in self.badnames]
+
         
     @classmethod
     def setgoodnames(self, names):
@@ -112,10 +113,15 @@ class Club:
         return res
         
     
-    def __init__(self, values, fieldnames=None):
+    def __init__(self, values, fieldnames=None, fillall=False):
         self.cmp = []
         if not fieldnames:
             fieldnames = self.fieldnames
+        if fillall:
+            # We must ensure all defined fields have a value
+            for name in self.fieldnames:
+                self.__dict__[name] = ''
+
         for (name, value) in zip(fieldnames, values):
             value = self.stringify(value)
             if name == 'place':

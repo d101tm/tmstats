@@ -192,7 +192,12 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
         fixup = lambda x:x
     for row in reader:
         clubnum = fixup(row['clubnumber'])
-        club = clubs[clubnum]
+        try:
+            club = clubs[clubnum]
+        except KeyError:
+            from simpleclub import Club
+            club = Club(row.values(), fieldnames=row.keys(), fillall=True)
+            clubs[clubnum] = club
         keepers.add(clubnum)
         if row['newarea'] and row['newarea'] != '0D0A':
             club.division = row['newarea'][0]
