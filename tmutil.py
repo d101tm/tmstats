@@ -208,7 +208,7 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
                 if item in club.__dict__ and isinstance(club.__dict__[item], numbers.Number):
                     if isinstance(club.__dict__[item], int):
                         club.__dict__[item] = int(row[item])
-                    elif isinstance(club.__dict[item], float):
+                    elif isinstance(club.__dict__[item], float):
                         club.__dict__[item] = float(row[item])
                     else:
                         club.__dict__[item] = long(row[item])
