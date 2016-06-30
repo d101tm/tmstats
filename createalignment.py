@@ -84,15 +84,15 @@ def getlatest(curs):
             # We care about CSV files, but only the latest.
             # We assume consistency in timezone from Dropbox...
             modified = ' '.join(item['modified'].split()[1:5])
-            print modified
+            print modified, filename
             filetime = time.strptime(modified, '%d %b %Y %H:%M:%S')
             if (filetime > lasttime):
                 lastfile = filename
                 lasttime = filetime
                 lastext = ext
                 
-            # Convert the timestamp to local.  There must be an easier way!
-            lasttime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(calendar.timegm(lasttime)))
+    # Convert the timestamp to local.  There must be an easier way!
+    lasttime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(calendar.timegm(lasttime)))
             
     print 'Using', lastfile, 'modified at', lasttime
     with open('alignmentsource.txt', 'w') as outfile:
@@ -166,18 +166,24 @@ if __name__ == "__main__":
     ignore = ['clubnumber', 'clubname', 'newarea', 'oldarea']
     for row in alignment:
         clubnumber = row['clubnumber']
-        c = clubs[clubnumber]
-        c.newarea = row['newarea']
-        for f in fields:
-            if f in ignore:
-                continue 
-            try:
-                v = row[f].strip()
-            except AttributeError:
-                v = ''   # Handle missing items
-            if v:
-                print 'overriding', f, 'for', c.clubname, 'from', c.__dict__[f], 'to', v
-                c.__dict__[f] = v
+        try:
+            c = clubs[clubnumber]
+            c.newarea = row['newarea']
+            for f in fields:
+                if f in ignore:
+                    continue 
+                try:
+                    v = row[f].strip()
+                except AttributeError:
+                    v = ''   # Handle missing items
+                if v:
+                    print 'overriding', f, 'for', c.clubname, 'from', c.__dict__[f], 'to', v
+                    c.__dict__[f] = v
+        except KeyError:
+            # Must create a new club.  Oh, boy!
+            print 'creating new club', clubnumber
+            c = Club(row.values(), fieldnames=row.keys())
+            print c
         ourclubs[clubnumber] = c
 
     
