@@ -10,7 +10,7 @@
     in the YML file (though a --newAlignment on the invocation would win).
 
     Invoke like this:
-    export "$(checkfortransition.py officers)"
+    eval "$(checkfortransition.py officers)"
 
 """
 
@@ -50,10 +50,10 @@ if __name__ == "__main__":
     f = parms.varname
     if desiredyear != int(tmutil.getTMYearFromDB(curs)):
         if parms.__dict__[f]:
-            ans = "%s=\"--%s '%s'\"" % (f, f, parms.__dict__[f])
+            ans = "%s=\"--%s %s\"" % (f, f, parms.__dict__[f])
         elif desiredyear in parms.__dict__:
             try:
-                ans = "%s=\"--%s '%s'\"" % (f, f, parms.__dict__[desiredyear][f])
+                ans = "%s=\"--%s %s\"" % (f, f, parms.__dict__[desiredyear][f])
             except KeyError:
                 pass
     print ans
