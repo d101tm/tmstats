@@ -179,6 +179,7 @@ if [[ "$dorun" = "yes" ]] ; then
     if (( $haveperf == 0 )) ; then
         echo "Running Share The Wealth"
         ../sharethewealth.py --base M3 --final M5
+        ../stw2.py
     fi
     
     ### Run daily housekeeping
