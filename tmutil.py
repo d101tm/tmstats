@@ -2,8 +2,8 @@
 """ Utility functions for the TMSTATS suite """
 from datetime import date, timedelta, datetime
 import csv, cStringIO, codecs
-import xlrd
 import os
+import numbers
 
 def gotodatadir():
     """ Go to the 'data' directory if we're not already there """
@@ -162,60 +162,67 @@ class UnicodeWriter:
             self.writerow(row)
 
 
-def overrideClubs(clubs, newAlignment):
+def overrideClubs(clubs, newAlignment, exclusive=True):
     """ Updates 'clubs' to reflect the alignment in the newAlignment spreadsheet.
-        Typically used at a TM year boundary. """
-    book = xlrd.open_workbook(newAlignment)
-
-
-    # Start with the Alignment sheet
-    align = book.sheet_by_name('Alignment')
-    # The spreadsheet is more human-readable than computer-friendly;
-    #   in particular, there are no real headings, so we go by column number.
-    clubcol = 5  # ('F')
-    namecol = 6
-    distcol = 7
-    areacol = 8
-    divcol = 9
-
-    # Walk down looking for a valid club number
-    rownum = 0
-
-    while rownum < align.nrows:
-        values = align.row_values(rownum)
-        clubnum = numToString(values[clubcol])
-        if clubnum in clubs:
+        Typically used at a TM year boundary or for planning realignment.
+    
+        newAlignment is a "test alignment" file - a CSV with the clubs in the new
+        alignment.  Non-blank columns in the file override information from the database,
+        with the following exceptions:
+        
+            "likelytoclose" is used during planning to identify clubs in danger.
+            "clubname" does NOT override what comes from Toastmasters.
+            "newarea" is of the form Xn (X is the Division; n is the area).
+    
+        Specify exclusive=False to keep clubs not included in the spreadsheet;
+        otherwise, clubs not in the spreadsheet are discarded.
+    """
+    
+    
+    pfile = open(newAlignment, 'rbU')
+    reader = csv.DictReader(pfile)
+    keepers = set()
+    # Sadly, the callers of this routine have different types of key.
+    # We have to be resilient against this.
+    if isinstance(clubs.keys()[0], int):
+        fixup = lambda x:int(x)
+    elif isinstance(clubs.keys()[0], (long, float)):
+        fixup = lambda x:float(x)
+    else:
+        fixup = lambda x:x
+    for row in reader:
+        clubnum = fixup(row['clubnumber'])
+        try:
             club = clubs[clubnum]
-            was = 'District %s, Area %s%s' % (club.district, club.division, club.area)
-            if values[areacol]:
-                club.area = numToString(values[areacol])
-            if values[divcol]:
-                club.division = values[divcol]
-            if values[distcol]:
-                clubs.district = numToString(values[distcol])
-            now = 'District %s, Area %s%s' % (club.district, club.division, club.area)
-            if (was != now):
-                #print 'Change: %s (%s) from %s to %s' % (club.clubname, club.clubnumber, was, now)
-                pass
-        rownum += 1
+        except KeyError:
+            from simpleclub import Club
+            club = Club(row.values(), fieldnames=row.keys(), fillall=True)
+            clubs[clubnum] = club
+        keepers.add(clubnum)
+        if row['newarea'] and row['newarea'] != '0D0A':
+            club.division = row['newarea'][0]
+            club.area = row['newarea'][1:]
+        for item in reader.fieldnames:
+            if row[item].strip() and item not in ['clubnumber', 'clubname', 'newarea']:
+                # Maintain the same type
+                if item in club.__dict__ and isinstance(club.__dict__[item], numbers.Number):
+                    if isinstance(club.__dict__[item], int):
+                        club.__dict__[item] = int(row[item])
+                    elif isinstance(club.__dict__[item], float):
+                        club.__dict__[item] = float(row[item])
+                    else:
+                        club.__dict__[item] = long(row[item])
+                else:
+                    club.__dict__[item] = row[item]
 
-    # Now, handle the suspended club list
-    # Find the first sheet which starts with 'Suspended'
-    names = book.sheet_names()
-    sheetnum = 0
-    while not names[sheetnum].startswith('Suspended'):
-        sheetnum += 1
-
-    if sheetnum <= len(names):
-        susp = book.sheet_by_index(sheetnum)
-        rownum = 0
-        while rownum < susp.nrows:
-            values = susp.row_values(rownum)
-            clubnum = numToString(values[clubcol])
-            if clubnum in clubs:
-                #print 'Suspended: %s (%s)' % (clubs[clubnum].clubname, clubs[clubnum].clubnumber)
-                del clubs[clubnum]
-            rownum += 1
+    pfile.close()
+    # Remove clubs not in the file:
+    if exclusive:
+        clubnumbers = clubs.keys()
+        for c in clubnumbers:
+            if c not in keepers:
+                del clubs[c]
+   
 
     return clubs
 
