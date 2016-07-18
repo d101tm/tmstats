@@ -221,10 +221,8 @@ def makemap(outfile, clubs, parms):
     half = (1 + len(boundsByDivision)) / 2
 
     # If there are fewer than 6 divisions, try to stay on one line.
-    # @@TODO@@ The mapping of new division to old should be parameterized, but for now, it's Brute Force(TM)
     if oneline:
         maxwidth = left + (len(boundsByDivision) * celltotal)
-        was = {'A': 'C', 'B': 'H', 'C':  'D', 'D': 'E', 'E': 'I'}
     else:
         maxwidth = left + (half * celltotal)
 
@@ -233,10 +231,7 @@ def makemap(outfile, clubs, parms):
     for div in sorted(boundsByDivision.keys()):
         outfile.write("$('.div%s').css(%s);\n" % (div, outputprops(standardprops, left, top)))
         outfile.write("$('.div%s').css('background-color', fillcolors['%s']);\n" % (div, div))
-        if oneline:
-            thehtml = 'Division %s<br />(was %s)' % (div, was[div])
-        else:
-            thehtml = 'Division %s' % div
+        thehtml = 'Division %s' % div
         outfile.write("$('.div%s').html('%s');\n" % (div, thehtml))
         if i == half and not oneline:
             left = initwidth + celltotal
@@ -304,16 +299,19 @@ def makemap(outfile, clubs, parms):
                 except Exception, e:
                     print e
                     icon = 'missing'
+                    for club in l:
+                        inform('%s%s %s' % (club.division, club.area, club.clubname), file=sys.stdout, level=0, verbosity=parms.verbosity)
+                        inform('   %s' % (club.address), file=sys.stdout, level=0, verbosity=parms.verbosity)
             else:
                 icon = ''
-            if showdetails:
-                markertext = []
-                for c in l:
+            markertext = []
+            for c in l:
+                if showdetails:
                     markertext.append('%s (%s, %s%s)' % (c.clubname, c.color, c.division, c.area))
-                markertext = '\\n'.join(markertext)
-                outfile.write('addMarker("%s", "%s",%s,%s,%s);\n' % (markertext, icon, club.latitude, club.longitude, clubinfo))
-            else:
-                outfile.write('addMarker("%d clubs meet here", "%s",%s,%s,%s);\n' % (len(l), icon, club.latitude, club.longitude, clubinfo))
+                else:
+                    markertext.append(c.clubname)
+            markertext = '\\n'.join(markertext)
+            outfile.write('addMarker("%s", "%s",%s,%s,%s);\n' % (markertext, icon, club.latitude, club.longitude, clubinfo))
         else:
             club = l[0]
             if parms.pindir:
