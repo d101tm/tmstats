@@ -299,6 +299,9 @@ def makemap(outfile, clubs, parms):
                 except Exception, e:
                     print e
                     icon = 'missing'
+                    for club in l:
+                        inform('%s%s %s' % (club.division, club.area, club.clubname), file=sys.stdout, level=0, verbosity=parms.verbosity)
+                        inform('   %s' % (club.address), file=sys.stdout, level=0, verbosity=parms.verbosity)
             else:
                 icon = ''
             markertext = []
