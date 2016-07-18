@@ -82,49 +82,7 @@ if __name__ == "__main__":
 
     # Process new grouping
     if parms.testalign:
-        import csv
-        infile = open(parms.testalign, 'rbU')
-        reader = csv.DictReader(infile)
-        newclubs = {}
-        newdivs = {}
-        clubsbypos = {}
-        line = reader.next()  # Skip header
-        for line in reader:
-            newdiv = line['newarea'][0]
-            newarea = line['newarea'][1:]
-            clubnum = line['clubnumber']
-            newclubs[clubnum] = (newdiv, newarea)
-            c = clubs[clubnum]
-            c.division = newdiv
-            c.area = newarea
-            c.color = line['color']
-            if newdiv not in newdivs:
-                newdivs[newdiv] = []
-
-            # Info in the alignment file takes priority
-            for item in ('latitude', 'longitude', 'place', 'address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime'):
-                if line[item]:
-                    c.__dict__[item] = line[item]
-
-
-
-            latitude = float(c.latitude)
-            longitude = float(c.longitude)
-            coords = (latitude, longitude)
-            clubsbypos[coords] = c
-            newdivs[newdiv].append(coords)
-        for c in clubs.keys():
-            if c not in newclubs:
-                del clubs[c]
-        for c in clubs.keys():
-            try:
-                clubs[c].color
-            except AttributeError:
-                print '%s (%s) does not have a color' % (clubs[c].clubname, c)
-                clubs[c].color = ''
-
-
-
+        clubs = overrideClubs(clubs, parms.testalign)
 
     outfile = open(parms.outfile, 'w')
 
