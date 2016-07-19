@@ -1,7 +1,8 @@
 #!/bin/bash
 # HostGator-specific setup for the tmstats environment
 export TZ=PST8PDT
-export PYTHONPATH="$HOME/python:$PYTHONPATH"
+# Force the correct level of Python and the correct library
+. $HOME/python2.7/bin/activate
 
 # Even if we're running in a weird shell, let's use THIS directory as the current directory
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
