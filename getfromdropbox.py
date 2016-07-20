@@ -31,6 +31,10 @@ def getDropboxFile(token, directory, extensions, cursor=None):
         cursor is the state cursor from a previous execution; if omitted, examines all files
 
         Returns an object of class Output """
+    if not token:
+        output.error = "ERROR: No access token provided; try generating one from the app console on the web."
+        return output
+        
     dbx = dropbox.Dropbox(token)
     output = Output()
 
