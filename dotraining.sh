@@ -1,9 +1,8 @@
 #!/bin/sh
-export PYTHONPATH=~/python:$PYTHONPATH
 cd data
 rm latesttraining.html 2>/dev/null
+../getfromdropbox.py --outfile latesttraining.html --cfile trainingcursor.txt --ext htm html --dir Training -v || exit $?
 echo $(date +"%B %e") | sed 's/  / /' > trainingreportdate.txt
-../gettrainingstatus.py || exit $?
 ../training.py latesttraining.html --require9a || exit $?
 if [ -d ~/www/files/training ] ; then  
     for name in trainingreport*
