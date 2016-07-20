@@ -17,7 +17,10 @@ class Output:
         self.filename:  Name of the most recent file found (only the filename; path is stripped)
         self.filetime:  Time and date last modified on Dropbox server (datetime.datetime)
         self.file:  Filelike object that can be used to read the file from Dropbox as raw bytes
-        self.error:  An error message if errors occur (currently only in authentication) """
+        self.error:  An error message if errors occur (currently only in authentication)
+        self.warning:  A warning if no file is found
+    """
+
 
     def __init__(self):
         self.cursor = None
@@ -25,6 +28,7 @@ class Output:
         self.filetime = None
         self.file = None
         self.error = None
+	self.warning = None
 
     def __repr__(self):
         return 'cursor: %s\nfilename: %s\nfiletime: %s\nerror: %s\n\n%s' % (self.cursor, self.filename, self.filetime, self.error, self.content)
@@ -100,7 +104,7 @@ def getDropboxFile(token, directory, extensions, cursor=None):
         output.filetime = latesttime
         output.file = dbx.files_download(fileid)[1].raw
     else:
-        output.error = 'No %sfile found' % ('changed ' if had_cursor else '')
+        output.warning = 'No %sfile found' % ('changed ' if had_cursor else '')
         if extensions:
             if len(extensions) == 1:
                 s = 'with extension ' + extensions[0]
@@ -109,7 +113,7 @@ def getDropboxFile(token, directory, extensions, cursor=None):
                 if len(extensions) > 2:
                     s += ','
                 s += ' OR ' + extensions[-1]
-            output.error += ' ' + s
+            output.warning += ' ' + s
 
     return output
 
@@ -178,8 +182,11 @@ if __name__ == "__main__":
         if parms.verbose:
             sys.stderr.write('Using %s, last modified at %s UTC\n' % (output.filename, output.filetime))
     else:
-        if parms.verbose:
-            sys.stderr.write(output.error)
+        if output.error:
+	    sys.stderr.write(output.error)
+            sys.stderr.write('\n')
+        if parms.verbose and output.warning:
+            sys.stderr.write(output.warning)
             sys.stderr.write('\n')
         sys.exit(1)
 
