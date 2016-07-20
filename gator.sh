@@ -9,6 +9,10 @@ SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 data="$SCRIPTPATH/data"
 cd "$data"   # Run in the data directory.
 
+export STATS_HOME="$SCRIPTPATH"
+export STATS_DATA="$STATS_HOME/data"
+
+
 touch hourly       # We were here!
 
 export hour=$(date +'%k')
@@ -226,7 +230,7 @@ if [[ "$dorun" = "yes" ]] ; then
 
     # Now, ingest rosters if need be
     echo "Checking for a new roster"
-    ../getroster.py && ../ingestroster.py "$(cat rosterfileinfo.txt)"
+    ../getroster.sh
 
     # And process award letters
     if [[ "$(hostname)" == *.local ]]
