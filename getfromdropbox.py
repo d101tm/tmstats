@@ -40,13 +40,13 @@ def getDropboxFile(token, directory, extensions, cursor=None):
         cursor is the state cursor from a previous execution; if omitted, examines all files
 
         Returns an object of class Output """
-    
+
     output = Output()
-    
+
     if not token:
         output.error = "ERROR: No access token provided; try generating one from the app console on the web."
         return output
-        
+
     dbx = dropbox.Dropbox(token)
 
     # Make sure we have a proper token
@@ -128,7 +128,8 @@ if __name__ == "__main__":
     parms.add_argument('--verbose', '-v', action='count', help="Increase verbosity of output")
     parms.add_argument('--directory', dest='directory', default='', help="Dropbox directory to examine")
     parms.add_argument('--extensions', dest='extensions', metavar="EXTENSION", type=str, nargs='+', action="append", help="extensions to consider")
-    parms.add_argument('--outfile', dest='outfile', default='-', help="filename for output file; specify '-' for stdout; specify '+' to use the name of the file found.  File is not changed if no file is found.")
+    parms.add_argument('--outfile', dest='outfile', default='-', help="filename for output file; specify '-' for stdout; specify '+' to use the name of the file found; specify 'something.+' to keep the extension of the file but force the name to be 'something'.  File is not changed if no file is found.")
+    parms.add_argument('--namefile', dest='namefile', default=None, help='filename into which to write the name of the output file.  Not changed if nothing is written.')
     parms.add_argument('--outdir', dest='outdir', default='', help="output directory for output file, especially useful if outfile is '+'")
     parms.add_argument('--dropboxtoken', dest='dropboxtoken', help="Dropbox access token")
     group = parms.add_mutually_exclusive_group()
@@ -159,23 +160,41 @@ if __name__ == "__main__":
 
 
     output = getDropboxFile(parms.dropboxtoken, parms.directory, parms.extensions, parms.cursor)
-    
+
     if parms.cfile:
         with open(parms.cfile, 'w') as f:
             f.write(output.cursor)
-        
+
 
     if parms.verbose >= 2:
         sys.stderr.write('cursor: %s\n' % output.cursor)
 
     if output.file:
-        if parms.outfile == '-':
+        if parms.outfile == '-' or parms.outfile.strip() == '':
             outfile = sys.stdout
+            if parms.namefile:
+                with open(parms.namefile, 'w') as f:
+                    f.write('')
         else:
             if parms.outdir:
                 parms.outdir = os.path.expanduser(parms.outdir)
-                print parms.outdir
-            outfn = os.path.join(parms.outdir, output.filename[1:] if parms.outfile == '+' else parms.outfile)
+
+            if parms.outfile.endswith('.+'):
+                # Construct filename, preserving the extension we found
+                outfn = os.path.splitext(parms.outfile)[0] + os.path.splitext(output.filename)[1]
+            elif parms.outfile == '+':
+                # Preserve the filename we found
+                outfn = output.filename
+            else:
+                # Use the name we were given
+                outfn = parms.outfile
+
+            outfn = os.path.join(parms.outdir, outfn)
+            # Write as an absolute filename
+            if parms.namefile:
+                with open(parms.namefile, 'w') as f:
+                    f.write(os.path.abspath(outfn))
+
             outfile = open(outfn, 'w')
         outfile.write(output.file.read())
 
@@ -183,7 +202,7 @@ if __name__ == "__main__":
             sys.stderr.write('Using %s, last modified at %s UTC\n' % (output.filename, output.filetime))
     else:
         if output.error:
-	    sys.stderr.write(output.error)
+            sys.stderr.write(output.error)
             sys.stderr.write('\n')
         if parms.verbose and output.warning:
             sys.stderr.write(output.warning)
