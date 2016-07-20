@@ -3,9 +3,15 @@
 
 
 
-import dropbox, os.path, requests
+import dropbox, os.path, requests, sys
 from dropbox.exceptions import ApiError, AuthError
 from datetime import datetime
+
+# Patch around SSL problems in outdated versions of Python (*cough* HostGator *cough*)
+if sys.hexversion < 0x02070900:
+    sys.stderr.write('Patching URLLIB3\n\n')
+    from dropbox.rest import urllib3
+    urllib3.disable_warnings()
 
 class Output:
     """ self.cursor:  Updated cursor from Dropbox (you can store this for delta processing)
@@ -110,7 +116,7 @@ def getDropboxFile(token, directory, extensions, cursor=None):
 
 
 if __name__ == "__main__":
-    import tmutil, tmparms, sys
+    import tmutil, tmparms
     tmutil.gotodatadir()
     reload(sys).setdefaultencoding('utf8')
 
