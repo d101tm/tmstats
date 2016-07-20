@@ -246,7 +246,7 @@ fi
     
 # Handle training reports and clear the cache, no matter what.
 cd "$SCRIPTPATH"
-./dotraining.sh
+./dotraining4.sh
 ./clearcache.sh
 
 # If voting is in process, handle the votes
