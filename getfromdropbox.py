@@ -127,7 +127,9 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', dest='outfile', default='-', help="filename for output file; specify '-' for stdout; specify '+' to use the name of the file found.  File is not changed if no file is found.")
     parms.add_argument('--outdir', dest='outdir', default='', help="output directory for output file, especially useful if outfile is '+'")
     parms.add_argument('--dropboxtoken', dest='dropboxtoken', help="Dropbox access token")
-    parms.add_argument('--cursor', dest='cursor', default=None, help="Dropbox cursor (overrides --directory)")
+    group = parms.add_mutually_exclusive_group()
+    group.add_argument('--cursor', dest='cursor', default=None, help="Dropbox cursor")
+    group.add_argument('--cfile', dest='cfile', default=None, help="Text file containing a Dropbox cursor; gets updated or created if required.")
     # Add other parameters here
     parms.parse()
 
@@ -143,9 +145,21 @@ if __name__ == "__main__":
         parms.extensions = e
 
 
+    if parms.cfile:
+        parms.cursor = None       # If the file doesn't exist yet
+        try:
+            with open(parms.cfile, 'r') as f:
+                parms.cursor = f.read().strip()
+        except IOError:
+            pass
 
 
     output = getDropboxFile(parms.dropboxtoken, parms.directory, parms.extensions, parms.cursor)
+    
+    if parms.cfile:
+        with open(parms.cfile, 'w') as f:
+            f.write(output.cursor)
+        
 
     if parms.verbose >= 2:
         sys.stderr.write('cursor: %s\n' % output.cursor)
