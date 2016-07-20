@@ -9,8 +9,7 @@ from datetime import datetime
 
 # Patch around SSL problems in outdated versions of Python (*cough* HostGator *cough*)
 if sys.hexversion < 0x02070900:
-    sys.stderr.write('Patching URLLIB3\n\n')
-    from dropbox.rest import urllib3
+    from requests.packages import urllib3
     urllib3.disable_warnings()
 
 class Output:
