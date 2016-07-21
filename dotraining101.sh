@@ -6,19 +6,15 @@ rm latesttraining.html 2>/dev/null
 ../getfromdropbox.py --outfile latesttraining.html --cfile trainingcursor.txt --ext htm html --dir Training  || exit $?
 echo $(date +"%B %e") | sed 's/  / /' > trainingreportdate.txt
 ../training.py latesttraining.html || exit $?
-if [ -d ~/www/files/training ] ; then  
+export TARGET=$HOME/files/reports
+
+if [ -d $TARGET ] ; then  
     for name in trainingreport*
     do
-        cp $name ~/www/files/training/${name##training}
+        cp $name $TARGET/${name/report/}
     done
-    cp lucky7.html ~/www/files/training/
+    cp lucky7.html $TARGET/lucky7.table
 
-
-    if [ -d ~/www/test/files/training ] ; then
-        cp -p ~/www/files/training/*  ~/www/test/files/training/
-    fi
-    
-    
 
 
     # Now, create the message to the Program Quality Directors
@@ -32,12 +28,12 @@ if [ -d ~/www/files/training ] ; then
     cat > trainingmessage.txt << EOF
 ${filemsg}.
 
-See http://d4tm.org/files/training/report.html.
-There is an Excel version of the report at http://d4tm.org/files/training/report.xlsx.
+See http://files.d101tm.org/reports/training.html
+There is an Excel version of the report at http://files.d101tm.org/reports/training.xlsx
 
 The "Lucky 7" report has also been updated on the "What's Trending" page.
 EOF
 
-    ../sendmail.py --textfile trainingmessage.txt --to quality@d4tm.org --bcc david@d2j.us --subject "$filemsg"
+echo    ../sendmail.py --textfile trainingmessage.txt --to quality@d101tm.org --bcc david@d2j.us --subject "$filemsg"
 
 fi
