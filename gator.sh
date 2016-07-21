@@ -154,7 +154,7 @@ if [[ "$dorun" = "yes" ]] ; then
 
     if (( $haveperf == 0 )) ; then
         echo "Running March Madness"
-        ../madness.py
+        PYTHONPATH=~/python:$PYTHONPATH ../madness.py
     fi
 
     ### Run other statistics
@@ -178,7 +178,7 @@ if [[ "$dorun" = "yes" ]] ; then
 
     if (( $haveperf == 0 )) ; then
         echo "Running President's Club"
-        ../presidentsclub.py > presidentsclub.html
+        PYTHONPATH=~/python:$PYTHONPATH ../presidentsclub.py > presidentsclub.html
     fi
 
     if (( $haveperf == 0 )) ; then

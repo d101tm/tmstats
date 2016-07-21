@@ -91,7 +91,7 @@ then
 fi
 
 # Get the educational achievements
-../geteducationals.py
+PYTHONPATH=~/python:$PYTHONPATH ../geteducationals.py
 
 
 # And exit
