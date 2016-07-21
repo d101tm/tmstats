@@ -180,7 +180,7 @@ for row in reader:
 
 # And now we go through the Divisions and Areas and build the output.
 outfile = open(parms.outfile, 'wb')
-outfile.write("<p>Click on a Division to see the clubs and Areas it contains.</p>")
+outfile.write("<p><b>Click on a Division to see the clubs and Areas it contains.<b></p>")
 outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="24"]
 """)
 for d in sorted(Division.divisions):
