@@ -136,9 +136,10 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running Club Change Report"
         ../runclubchanges.sh 
 	
-        echo "Running alignment"
+        echo "Running alignment-related"
         (cd ..;./tonight.sh)
     fi
+
         
     rm marker
     rm *.success 2>/dev/null
