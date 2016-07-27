@@ -129,6 +129,7 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', default='d101align.csv')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     parms.add_argument('--alignment', dest='alignment', default=None, help='Use this file instead of going to Dropbox.')
+    parms.add_argument('--trustWHQ', dest='trust', action='store_true', help='Specify this to use information from WHQ because we are in the new year')
     # Add other parameters here
     parms.parse() 
     
@@ -155,36 +156,41 @@ if __name__ == "__main__":
         c.activemembers = activemembers
         c.oldarea = c.division + c.area
     
-    
-    # Remove any clubs NOT in the newAlignment; patch in newarea and likelytoclose; override anything else specified.
-    # Get the alignment CSV from Dropbox
-    if not parms.alignment:
-        alignment = csv.DictReader(getlatest(curs))
+    if parms.trust:
+        ourclubs = clubs
+        for c in clubs.values():
+            c.newarea = c.division + c.area
+            c.likelytoclose = ''
     else:
-        alignment = csv.DictReader(open(parms.alignment).read().splitlines())
-    fields = alignment.fieldnames
-    ignore = ['clubnumber', 'clubname', 'newarea', 'oldarea']
-    for row in alignment:
-        clubnumber = row['clubnumber']
-        try:
-            c = clubs[clubnumber]
-            c.newarea = row['newarea']
-            for f in fields:
-                if f in ignore:
-                    continue 
-                try:
-                    v = row[f].strip()
-                except AttributeError:
-                    v = ''   # Handle missing items
-                if v:
-                    print 'overriding', f, 'for', c.clubname, 'from', c.__dict__[f], 'to', v
-                    c.__dict__[f] = v
-        except KeyError:
-            # Must create a new club.  Oh, boy!
-            print 'creating new club', clubnumber
-            c = Club(row.values(), fieldnames=row.keys())
-            print c
-        ourclubs[clubnumber] = c
+        # Remove any clubs NOT in the newAlignment; patch in newarea and likelytoclose; override anything else specified.
+        # Get the alignment CSV from Dropbox
+        if not parms.alignment:
+            alignment = csv.DictReader(getlatest(curs))
+        else:
+            alignment = csv.DictReader(open(parms.alignment).read().splitlines())
+        fields = alignment.fieldnames
+        ignore = ['clubnumber', 'clubname', 'newarea', 'oldarea']
+        for row in alignment:
+            clubnumber = row['clubnumber']
+            try:
+                c = clubs[clubnumber]
+                c.newarea = row['newarea']
+                for f in fields:
+                    if f in ignore:
+                        continue 
+                    try:
+                        v = row[f].strip()
+                    except AttributeError:
+                        v = ''   # Handle missing items
+                    if v:
+                        print 'overriding', f, 'for', c.clubname, 'from', c.__dict__[f], 'to', v
+                        c.__dict__[f] = v
+            except KeyError:
+                # Must create a new club.  Oh, boy!
+                print 'creating new club', clubnumber
+                c = Club(row.values(), fieldnames=row.keys())
+                print c
+            ourclubs[clubnumber] = c
 
     
     # Now, create the output file, sorted by newarea (because that's what we need later on)

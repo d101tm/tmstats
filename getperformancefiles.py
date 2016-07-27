@@ -85,6 +85,7 @@ if __name__ == "__main__":
             
     parms = tmparms.tmparms()
     parms.add_argument('--district', type=int)
+    parms.add_argument('--altdistrict', type=int)
     parms.add_argument('--startdate', default=None)
     parms.add_argument('--enddate', default='today')
     parms.add_argument('--skipclubs', action='store_true',
@@ -92,6 +93,20 @@ if __name__ == "__main__":
     parms.parse()
 
     district = "%0.2d" % parms.district
+    try:
+        os.remove('altdistrict.txt')
+    except OSError:
+        pass
+    # Handle the case of a district being reformed
+    if parms.altdistrict:
+        altdistrict = "%0.2d" % parms.altdistrict
+        url = "https://www.toastmasters.org/service/clubs/export/Downloads/Csv?district=%s&advanced=1&latitude=0&longitude=0" % district
+        if not getresponse(url):
+            sys.stderr.write('No clubs found for District %s; using %s instead.' % (district, altdistrict))
+            district = altdistrict
+            with open('altdistrict.txt', 'w') as f:
+                f.write(altdistrict + '\n')
+            
     enddate = datetime.strptime(cleandate(parms.enddate), '%Y-%m-%d').date()
     if parms.startdate:
         startdate = datetime.strptime(cleandate(parms.startdate), '%Y-%m-%d').date()

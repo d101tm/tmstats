@@ -1,6 +1,12 @@
 #!/bin/sh
 cd data
-../createalignment.py 
+if [ -e altdistrict.txt ] ; then
+    echo "altdistrict exists" $(cat altdistrict.txt)
+    ../createalignment.py 
+else
+    echo "No altdistrict"
+    ../createalignment.py --trust
+fi
 ../alignmap.py --pindir pins --district 101 --testalign d101align.csv  --nomakedivisions
 ../allstats.py --outfile d101proforma.html --newAlign d101align.csv
 ../makelocationreport.py --color --infile d101align.csv
