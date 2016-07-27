@@ -157,10 +157,15 @@ if __name__ == "__main__":
         c.oldarea = c.division + c.area
     
     if parms.trust:
-        ourclubs = clubs
-        for c in clubs.values():
-            c.newarea = c.division + c.area
-            c.likelytoclose = ''
+        # Remove any clubs not in the District
+        # patch in newarea
+        ourclubs = {}    
+        for cnum in clubs:
+            c = clubs[cnum]
+            if int(c.district) == parms.district:
+                c.newarea = c.division + c.area
+                c.likelytoclose = ''
+                ourclubs[cnum] = c
     else:
         # Remove any clubs NOT in the newAlignment; patch in newarea and likelytoclose; override anything else specified.
         # Get the alignment CSV from Dropbox
