@@ -3,7 +3,7 @@
 
 cd data
 rm latesttraining.html 2>/dev/null
-../getfromdropbox.py --outfile latesttraining.html --cfile trainingcursor.txt --ext htm html --dir Training  || exit $?
+../getfromdropbox.py --outfile latesttraining.html --namefile trainingfileinfo.txt --cfile trainingcursor.txt --ext htm html --dir Training  || exit $?
 echo $(date +"%B %e") | sed 's/  / /' > trainingreportdate.txt
 ../training.py latesttraining.html || exit $?
 export TARGET=$HOME/files/reports
@@ -31,7 +31,7 @@ ${filemsg}.
 See http://files.d101tm.org/reports/training.html
 There is an Excel version of the report at http://files.d101tm.org/reports/training.xlsx
 
-The "Lucky 7" report has also been updated on the "What's Trending" page.
+The "Lucky 7" report is at http://files.d101tm.org/reports/lucky7.table  (it's an HTML fragment)
 EOF
 
 echo    ../sendmail.py --textfile trainingmessage.txt --to quality@d101tm.org --bcc david@d2j.us --subject "$filemsg"

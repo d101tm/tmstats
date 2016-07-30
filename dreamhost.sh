@@ -147,6 +147,9 @@ if [[ "$dorun" = "yes" ]] ; then
     echo "Finished at $(date)" > "$success"
     cat "$success"
 fi    
+# Handle training reports
+cd "$SCRIPTPATH"
+./dotraining101.sh
 exit 0
 
         
