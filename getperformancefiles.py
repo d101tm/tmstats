@@ -151,6 +151,7 @@ if __name__ == "__main__":
             startdate = datetime(today.year-1, 7, 1)
         else:
             startdate = datetime(today.year, 7, 1)
+        startdate = datetime.date(startdate)
         tmyear = startdate.year
 
     tmyearpiece = '%d-%d' % (tmyear, tmyear+1)  # For the URLs
@@ -183,9 +184,8 @@ if __name__ == "__main__":
     #    on or after our startdate.
     
     # Try to get the obvious first candidate report if we're not looking at the most recent data
-
     thedate = startdate
-    if (thedate < yesterday):
+    if thedate and (thedate < yesterday):
         report = getreportfromWHQ('clubperformance', district, altdistrict, tmyearpiece, months[0], thedate)
     else:
         report = None       # We'll get the latest data instead.
