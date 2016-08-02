@@ -153,4 +153,5 @@ cd "$SCRIPTPATH"
 exit 0
 
         
-	
+# Copy info from Dropbox
+(cd data; ../copywebfiles.py)
