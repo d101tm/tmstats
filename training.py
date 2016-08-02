@@ -149,8 +149,6 @@ if __name__ == "__main__":
     # Now we just power through the rows.  If they have an Area/Division, use it.
     for t in tbl:
         if t.name == 'tr':
-            print ' '.join(t.stripped_strings)
-            print 'class' in t.attrs
             if 'class' in t.attrs:
                 cname = unicode(t['class'][0])
                 if cname in [u'even', u'odd']:
@@ -174,15 +172,6 @@ if __name__ == "__main__":
                     row.append(trained)
                     row.extend(offlist)
                     results.append(row)                
-            else:
-                contents = ' '.join(t.stripped_strings)
-                match = finder.match(contents)
-                if match:
-                    area = match.group(1).strip()
-                    division = match.group(2).strip()
-                    if area == '0A':
-                        division = '0D'
-
     # Now, create the HTML result file and the matching Excel spreadsheet
     results.sort(key=lambda x:(x[0], x[1], x[3]))
     print 'results is %d long' % len(results)
