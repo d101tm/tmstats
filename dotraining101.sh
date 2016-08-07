@@ -34,6 +34,6 @@ There is an Excel version of the report at http://files.d101tm.org/reports/train
 The "Lucky 7" report is at http://files.d101tm.org/reports/lucky7.table  (it's an HTML fragment)
 EOF
 
-echo    ../sendmail.py --textfile trainingmessage.txt --to quality@d101tm.org --bcc david@d2j.us --subject "$filemsg"
+../sendmail.py --textfile trainingmessage.txt --to quality@d101tm.org --bcc david@d2j.us --subject "$filemsg"
 
 fi

@@ -112,7 +112,7 @@ if __name__ == "__main__":
     parms.add_argument('report', type=str, nargs='?', default='latesttraining.html', help='Name of the training report file, default is %(default)s')
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--require9a', action='store_true', help='If true, only clubs which achieved goal 9a (4 or more officers trained during first cycle) are eligible.')
-    parms.add_argument('--reward', type=str, default='$75 in District Credit')
+    parms.add_argument('--reward', type=str, default='$50 in District Credit')
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
     # Add other parameters here
     parms.parse() 
@@ -254,11 +254,6 @@ if __name__ == "__main__":
     outfile.write("""<p>Clubs which have all 7 officers trained before the end of %s%s receive %s.  This report was updated on %s.</p>
     """ % (parms.lastmonth, qual, parms.reward, datetime.today().strftime('%m/%d/%Y')))
 
-    styles = {}
-    if len(lucky) > 1 :
-        styles['v'] = ""
-    else:
-        styles['v'] = ' style="visibility: hidden;"'
 
     # And create the fragment
     outfile.write("""<table class="DSSbtable">
@@ -266,29 +261,16 @@ if __name__ == "__main__":
         <tr valign="top">
           <th><strong>Area</strong></th>
           <th><strong>Club</strong></th>
-          <th%(v)s><strong>&nbsp;</strong></th>
-          <th%(v)s><strong>Area</strong></th>
-          <th%(v)s><strong>Club</strong></th>
-      </tr>
+        </tr> 
       </thead>
       <tbody>
-    """ % styles)
+    """)
 
-    # We want to go down, not across...
-    incol1 = (1 + len(lucky)) / 2# Number of items in the first column.  
-    left = 0  # Start with the zero'th item
-    for i in range(incol1):
-        club = lucky[i]
+    # Single-column listing
+    for club in lucky:
         outfile.write('<tr>\n')
         outfile.write('  <td>%s%d</td><td>%s</td>\n' % (club[0], int(club[1]), club[2]))
         outfile.write('  <td>&nbsp;</td>\n')
-        try:
-            club = lucky[i+incol1]   # For the right column
-        except IndexError:
-            #outfile.write('<td>&nbsp;</td><td>&nbsp;</td>\n')    # Close up the row neatly
-            outfile.write('</tr>\n')
-            break
-        outfile.write('  <td>%s%d</td><td>%s</td>\n' % (club[0], int(club[1]), club[2]))
         outfile.write('</tr>\n')
 
     outfile.write("""  </tbody>
