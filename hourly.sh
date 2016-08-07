@@ -11,9 +11,15 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/lib
 
 # Even if we're running in a weird shell, let's use THIS directory as the current directory
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+data="$SCRIPTPATH/data"
+cd "$data"   # Run in the data directory.
+
+touch hourly       # We were here!
+# Handle training reports
 cd "$SCRIPTPATH"
+./dotraining101.sh
+exit 0
 
-touch data/dreamhost       # We were here!
-./daily.sh "$*"
-./hourly.sh "$*"
-
+        
+# Copy info from Dropbox
+(cd data; ../copywebfiles.py)
