@@ -2,7 +2,7 @@
 
 
 cd data
-rm latesttraining.html 2>/dev/null
+# ZZrm latesttraining.html 2>/dev/null
 ../getfromdropbox.py --outfile latesttraining.html --namefile trainingfileinfo.txt --cfile trainingcursor.txt --ext htm html --dir Training  || exit $?
 echo $(date +"%B %e") | sed 's/  / /' > trainingreportdate.txt
 ../training.py latesttraining.html || exit $?
@@ -14,6 +14,7 @@ if [ -d $TARGET ] ; then
         cp $name $TARGET/${name/report/}
     done
     cp lucky7.html $TARGET/lucky7.table
+    cp lucky7frag.html $TARGET/lucky7frag.html
 
 
 

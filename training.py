@@ -114,6 +114,7 @@ if __name__ == "__main__":
     parms.add_argument('--require9a', action='store_true', help='If true, only clubs which achieved goal 9a (4 or more officers trained during first cycle) are eligible.')
     parms.add_argument('--reward', type=str, default='$50 in District Credit')
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
+    parms.add_argument('--outlist', type=str, default='lucky7frag.html', help='File to contain a narrative format of qualiftying clubs')
     # Add other parameters here
     parms.parse() 
    
@@ -276,3 +277,17 @@ if __name__ == "__main__":
     outfile.write("""  </tbody>
     </table>
     """)
+    outfile.close()
+
+    # And the list version
+    if parms.outlist:
+        outlist = open(parms.outlist, 'w')
+        if lucky:
+            outlist.write('The following ')
+            outlist.write('club' + ('s have' if len(lucky) > 1 else ' has') + ' qualified so far: ')
+            llist = [('<b>%s</b>' % club[2]) for club in sorted(lucky,key=lambda x:x[2])]
+            if len(llist) > 1:
+                llist[-1] = 'and ' + llist[-1]
+            outlist.write(', '.join(llist))
+            outlist.write('.\n')
+        outlist.close()
