@@ -77,12 +77,13 @@ if __name__ == "__main__":
         if month <= 6:
             tmyear = tmyear - 1
         candidate.append(tmyear)
+        candidate.append(parms.district)
         if makekey(candidate[5], candidate[0], candidate[3], candidate[4]) not in existing:
             awards.append(candidate)
         
     # And insert awards into the database
     if awards:
-        changecount = curs.executemany("INSERT INTO awards (clubnumber, division, area, award, awarddate, membername, clubname, clublocation, tmyear) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)", awards)     
+        changecount = curs.executemany("INSERT INTO awards (clubnumber, division, area, award, awarddate, membername, clubname, clublocation, tmyear, district) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", awards)     
     else:
         changecount = "No"      
     inform("%s %s added" % (changecount, "awards" if changecount != 1 else "award"))

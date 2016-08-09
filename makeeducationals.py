@@ -154,6 +154,9 @@ if __name__ == "__main__":
 
     if not parms.include_hpl:
         clauses.append('award != "LDREXC"')
+
+    if parms.district:
+        clauses.append('district = %s' % parms.district)
         
     curs.execute("SELECT COUNT(DISTINCT membername) FROM awards WHERE " + ' AND '.join(clauses))
     count = curs.fetchone()[0]
