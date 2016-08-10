@@ -110,8 +110,8 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     group = parms.parser.add_mutually_exclusive_group()
-    group.add_argument('--since', type=int, default='30',
-            help='How many days to look back')
+    group.add_argument('--since', type=str, default='30',
+            help='How long ago or first date to look for awards.')
     group.add_argument('--lastmonth', action='store_true',
             help='If specified, looks at the previous month')
     parms.add_argument('--include-hpl', action='store_true',
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         timestamp = 'during ' + datetime.date(year, month, 1).strftime('%B, %Y')
         
     else:
-        firstdate = today - datetime.timedelta(parms.since)
+        firstdate = datetime.datetime.strptime(tmutil.cleandate(parms.since), '%Y-%m-%d')
         clauses.append("awarddate >= '%s'" % firstdate.strftime('%Y-%m-%d'))
         timestamp = 'since ' + firstdate.strftime('%B ') + '%d' % firstdate.day
 
@@ -172,35 +172,8 @@ if __name__ == "__main__":
     print '<p>Achievements not shown here can be found on the Toastmasters International'
     print '<a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
     
-    # Print the full-width version 
-           
-    print '<div class="moduletable hidden-phone">'
-    print '<div class="custom hidden-phone">'
-    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:1px; padding-right: 4px; border:0.5px solid white; font-family:  Arial, sans-serif;font-size: 12px;} .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center; width: 100%;} td.awardname {border-left: 5px solid white; border-right: 5px solid white;}--></style>'
-
-    print '<table>'
-
-    for (caward, laward) in zip(commtrack, ldrtrack):
-        print '  <tr>'
-        print '    <td width="50%">'
-        print '      <table width="100%">'
-        printawards(awards, knownawards, caward)
-        print '      </table>'
-        print '    </td>'
-        print '    <td width="50%">'
-        print '      <table width="100%">'
-        printawards(awards, knownawards, laward)
-        print '      </table>'
-        print '    </td>'
-        print '  </tr>'
-
-    print '</table>'   
-    print '</div>'
-    print '</div>'         
-    
     # And now print the narrow version
-    print '<div class="moduletable visible-phone">'
-    print '<div class="custom visible-phone">'
+    print '<div class="awardstable">'
     print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:1px; border:0.5px solid white; font-family: Arial, sans-serif;font-size: 12px;}  .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center;}--></style>'
     print '<table>'
     for k in commtrack:
@@ -208,7 +181,6 @@ if __name__ == "__main__":
     for k in ldrtrack:
         printawards(awards, knownawards, k)
     print '</table>'
-    print '</div>'
     print '</div>'
 
         

@@ -129,6 +129,13 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "allstats rc = $?"
     fi
     
+    if (( $haveperf == 0 )) ; then
+        echo "Running award tallies"
+        ../awardtallies.py
+        echo "Creating award files"
+        ../makeeducationals.py --since 30
+        convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
+    fi
     
     ### Run daily housekeeping
     if (( $haveclubs == 0 )) ; then
