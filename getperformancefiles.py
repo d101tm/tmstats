@@ -25,20 +25,21 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
-    clubinfo = urllib.urlopen(url).readlines()
+    print url
+    flo = urllib.urlopen(url)
+    clubinfo = flo.readlines()
+    # clubinfo = urllib.urlopen(url).read().split('\n')
     if len(clubinfo) < 10:
         # We didn't get anything of value
         clubinfo = False
     elif clubinfo[0][0] in ['{', '<']:
         # This isn't a naked CSV
         clubinfo = False
-    
     return clubinfo
         
         
 def getreportfromWHQ(report, district, altdistrict, tmyearpiece, month, thedate):
     url = makeurl(report, district, tmyearpiece, monthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
-    print url
     resp = getresponse(url)
     if not resp:
         if altdistrict:
@@ -118,6 +119,7 @@ if __name__ == "__main__":
     else:
         altdistrict = ''
             
+    # Compute dates
     enddate = datetime.strptime(cleandate(parms.enddate), '%Y-%m-%d').date()
     if parms.startdate:
         startdate = datetime.strptime(cleandate(parms.startdate), '%Y-%m-%d').date()
@@ -137,7 +139,6 @@ if __name__ == "__main__":
     today = date.today()
     yesterday = today - timedelta(1)
 
-    
     # Figure out what months we need info for:
     tmmonths = (7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6)
     # If it's January-July, we care about the TM year which started the previous July 1; otherwise, it's this year.
@@ -178,6 +179,22 @@ if __name__ == "__main__":
     finals = [monthend(m[0],m[1]) for m in months[-2:]]
     
     
+
+    
+    # Get today's data
+    print "Getting the latest performance info"
+    dolatest(district, altdistrict, finals, tmyearpiece)
+        
+        
+    # And get and write current club data unless told not to
+    if not parms.skipclubs:
+        url = "https://www.toastmasters.org/service/clubs/export/Downloads/Csv?district=%s&advanced=1&latitude=0&longitude=0" % clubdistrict
+        clubdata = getresponse(url)
+        if clubdata:
+            with open(makefilename('clubs', today), 'w') as f:
+                        f.write(''.join(clubdata).replace('\r',''))
+
+    sys.exit()   # Only today!
 
     # We assume all reports have identical availabilities, so we
     #    use the clubperf report to find the first available report

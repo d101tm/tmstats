@@ -133,7 +133,7 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running award tallies"
         ../awardtallies.py
         echo "Creating award files"
-        ../makeeducationals.py --since 30
+        ../makeeducationals.py --since 7/1
         convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
     fi
     
