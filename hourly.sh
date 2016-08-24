@@ -18,7 +18,6 @@ touch hourly       # We were here!
 # Handle training reports
 cd "$SCRIPTPATH"
 ./dotraining101.sh
-exit 0
 
         
 # Copy info from Dropbox
