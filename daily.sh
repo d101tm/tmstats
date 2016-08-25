@@ -35,7 +35,7 @@ monthof()
   themonth=$1
 }
 
-
+update="update"
 if [ "$1" = "force" ]
 then
     force="force"
@@ -44,7 +44,13 @@ elif [ "$1" = "test" ]
 then
     force="force"
     zip=""
+elif [ "$1" = "noupdate" ]
+then
+    update=""
+    force="force"
+    zip=""
 else
+    update="update"
     force=""
     zip="zip"
 fi
@@ -69,7 +75,12 @@ fi
 
 if [[ "$dorun" = "yes" ]] ; then
     # Run the daily cycle
-    ../updateit.sh "$*"
+    if [[ "$update" = "update" ]] ; then
+        ../updateit.sh "$*"
+    else
+        true  # Set return code to indicate success
+    fi
+
     let urc=$?
     let haveclubs=$(($urc & 4))  # 0 if we got them
     let haveperf=$(($urc & 2))   # 0 if we got the info
@@ -125,8 +136,13 @@ if [[ "$dorun" = "yes" ]] ; then
     ### Run the allstats report
     if (( $haveboth == 0 )) ; then
         echo "running allstats"
-        ../allstats.py 
-        echo "allstats rc = $?"
+        ../allstats.py --outfile performance.html
+        rc=$?
+        echo "allstats rc = $rc"
+        if [[ "$rc" == 0 ]] ; then
+            cp performance.html ~/www/files/reports/
+        fi
+
     fi
     
     if (( $haveperf == 0 )) ; then
@@ -146,6 +162,7 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running alignment-related"
         (cd ..;./tonight.sh)
     fi
+
 
         
     rm marker
