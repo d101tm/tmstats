@@ -4,7 +4,6 @@ if [ -e altdistrict.txt ] ; then
     echo "altdistrict exists" $(cat altdistrict.txt)
     ../createalignment.py 
 else
-    echo "No altdistrict"
     ../createalignment.py --trust
 fi
 ../alignmap.py --pindir pins --district 101 --testalign d101align.csv  --nomakedivisions
