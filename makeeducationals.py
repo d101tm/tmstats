@@ -32,8 +32,9 @@ knownawards = {
 }
 
 commtrack = ['CC', 'ACB', 'ACS', 'ACG']
-ldrtrack = ['CL', 'ALB', 'ALS', 'DTM']
-knowns = commtrack + ldrtrack
+ldrtrack = ['CL', 'ALB', 'ALS']
+dtm = ['DTM']
+knowns = commtrack + ldrtrack + dtm
 unknowns = set()
 
 class Award:
@@ -54,13 +55,13 @@ class Award:
 
 def printawards(awards, knownawards, k):
     if k in awards:
-        print '[et_pb_tab title="%s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="2em" body_line_height_tablet="2em" body_line_height_phone="2em"]' % knownawards[k]
+        print '[et_pb_accordion_item title="%s"]' % knownawards[k]
         print '<table>'
-        print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
+        #print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
         for each in sorted(awards[k], key=lambda x:x.key):
             print each
         print '</table>'
-        print '[/et_pb_tab]'
+        print '[/et_pb_accordion_item]'
 
 
 def makeCongratulations(count, district, timing, parms):
@@ -178,12 +179,14 @@ if __name__ == "__main__":
     # And now print the awards themselves.
 
     print '<div class="awardstable">'
-    print '[et_pb_tabs admin_label="awards" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]'
+    print '[et_pb_accordion admin_label="Awards" use_border_color="off" border_color="#ffffff" border_style="solid"]'
+    for k in dtm:
+        printawards(awards, knownawards, k)
     for k in commtrack:
         printawards(awards, knownawards, k)
     for k in ldrtrack:
         printawards(awards, knownawards, k)
-    print '[/et_pb_tabs]'
+    print '[/et_pb_accordion]'
     print '</div>'
 
 
