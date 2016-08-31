@@ -51,17 +51,17 @@ class Award:
             unknowns.add(award)
 
     def __repr__(self):
-        return '<tr class="awardline"><td class="awardmember">%s</td><td class="awardclub">%s</td></tr>' % (self.membername, self.clubname)
+        return '<tr class="noawardline"><td class="awardmember" width="48%%">%s</td><td class="awardclub" width="48%%">%s</td></tr>' % (self.membername, self.clubname)
 
 def printawards(awards, knownawards, k):
     if k in awards:
-        print '[et_pb_accordion_item title="%s"]' % knownawards[k]
+        print '[et_pb_toggle title="%s" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000000"]' % knownawards[k]
         print '<table>'
         #print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
         for each in sorted(awards[k], key=lambda x:x.key):
             print each
         print '</table>'
-        print '[/et_pb_accordion_item]'
+        print '[/et_pb_toggle]'
 
 
 def makeCongratulations(count, district, timing, parms):
@@ -179,14 +179,12 @@ if __name__ == "__main__":
     # And now print the awards themselves.
 
     print '<div class="awardstable">'
-    print '[et_pb_accordion admin_label="Awards" use_border_color="off" border_color="#ffffff" border_style="solid"]'
     for k in dtm:
         printawards(awards, knownawards, k)
     for k in commtrack:
         printawards(awards, knownawards, k)
     for k in ldrtrack:
         printawards(awards, knownawards, k)
-    print '[/et_pb_accordion]'
     print '</div>'
 
 
