@@ -12,7 +12,7 @@ def inform(*args, **kwargs):
           this message NOT to be printed. """
     suppress = kwargs.get('suppress', 1)
     file = kwargs.get('file', sys.stderr)
-    
+
     if parms.quiet < suppress:
         print >> file, ' '.join(args)
 
@@ -48,10 +48,10 @@ class Award:
         awards[award].append(self)
         if award not in knowns:
             unknowns.add(award)
-            
+
     def __repr__(self):
-        return '<tr><td width="48%%">%s</td><td width="48%%">%s</td></tr>' % (self.membername, self.clubname)
-        
+        return '<tr class="awardline"><td class="awardmember">%s</td><td class="awardclub">%s</td></tr>' % (self.membername, self.clubname)
+
 def printawards(awards, knownawards, k):
     if k in awards:
         print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
@@ -61,7 +61,7 @@ def printawards(awards, knownawards, k):
 
 def makeCongratulations(count, district, timing, parms):
     # Now, create the "Congratulations" slide
-        
+
     cmd = ['convert']
     cmd.append(parms.baseslide)
     cmd.append('-quality')
@@ -94,18 +94,18 @@ def makeCongratulations(count, district, timing, parms):
         cmd.append('"text %d,%d \'%s\'"' % (left, line, t))
         line += spacing
     cmd.append(parms.prefix + '.jpg')
-    
+
     return cmd
 
 if __name__ == "__main__":
- 
+
     import tmparms
     # Make it easy to run under TextMate
     if 'TM_DIRECTORY' in os.environ:
         os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
+
     reload(sys).setdefaultencoding('utf8')
-    
+
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
@@ -120,19 +120,19 @@ if __name__ == "__main__":
             help='Filename prefix for the .jpg and .html files created by this program (default: %(default)s)')
     parms.add_argument('--baseslide', type=str, default='ed-achieve-base.png',
             help='Slide to use as the base for the "Congratulations" slide')
-        
+
     # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
+    parms.parse()
+
+    # Connect to the database
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
-    
+
     # Your main program begins here.
     # Close stdout and reassign it to the output file
     sys.stdout.close()
     sys.stdout = open(parms.prefix + '.shtml', 'w')
-    
+
     clauses = []
     # Figure out the timeframe for the queries.
     today = datetime.datetime.today()
@@ -145,7 +145,7 @@ if __name__ == "__main__":
             year = year - 1
         clauses.append('MONTH(awarddate) = %d' % month)
         timestamp = 'during ' + datetime.date(year, month, 1).strftime('%B, %Y')
-        
+
     else:
         firstdate = datetime.datetime.strptime(tmutil.cleandate(parms.since), '%Y-%m-%d')
         clauses.append("awarddate >= '%s'" % firstdate.strftime('%Y-%m-%d'))
@@ -157,24 +157,23 @@ if __name__ == "__main__":
 
     if parms.district:
         clauses.append('district = %s' % parms.district)
-        
+
     curs.execute("SELECT COUNT(DISTINCT membername) FROM awards WHERE " + ' AND '.join(clauses))
     count = curs.fetchone()[0]
 
     curs.execute("SELECT membername, award, clubname, awarddate FROM awards WHERE " + ' AND '.join(clauses))
     for (membername, award, clubname, awarddate) in curs.fetchall():
         Award(membername, award, clubname, awarddate)
-        
 
-            
+
+
     print '<h3>Member Educationals %s</h3>' % timestamp
     print '<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals %s.  Will we see YOUR name here next?</p>' % timestamp
     print '<p>Achievements not shown here can be found on the Toastmasters International'
     print '<a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
-    
-    # And now print the narrow version
+
+    # And now print the awards themselves.
     print '<div class="awardstable">'
-    print '<style scoped="scoped" type="text/css"><!-- table,th,td {border-collapse:collapse; vertical-align:top; padding:1px; border:0.5px solid white; font-family: Arial, sans-serif;font-size: 12px;}  .awardname {background-color: #f2df74; font-size: 14pt; font-weight: bold; text-align: center;}--></style>'
     print '<table>'
     for k in commtrack:
         printawards(awards, knownawards, k)
@@ -183,6 +182,6 @@ if __name__ == "__main__":
     print '</table>'
     print '</div>'
 
-        
+
     cmd = makeCongratulations(count, parms.district, timestamp, parms)
     subprocess.call(' '.join(cmd),shell=True)
