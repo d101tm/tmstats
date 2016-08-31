@@ -51,7 +51,7 @@ class Award:
             unknowns.add(award)
 
     def __repr__(self):
-        return '<tr class="noawardline"><td class="awardmember" width="48%%">%s</td><td class="awardclub" width="48%%">%s</td></tr>' % (self.membername, self.clubname)
+        return '<tr class="awardline"><td class="awardmember" width="48%%">%s</td><td class="awardclub" width="48%%">%s</td></tr>' % (self.membername, self.clubname)
 
 def printawards(awards, knownawards, k):
     if k in awards:
