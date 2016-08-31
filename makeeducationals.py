@@ -54,9 +54,13 @@ class Award:
 
 def printawards(awards, knownawards, k):
     if k in awards:
+        print '[et_pb_tab title="%s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="2em" body_line_height_tablet="2em" body_line_height_phone="2em"]' % knownawards[k]
+        print '<table>'
         print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
         for each in sorted(awards[k], key=lambda x:x.key):
             print each
+        print '</table>'
+        print '[/et_pb_tab]'
 
 
 def makeCongratulations(count, district, timing, parms):
@@ -169,17 +173,17 @@ if __name__ == "__main__":
 
     print '<h3>Member Educationals %s</h3>' % timestamp
     print '<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals %s.  Will we see YOUR name here next?</p>' % timestamp
-    print '<p>Achievements not shown here can be found on the Toastmasters International'
-    print '<a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
+    print '<p>Achievements not shown here can be found on the Toastmasters International <a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
 
     # And now print the awards themselves.
+
     print '<div class="awardstable">'
-    print '<table>'
+    print '[et_pb_tabs admin_label="awards" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]'
     for k in commtrack:
         printawards(awards, knownawards, k)
     for k in ldrtrack:
         printawards(awards, knownawards, k)
-    print '</table>'
+    print '[/et_pb_tabs]'
     print '</div>'
 
 
