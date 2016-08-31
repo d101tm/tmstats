@@ -150,7 +150,12 @@ if [[ "$dorun" = "yes" ]] ; then
         ../awardtallies.py
         echo "Creating award files"
         ../makeeducationals.py --since 7/1
-        convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
+        rc=$?
+        echo "makeeducationals rc = $rc"
+        if [[ "$rc" == 0 ]] ; then
+            cp recentawards.* ~/www/files/reports
+        fi
+        # convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
     fi
     
     ### Run daily housekeeping
