@@ -156,6 +156,9 @@ if [[ "$dorun" = "yes" ]] ; then
             cp recentawards.* ~/www/files/reports
         fi
         # convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
+
+        echo "Running Stellar September"
+        ../stellar.py && cp stellar.* ~/www/files/reports
     fi
     
     ### Run daily housekeeping
