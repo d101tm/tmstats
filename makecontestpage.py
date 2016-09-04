@@ -140,10 +140,15 @@ if __name__ == "__main__":
     
     # Find all published contest events in the database
     
-    stmt = "SELECT ID from %s p INNER JOIN %s t ON p.ID = t.object_id WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s" % (poststable, prefix+'term_relationships')
+    stmt = "SELECT ID, post_title from %s p INNER JOIN %s t ON p.ID = t.object_id WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s" % (poststable, prefix+'term_relationships')
     curs.execute(stmt, (tax_contest,))
-    post_numbers = [l[0] for l in curs.fetchall()]
+    post_numbers = []
+    post_titles = {}
+    for (number, title) in curs.fetchall():
+        post_numbers.append(number)
+        post_titles[number] = title
     nums = ','.join(['%d' % p for p in post_numbers])
+    title_pattern = re.compile(r"""(Division|Area)\s+(.*)\s+Contest""")
     
     
             
@@ -157,13 +162,15 @@ if __name__ == "__main__":
     # @@TODO@@ We need to select only events in the current period.
     events = {}
     for p in posts.values():
-        try:
-            for area in p['Area'].split():
+        id = p['post_id']
+        m = re.match(title_pattern, post_titles[id])
+        if m:
+            for area in m.group(2).replace('/',' ').split():
                 events[area] = Event(p, area, venues)
                 if not events[area].EventURL:
                     print 'Area %s does not have a URL' % area
             
-        except KeyError:
+        else:
             print p['post_id'], 'does not have an Area'
             continue
             
