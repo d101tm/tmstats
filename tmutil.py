@@ -324,3 +324,21 @@ def showclubswithoutvalues(clubs, outfile):
     outfile.write("""  </tbody>
 </table>
 """)
+
+def ParseWPConfig(f):
+    """ Parses a WordPress configuration file 
+        Stolen from http://stackoverflow.com/questions/16881577/parse-php-file-variables-from-python-script """
+    
+    import re
+    define_pattern = re.compile(r"""\bdefine\(\s*('|")(.*)\1\s*,\s*('|")(.*)\3\)\s*;""")
+    assign_pattern = re.compile(r"""(^|;)\s*\$([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)\s*=\s*('|")(.*)\3\s*;""")
+
+
+    php_vars = {}
+    for line in f:
+        for match in define_pattern.finditer(line):
+            php_vars[match.group(2)]=match.group(4)
+        for match in assign_pattern.finditer(line):
+            php_vars[match.group(2)]=match.group(4)
+    return php_vars
+
