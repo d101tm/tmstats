@@ -19,6 +19,9 @@ touch hourly       # We were here!
 cd "$SCRIPTPATH"
 ./dotraining101.sh
 
+# Update contest page
+(cd data;../makecontestpage.py && cp contestschedule.html ~/files/reports/)
+
         
 # Copy info from Dropbox
 (cd data; ../copywebfiles.py)
