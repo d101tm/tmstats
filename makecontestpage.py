@@ -105,7 +105,7 @@ if __name__ == "__main__":
     conn.close()
 
     # Parse the configuration file
-    config = tmutil.ParseWPConfig(open(parms.configfile,'r'))
+    config = tmutil.parseWPConfig(open(parms.configfile,'r'))
     if parms.uselocal:
         config['DB_HOST'] = 'localhost'
 

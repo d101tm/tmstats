@@ -325,7 +325,7 @@ def showclubswithoutvalues(clubs, outfile):
 </table>
 """)
 
-def ParseWPConfig(f):
+def parseWPConfig(f):
     """ Parses a WordPress configuration file 
         Stolen from http://stackoverflow.com/questions/16881577/parse-php-file-variables-from-python-script """
     
