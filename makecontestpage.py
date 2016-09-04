@@ -70,15 +70,15 @@ class Event:
         if len(self.area) == 1:
             self.name = '<b>Division %s Contest</b>' % self.area
         else:
-            self.name = 'Area %s Contest' % self.area
+            self.name = '<b>Area %s Contest</b>' % self.area
         ptemplate = '%Y-%m-%d %H:%M:%S'
         start = datetime.strptime(self.EventStartDate, ptemplate)
         end = datetime.strptime(self.EventEndDate, ptemplate)
         self.date = start.strftime('%B %d').replace(' 0',' ')
         self.time = start.strftime(' %I:%M') + '-' + end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
-        self.addr = '<td>%(VenueVenue)s<br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
-        ans = """<tr><td>%(name)s<br><a href="%(EventURL)s">Register</a></td><td>%(date)s<br>%(time)s%(addr)s</tr>""" % self.__dict__
+        self.addr = '<td><b>%(VenueVenue)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
+        ans = """<tr><td>%(name)s<br><a href="%(EventURL)s">Register</a></td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
         return ans
 
 def tocome(what):
@@ -124,6 +124,7 @@ if __name__ == "__main__":
     config = ParseWPConfig(open(parms.configfile,'r'))
     if parms.uselocal:
         config['DB_HOST'] = 'localhost'
+
 
     # Connect to the WP database     
     conn = dbconn.dbconn(config['DB_HOST'], config['DB_USER'], config['DB_PASSWORD'], config['DB_NAME'])
