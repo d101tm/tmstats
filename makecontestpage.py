@@ -160,7 +160,6 @@ if __name__ == "__main__":
             continue
             
 
-            
     outfile = open(parms.outfile,'w')
     outfile.write("""<table border="1"><colgroup> <col> <col> <col> <col> </colgroup>
 <thead>
@@ -173,8 +172,8 @@ if __name__ == "__main__":
 <tbody>\n""")
     for div in sorted(divisions.keys()):
         d = divisions[div]
-        if d in events:
-            output(events[d], outfile)
+        if div in events:
+            output(events[div], outfile)
         else:
             output(tocome('<b>Division %s</b>' % div), outfile)
         pending = None
