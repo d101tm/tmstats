@@ -38,6 +38,7 @@ if __name__ == "__main__":
     # Define args and parse command line
     parms = tmparms.tmparms(description=__doc__)
     parms.add_argument('--finaldate', default='9/15', dest='finaldate', help="Final date for qualifying.")
+    parms.add_argument('--pct', default='75.0', dest='pct', type=float, help="Threshold to qualify (in percent)")
     parms.add_argument('--outfileprefix', default='stellar', dest='outfileprefix', type=str, help="Output file prefix.")
     parms.parse()
     finaldate = cleandate(parms.finaldate)
@@ -70,7 +71,7 @@ if __name__ == "__main__":
         if c[0] in specials:
             c[3] = specials[c[0]]
         club = myclub(*c)
-        if club.pct >= 75.0:
+        if club.pct >= parms.pct:
             clubs.append(myclub(*c))
     clubs.sort(key=lambda c: c.key())
     
