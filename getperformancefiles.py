@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # Handle the case of a district being reformed
     if parms.altdistrict:
         altdistrict = "%0.2d" % parms.altdistrict
-        url = "https://www.toastmasters.org/service/clubs/export/Downloads/Csv?district=%s&advanced=1&latitude=0&longitude=0" % district
+        url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % district
         if not getresponse(url):
             sys.stderr.write('No clubs found for District %s; using %s instead.' % (district, altdistrict))
             clubdistrict = altdistrict
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         
     # And get and write current club data unless told not to
     if not parms.skipclubs:
-        url = "https://www.toastmasters.org/service/clubs/export/Downloads/Csv?district=%s&advanced=1&latitude=0&longitude=0" % clubdistrict
+        url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % clubdistrict
         clubdata = getresponse(url)
         if clubdata:
             with open(makefilename('clubs', today), 'w') as f:
@@ -257,7 +257,7 @@ if __name__ == "__main__":
         
     # And get and write current club data unless told not to
     if not parms.skipclubs:
-        url = "https://www.toastmasters.org/service/clubs/export/Downloads/Csv?district=%s&advanced=1&latitude=0&longitude=0" % clubdistrict
+        url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % clubdistrict
         clubdata = getresponse(url)
         if clubdata:
             with open(makefilename('clubs', today), 'w') as f:
