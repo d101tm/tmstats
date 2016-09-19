@@ -38,8 +38,7 @@ conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 
 today = datetime.now()
-endmonth = '%d-%0.2d-01' % (today.year - 1 if (today.month < parms.toend) else 0, parms.toend)
-
+endmonth = '%d-%0.2d-01' % (today.year, parms.toend)
 outfile = parms.outfile
 
 # If there's monthly data for the end date, use it; otherwise, use
@@ -49,7 +48,7 @@ if curs.rowcount:
     final = True
 else:
     # No data returned; use today's data instead
-    curs.execute("SELECT clubnumber, clubname, asof, goalsmet, division, area FROM clubperf WHERE entrytype = 'L'")
+    curs.execute("SELECT clubnumber, clubname, asof, goalsmet, division, area FROM clubperf WHERE entrytype = 'L' AND district = %s", (parms.district,))
     final = False
 
 status = "final" if final else "updated daily"
