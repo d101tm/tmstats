@@ -26,11 +26,10 @@ class myclub:
 if __name__ == "__main__":
     import dbconn, tmparms, latest, os, sys, argparse
     from datetime import datetime
-    from tmutil import showclubswithvalues, cleandate
+    from tmutil import showclubswithvalues, cleandate, getClubBlock, gotodatadir
     
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+    gotodatadir()           # Move to the proper data directory
+
         
     # Get around unicode problems
     reload(sys).setdefaultencoding('utf8')
@@ -82,14 +81,11 @@ if __name__ == "__main__":
     outfile.close()
 
     # And write the paragraph form.
-    qualifiers = ['<b>%s</b>' % club.clubname for club in clubs]
+    qualifiers = getClubBlock(clubs)
     if len(clubs) == 0:
         res = ''
-    elif len(clubs) == 1:
-        res = '</p><p>%s has earned \\$50 in District Credit.\n' % qualifiers[0]
     else:
-        qualifiers[-1] = 'and ' + qualifiers[-1]
-        res = '</p><p>The clubs which have earned \\$50 in District Credit so far are: %s.\n' % ', '.join(qualifiers)
+        res = '</p><p><b>Congratulations to:</b> %s.\n' % qualifiers
 
     with open(parms.outfileprefix + '.text', 'w') as outfile:
         if res:
