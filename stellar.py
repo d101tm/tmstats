@@ -85,7 +85,7 @@ if __name__ == "__main__":
     if len(clubs) == 0:
         res = ''
     else:
-        res = '</p><p><b>Congratulations to:</b> %s.\n' % qualifiers
+        res = '<b>Congratulations to our Stellar Club%s:</b> %s.\n' % ('s' if len(clubs) > 1 else '', qualifiers)
 
     with open(parms.outfileprefix + '.text', 'w') as outfile:
         if res:
