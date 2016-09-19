@@ -325,6 +325,14 @@ def showclubswithoutvalues(clubs, outfile):
 </table>
 """)
 
+def getClubBlock(clubs):
+    """ Returns a text string representing the clubs.  Each club's name is
+        enclosed in a span of class 'clubname'. """
+    res = ['<span class="clubname">%s</span>' % club.clubname for club in sorted(clubs, key=lambda club: club.clubname.lower())]
+    if len(clubs) > 1:
+        res[-1] = 'and ' + res[-1]
+    return ', '.join(res)
+
 def parseWPConfig(f):
     """ Parses a WordPress configuration file 
         Stolen from http://stackoverflow.com/questions/16881577/parse-php-file-variables-from-python-script """
