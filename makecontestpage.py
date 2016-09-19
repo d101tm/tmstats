@@ -150,7 +150,6 @@ if __name__ == "__main__":
     stmt = "SELECT id, post_title from %s WHERE id IN (%s)" % (poststable, venuelist)
     curs.execute(stmt)
     for (id, title) in curs.fetchall():
-        print id, title
         venues[id]['VenueName'] = title
     
     
