@@ -196,17 +196,16 @@ if __name__ == "__main__":
             
 
     outfile = open(parms.outfile,'w')
-    outfile.write("""<table border="1"><colgroup> <col> <col> <col> <col> </colgroup>
+    outfile.write("""<table border="1"><colgroup> <col> <col> <col> </colgroup>
 <thead>
-<tr>
-<th>Area/Division</th>
-<th>When</th>
-<th>Where</th>
-</tr>
+
 </thead>
 <tbody>\n""")
+    outfile.write("<style>td.divhead {background: #F2DF74; font-size: 200%; font-weight: bold; text-align: center; border: none;}</style>\n")
     for div in sorted(divisions.keys()):
         d = divisions[div]
+        outfile.write('<tr><td colspan="3" class="divhead">Division %s</td></tr>\n' % div)
+        outfile.write('<tr><td><b>Area/Division</b></td><td><b>When</b></td><td><b>Where</b></td></tr>\n')
         if div in events:
             output(events[div], outfile)
         else:
