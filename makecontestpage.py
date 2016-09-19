@@ -38,7 +38,9 @@ class Division:
         return sorted(self.areas)
         
 class Event:
-    def __init__(self, contents, area, venues):
+    ptemplate = '%Y-%m-%d %H:%M:%S'
+    
+    def __init__(self, contents, area, venues, parms):
         for item in contents:
             ours = item.replace("_","")
             self.__dict__[ours] = contents[item]
@@ -48,6 +50,10 @@ class Event:
                 ours = item.replace("_","")
                 self.__dict__[ours] = venues[v][item]
         self.area = area
+        self.start = datetime.strptime(self.EventStartDate, self.ptemplate)
+        self.end = datetime.strptime(self.EventEndDate, self.ptemplate)
+        self.include = (self.start >= parms.start) and (self.end <= parms.end)
+        self.showreg = parms.showpast or (self.start > parms.now)
 
             
     def __repr__(self):
@@ -55,14 +61,15 @@ class Event:
             self.name = '<b>Division %s Contest</b>' % self.area
         else:
             self.name = '<b>Area %s Contest</b>' % self.area
-        ptemplate = '%Y-%m-%d %H:%M:%S'
-        start = datetime.strptime(self.EventStartDate, ptemplate)
-        end = datetime.strptime(self.EventEndDate, ptemplate)
-        self.date = start.strftime('%B %d').replace(' 0',' ')
-        self.time = start.strftime(' %I:%M') + '-' + end.strftime(' %I:%M %p')
+        self.date = self.start.strftime('%B %d').replace(' 0',' ')
+        self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
         self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
-        ans = """<tr><td>%(name)s<br><a href="%(EventURL)s">Register</a></td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
+        if self.showreg:
+            self.register = '<br><a href=%(EventURL)s">Register</a>' % self.__dict__
+        else:
+            self.register = ""
+        ans = """<tr><td>%(name)s%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
         return ans
 
 def tocome(what):
@@ -85,6 +92,9 @@ if __name__ == "__main__":
     parms.add_argument('--configfile', type=str, default='wp-config.php')
     parms.add_argument('--uselocal', action='store_true')
     parms.add_argument('--outfile', type=str, default='contestschedule.html')
+    parms.add_argument('--season', type=str, choices=['fall', 'spring', 'Fall', 'Spring', ''], default='')
+    parms.add_argument('--year', type=int, default=0)
+    parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
     # Add other parameters here
     parms.parse() 
    
@@ -93,6 +103,21 @@ if __name__ == "__main__":
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     curs = conn.cursor()
       
+    # Figure out the contest period.
+    parms.now = datetime.now()   
+    parms.start = parms.now
+    parms.end = parms.now  
+    if parms.now.month <= 6 or parms.season.lower() == 'spring':
+        print 'spring'
+        parms.start = parms.start.replace(month=1,day=1)
+        parms.end = parms.end.replace(month=6,day=30)
+    else:
+        parms.start = parms.start.replace(month=7,day=1)
+        parms.end = parms.end.replace(month=12,day=31)
+    if parms.year:
+        parms.start = parms.start.replace(year=parms.year)
+        parms.end = parms.end.replace(year=parms.year)
+        
     
     # We need a complete list of Areas and Divisions
     divisions = {}
@@ -153,16 +178,17 @@ if __name__ == "__main__":
         venues[id]['VenueName'] = title
     
     
-    # @@TODO@@ We need to select only events in the current period.
     events = {}
     for p in posts.values():
         id = p['post_id']
         m = re.match(title_pattern, post_titles[id])
         if m:
             for area in m.group(2).replace('/',' ').split():
-                events[area] = Event(p, area, venues)
-                if not events[area].EventURL:
-                    print 'Area %s does not have a URL' % area
+                this = Event(p, area, venues, parms)
+                if this.include:
+                    events[area] = this
+                    if not events[area].EventURL:
+                        print 'Area %s does not have a URL' % area
             
         else:
             print p['post_id'], 'does not have an Area'
