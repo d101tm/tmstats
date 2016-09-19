@@ -20,7 +20,7 @@ def getinfo(curs, table, post_list):
     for (post_id, meta_key, meta_value) in curs.fetchall():
         if post_id not in posts:
             posts[post_id] = {'post_id':post_id}
-        posts[post_id][meta_key] = meta_value
+        posts[post_id][meta_key] = meta_value.strip()
         if meta_key == '_EventVenueID':
             venue_numbers.add(meta_value)
         
@@ -61,7 +61,7 @@ class Event:
         self.date = start.strftime('%B %d').replace(' 0',' ')
         self.time = start.strftime(' %I:%M') + '-' + end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
-        self.addr = '<td><b>%(VenueVenue)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
+        self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
         ans = """<tr><td>%(name)s<br><a href="%(EventURL)s">Register</a></td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
         return ans
 
@@ -140,9 +140,19 @@ if __name__ == "__main__":
     # Now, get all the event information from the database
     (posts, venue_numbers) = getinfo(curs, prefix+'postmeta', nums)
     # Everything in the postmeta table is a string, including venue_numbers
+    venuelist = ','.join(venue_numbers)
     
     # And now, get the venue information.  
-    venues = getinfo(curs, prefix+'postmeta', ','.join(venue_numbers))[0]
+    venues = getinfo(curs, prefix+'postmeta', venuelist)[0]
+    
+    
+    # Patch in the actual name of the venue as VenueName
+    stmt = "SELECT id, post_title from %s WHERE id IN (%s)" % (poststable, venuelist)
+    curs.execute(stmt)
+    for (id, title) in curs.fetchall():
+        print id, title
+        venues[id]['VenueName'] = title
+    
     
     # @@TODO@@ We need to select only events in the current period.
     events = {}
@@ -173,7 +183,7 @@ if __name__ == "__main__":
 <tbody>\n""")
     for div in sorted(divisions.keys()):
         d = divisions[div]
-        if d in events:
+        if div in events:
             output(events[d], outfile)
         else:
             output(tocome('<b>Division %s</b>' % div), outfile)
