@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import dbconn, tmparms, os, sys
 from datetime import date, datetime
-from tmutil import showclubswithvalues
+from tmutil import showclubswithvalues, gotodatadir, getClubBlock
 import argparse
 
 class myclub:
@@ -21,16 +21,15 @@ class myclub:
 
 
 
-# Make it easy to run under TextMate
-if 'TM_DIRECTORY' in os.environ:
-    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
 
+# Standard setup
+gotodatadir()
 reload(sys).setdefaultencoding('utf8')
 
 # Handle parameters
 parms = tmparms.tmparms()
 parms.parser.add_argument("--toend", dest='toend', type=int, default=10)
-parms.parser.add_argument("--outfile", dest='outfile', type=argparse.FileType('w'), default='earlyachievers.html')
+parms.parser.add_argument("--outfileprefix", dest='outfileprefix', type=str, default='earlyachievers')
 
 parms.parse()
 
@@ -39,7 +38,7 @@ curs = conn.cursor()
 
 today = datetime.now()
 endmonth = '%d-%0.2d-01' % (today.year, parms.toend)
-outfile = parms.outfile
+
 
 # If there's monthly data for the end date, use it; otherwise, use
 #   today's data.
@@ -60,6 +59,9 @@ for c in curs.fetchall():
 winners = [c for c in clubs if c.goalsmet >= 5]
 almost = [c for c in clubs if c.goalsmet == 4]
 
+# Write the HTML version
+outfile = open(parms.outfileprefix + '.html', 'w')
+
 outfile.write("""<h3 id="early">Early Achievers</h3>
 <p>
 Clubs achieving 5 or more Distinguished Club Program (DCP) goals by October 31 earn $100 in District Credit.  This report is %s.</p>
@@ -74,5 +76,14 @@ if len(almost) > 0 and not final:
     outfile.write("<p>These clubs have achieved 4 of the 5 DCP goals needed to join the Early Achievers.</p>")
     showclubswithvalues(almost, "Goals", outfile)
 
-    
+outfile.close()
+
+# Write the text block version
+
+outfile = open(parms.outfileprefix + '.text', 'w')
+if len(winners) > 0:
+    outfile.write("<b>Congratulations to our Early Achiver Club%s</b>:  " % ('s' if len(winners) > 1 else ''))
+    outfile.write(getClubBlock(winners))
+    outfile.write('\n')
+outfile.close()   
 
