@@ -331,6 +331,8 @@ def getClubBlock(clubs):
     res = ['<span class="clubname">%s</span>' % club.clubname for club in sorted(clubs, key=lambda club: club.clubname.lower())]
     if len(clubs) > 1:
         res[-1] = 'and ' + res[-1]
+    if res:
+        res[-1] = res[-1] + '.'
     return ', '.join(res)
 
 def parseWPConfig(f):
