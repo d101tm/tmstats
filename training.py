@@ -283,11 +283,15 @@ if __name__ == "__main__":
     if parms.outlist:
         outlist = open(parms.outlist, 'w')
         if lucky:
-            outlist.write('The following ')
-            outlist.write('club' + ('s have' if len(lucky) > 1 else ' has') + ' qualified so far: ')
-            llist = [('<b>%s</b>' % club[2]) for club in sorted(lucky,key=lambda x:x[2])]
-            if len(llist) > 1:
-                llist[-1] = 'and ' + llist[-1]
-            outlist.write(', '.join(llist))
-            outlist.write('.\n')
+            outlist.write('<b>Congratulations to our Lucky 7 Club%s</b>: ' % 's' if len(lucky) > 1 else '')
+            
+            # Convert to be able to use the getClubBlock routine
+            class localclub:
+                def __init__(self, club):
+                    self.clubname = club[2]
+                    
+            luckyclubs = [localclub(club) for club in lucky]
+            
+            outlist.write(tmutil.getClubBlock(luckyclubs))
+           
         outlist.close()
