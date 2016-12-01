@@ -62,7 +62,7 @@ client = dropbox.client.DropboxClient(token)
 # The only files we care about are in the roster directory in Dropbox
 path = '/D101 Web Files'
 localpath = os.path.expanduser('~/files/')
-
+linkpath = 'http://files.d101tm.org/'
 
 has_more = True
 lastfile = None
@@ -94,6 +94,7 @@ while has_more:
             outfn = os.path.join(localpath,localfn)
             outpath = os.path.split(outfn)[0]
             print 'copying', filename, 'to', outfn
+            print 'find it at %s%s' % (linkpath, localfn)
             if not os.path.isdir(outpath):
                 print 'creating', outpath
                 os.makedirs(outpath)
