@@ -159,6 +159,9 @@ if [[ "$dorun" = "yes" ]] ; then
 
         echo "Running Stellar September"
         ../stellar.py && cp stellar.* ~/www/files/reports
+
+        echo "Running Early Achievers"
+        ../earlyachievers.py && cp earlyachievers.* ~/www/files/reports
     fi
     
     ### Run daily housekeeping
