@@ -66,7 +66,7 @@ class Event:
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
         self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
         if self.showreg:
-            self.register = '<br><a href=%(EventURL)s">Register</a>' % self.__dict__
+            self.register = '<br><a href="%(EventURL)s">Register</a>' % self.__dict__
         else:
             self.register = ""
         ans = """<tr><td>%(name)s%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
