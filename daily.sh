@@ -6,13 +6,16 @@ export TZ=PST8PDT
 # Ensure we're in the right virtual environment
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/lib
-. ~/python2.7.11/bin/activate
+[[ -e ~/python2.7.11/bin ]] && . ~/python2.7.11/bin/activate
 
 
 # Even if we're running in a weird shell, let's use THIS directory as the current directory
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 data="$SCRIPTPATH/data"
 cd "$data"   # Run in the data directory.
+
+export STATS_HOME="$SCRIPTPATH"
+export STATS_DATA="$STATS_HOME/data"
 
 touch daily       # We were here!
 
@@ -175,6 +178,18 @@ if [[ "$dorun" = "yes" ]] ; then
     fi
 
 
+    # Now, ingest rosters if need be
+    echo "Checking for a new roster"
+    ../getroster.sh
+
+    # And process award letters
+    if [[ "$(hostname)" == *.local ]]
+        then
+            echo "award letters not sent - not on proper host"
+    else
+            echo "Processing award letters"
+            ../sendawardmail.py
+    fi
         
     rm marker
     rm *.success 2>/dev/null
