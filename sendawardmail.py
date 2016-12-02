@@ -44,7 +44,6 @@ fullawardnames = {'CC':'Competent Communicator',
                   'DTM': 'Distinguished Toastmaster'}
                   
 paras = ['The communication and leadership skills you have gained will be of lifelong benefit.  Our Toastmasters Educational Program is also a lifelong learning process, as communication and leadership skills must be practiced!',
-         'You can find the requirements for your next award in the educational program summary on the District 4 Website at http://d4tm.org/Education/tracks.php',
          'Please email us if you have questions about the educational program.  We are here to help.  If you prefer a phone call, please send us your phone number and indicate the best time to call you.',
          'Good luck as you journey forward on the educational award path!',
          'Sincerely,',
