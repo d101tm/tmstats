@@ -160,7 +160,7 @@ if __name__ == "__main__":
 <tr><th><b>Training</b></th><th><b>When</b></th><th><b>Where</b></th></tr>
 </thead>
 <tbody>\n""")
-    for event in events:
+    for event in sorted(events,key=lambda l:l.start):
         output(event, outfile)
     
     outfile.write("""</tbody>
