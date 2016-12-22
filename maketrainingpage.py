@@ -51,11 +51,15 @@ class Event:
         self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
         self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
+        try:
+            self.special = '<br>%s' % self.eventspecialnote
+        except AttributeError:
+            self.special = ''
         if self.showreg and self.EventURL:
             self.register = '<br><a href="%(EventURL)s">Register</a>' % self.__dict__
         else:
             self.register = ""
-        ans = """<tr><td>%(name)s%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
+        ans = """<tr><td>%(name)s%(special)s%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
         return ans
 
     
