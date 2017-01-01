@@ -108,7 +108,6 @@ if __name__ == "__main__":
     parms.start = parms.now
     parms.end = parms.now  
     if parms.now.month <= 6 or parms.season.lower() == 'spring':
-        print 'spring'
         parms.start = parms.start.replace(month=1,day=1)
         parms.end = parms.end.replace(month=6,day=30)
     else:
