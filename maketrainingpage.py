@@ -30,7 +30,7 @@ def getinfo(curs, table, post_list):
 class Event:
     ptemplate = '%Y-%m-%d %H:%M:%S'
     
-    def __init__(self, name, contents, venues, parms):
+    def __init__(self, name, title, contents, venues, parms):
         for item in contents:
             ours = item.replace("_","")
             self.__dict__[ours] = contents[item]
@@ -44,6 +44,7 @@ class Event:
         self.include = (self.start >= parms.start) and (self.end <= parms.end)
         self.showreg = parms.showpast or (self.start > parms.now)
         self.name = name
+        self.title = title
 
             
     def __repr__(self):
@@ -51,11 +52,15 @@ class Event:
         self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
         self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
+        try:
+            self.special = '<br>%s' % self.eventspecialnote
+        except AttributeError:
+            self.special = ''
         if self.showreg and self.EventURL:
-            self.register = '<br><a href="%(EventURL)s">Register</a>' % self.__dict__
+            self.register = ' | <a href="%(EventURL)s">Register</a>' % self.__dict__
         else:
             self.register = ""
-        ans = """<tr><td>%(name)s%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
+        ans = """<tr><td><b>%(name)s</b>%(special)s<br><a href="/%(title)s">More Information</a>%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
         return ans
 
     
@@ -119,13 +124,15 @@ if __name__ == "__main__":
     
     # Find all published training events in the database
     
-    stmt = "SELECT ID, post_title from %s p INNER JOIN %s t ON p.ID = t.object_id WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s" % (poststable, prefix+'term_relationships')
+    stmt = "SELECT ID, post_title, post_name from %s p INNER JOIN %s t ON p.ID = t.object_id WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s" % (poststable, prefix+'term_relationships')
     curs.execute(stmt, (tax_training,))
     post_numbers = []
     post_titles = {}
-    for (number, title) in curs.fetchall():
+    post_names = {}
+    for (number, title, name) in curs.fetchall():
         post_numbers.append(number)
         post_titles[number] = title
+        post_names[number] = name
     nums = ','.join(['%d' % p for p in post_numbers])
     
     
@@ -149,18 +156,18 @@ if __name__ == "__main__":
     events = []
     for p in posts.values():
         id = p['post_id']
-        this = Event(post_titles[id], p, venues, parms)
+        this = Event(post_titles[id], post_names[id], p, venues, parms)
         if this.include:
             events.append(this)
             
 
     outfile = open(parms.outfile,'w')
-    outfile.write("""<table border="1"><colgroup> <col> <col> <col> </colgroup>
+    outfile.write("""<table class="d101eventtable"><colgroup> <col> <col> <col> </colgroup>
 <thead>
 <tr><th><b>Training</b></th><th><b>When</b></th><th><b>Where</b></th></tr>
 </thead>
 <tbody>\n""")
-    for event in events:
+    for event in sorted(events,key=lambda l:l.start):
         output(event, outfile)
     
     outfile.write("""</tbody>
