@@ -1,7 +1,8 @@
 #!/bin/sh
+export LIB=$LIB:/home/d101tm/lib/lib
 cd data
 ../createalignment.py
-../alignmap.py --pindir pins --district 101 --testalign d101align.csv  --nomakedivisions
+../alignmap.py --pindir pins --district 101 --testalign d101align.csv --makedivisions
 ../allstats.py --outfile d101proforma.html --newAlign d101align.csv
 ../makelocationreport.py --color --infile d101align.csv
 ../makealignmentpage.py > d101index.html
