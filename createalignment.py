@@ -207,8 +207,11 @@ if __name__ == "__main__":
     outclubs = sorted(ourclubs.values(),key=lambda club:club.newarea+club.clubnumber.rjust(8))
     # Omit suspended clubs
     for c in outclubs:
-        if c.clubstatus != 'Suspended':
-            writer.writerow(c.__dict__)
+        try:
+            if c.clubstatus != 'Suspended':
+                writer.writerow(c.__dict__)
+        except:
+            pass
     outfile.close()
         
     
