@@ -148,12 +148,17 @@ curs = conn.cursor()
 # Get all clubs
 clubs = Club.getClubsOn(curs)
 
+
 if parms.newAlignment:
     overrideClubs(clubs, parms.newAlignment)
     
 # Remove suspended clubs
 clubs = removeSuspendedClubs(clubs, curs)
 
+# Remove clubs from outside our District
+for c in clubs.keys():
+    if int(clubs[c].district) != parms.district:
+        del clubs[c]
 
 # Now, assign clubs to Areas and Divisions
 
