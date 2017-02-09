@@ -112,9 +112,10 @@ if __name__ == "__main__":
     parms.add_argument('report', type=str, nargs='?', default='latesttraining.html', help='Name of the training report file, default is %(default)s')
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--require9a', action='store_true', help='If true, only clubs which achieved goal 9a (4 or more officers trained during first cycle) are eligible.')
+    parms.add_argument('--bonus9a', action='store_true', help='If true, clubs get a bonus reward if they trained at least 4 officers in the first cycle.')
     parms.add_argument('--reward', type=str, default='$50 in District Credit')
+    parms.add_argument('--bonusreward', type=str, default='$100 in District Credit')
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
-    parms.add_argument('--outlist', type=str, default='lucky7frag.html', help='File to contain a narrative format of qualiftying clubs')
     # Add other parameters here
     parms.parse() 
    
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     # Your main program begins here.
     clubs = Club.getClubsOn(curs)
     
-    if parms.require9a:
+    if parms.require9a or parms.bonus9a:
         # Find the clubs which qualified in round 1
         curs.execute("SELECT clubnumber FROM clubperf INNER JOIN (SELECT MAX(asof) AS m FROM clubperf) ao ON ao.m = clubperf.asof WHERE offtrainedround1 >= 4")
         qualified = set()
@@ -248,50 +249,35 @@ if __name__ == "__main__":
     # Now, create the Lucky 7 file
 
     outfile = open('lucky7.html', 'w')
-    if parms.require9a:
-        qual = ' and which trained at least 4 officers in the June-August cycle'
-    else:
-        qual = ''
-    outfile.write("""<p>Clubs which have all 7 officers trained before the end of %s%s receive %s.  This report was updated on %s.</p>
-    """ % (parms.lastmonth, qual, parms.reward, datetime.today().strftime('%m/%d/%Y')))
 
+    bonus = []
+    if lucky:
+        # Do we need to split up clubs?
+        if parms.bonus9a:
+            onlylucky = []
+            for club in lucky:
+                if club[3] in qualified:
+                    bonus.append(club)
+                else:
+                    onlylucky.append(club)
+            lucky = onlylucky
 
-    # And create the fragment
-    outfile.write("""<table class="DSSbtable">
-      <thead>
-        <tr valign="top">
-          <th><strong>Area</strong></th>
-          <th><strong>Club</strong></th>
-        </tr> 
-      </thead>
-      <tbody>
-    """)
-
-    # Single-column listing
-    for club in lucky:
-        outfile.write('<tr>\n')
-        outfile.write('  <td>%s%d</td><td>%s</td>\n' % (club[0], int(club[1]), club[2]))
-        outfile.write('  <td>&nbsp;</td>\n')
-        outfile.write('</tr>\n')
-
-    outfile.write("""  </tbody>
-    </table>
-    """)
-    outfile.close()
-
-    # And the list version
-    if parms.outlist:
-        outlist = open(parms.outlist, 'w')
-        if lucky:
-            outlist.write('<b>Congratulations to our Lucky 7 Club%s</b>: ' % 's' if len(lucky) > 1 else '')
-            
-            # Convert to be able to use the getClubBlock routine
-            class localclub:
-                def __init__(self, club):
-                    self.clubname = club[2]
+    # Set up to use getClubBlock
+    class localclub:
+        def __init__(self, club):
+            self.clubname = club[2]
                     
-            luckyclubs = [localclub(club) for club in lucky]
-            
-            outlist.write(tmutil.getClubBlock(luckyclubs))
-           
-        outlist.close()
+    if lucky:
+        luckyclubs = [localclub(club) for club in lucky]
+        outfile.write('<p><b>Congratulations</b> to ')
+        outfile.write(tmutil.getClubBlock(luckyclubs))
+        outfile.write(' for earning %s.</p>' % parms.reward)
+     
+    if bonus:
+        luckyclubs = [localclub(club) for club in bonus]
+        outfile.write('<p><b>Congratulations</b> to ')
+        outfile.write(tmutil.getClubBlock(luckyclubs))
+        outfile.write(' for earning %s.</p>' % parms.bonusreward)
+
+    outfile.write("""<p>Information current as of %s.</p>
+    """ % ( datetime.today().strftime('%m/%d/%Y'),))
