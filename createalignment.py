@@ -148,13 +148,14 @@ if __name__ == "__main__":
     ourclubs = {}
     
     # Now, add info from clubperf (and create club.oldarea for each club)
-    curs.execute('SELECT clubnumber, color, goalsmet, activemembers FROM clubperf WHERE entrytype = "L"')
-    for (clubnumber, color, goalsmet, activemembers) in curs.fetchall():
+    curs.execute('SELECT clubnumber, color, goalsmet, activemembers, clubstatus FROM clubperf WHERE entrytype = "L"')
+    for (clubnumber, color, goalsmet, activemembers, clubstatus) in curs.fetchall():
         c = clubs[str(clubnumber)]
         c.color = color
         c.goalsmet = goalsmet
         c.activemembers = activemembers
         c.oldarea = c.division + c.area
+        c.clubstatus = clubstatus
     
     if parms.trust:
         # Remove any clubs not in the District
@@ -204,8 +205,13 @@ if __name__ == "__main__":
     writer = csv.DictWriter(outfile, fieldnames=outfields, extrasaction='ignore')
     writer.writeheader()
     outclubs = sorted(ourclubs.values(),key=lambda club:club.newarea+club.clubnumber.rjust(8))
+    # Omit suspended clubs
     for c in outclubs:
-        writer.writerow(c.__dict__)
+        try:
+            if c.clubstatus != 'Suspended':
+                writer.writerow(c.__dict__)
+        except:
+            pass
     outfile.close()
         
     

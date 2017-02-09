@@ -6,6 +6,7 @@ import os, sys
 from math import pi, sin, cos
 import pprint
 import datetime
+import re
 
 # temphackfix
 from requests.adapters import HTTPAdapter
@@ -193,6 +194,25 @@ def updateclubstocurrent(conn, clubs, apikey):
     for (clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude)  in c.fetchall():
         print (clubnumber, clubname)
         print (address, city, state, zip)
+        oldaddress = address
+        # Let's clean up some common problems in the address
+        address = address.replace('Community Room','')
+        address = address.replace('SW2-130','')
+        if 'Lucas Hall' in address:
+            address = 'Lucas Hall'
+        patterns = (r'Classroom [A-Za-z0-9-]*',
+                    r'Room [A-Za-z0-9-]*',
+                    r'Rm [A-Za-z0-9-]*',
+                    r'Suite [A-Za-z0-9-]*')
+        patterns = [re.compile(p, re.IGNORECASE) for p in patterns]
+        
+        for p in patterns:
+            address = p.sub('', address)
+            
+        if address != oldaddress:
+            print ('rewrote to', address)
+
+                    
         gres = gmaps.geocode("%s, %s, %s %s" % (address, city, state, zip))
         pprint.pprint(gres)
         print ("=================")

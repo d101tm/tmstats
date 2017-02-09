@@ -23,6 +23,8 @@ cd "$SCRIPTPATH"
 (cd data;../makecontestpage.py && cp contestschedule.html ~/files/reports/)
 (cd data;../maketrainingpage.py && cp trainingschedule.html ~/files/reports/)
 
-        
+# Update open house results
+(cd data;../openhouse.py && cp openhouseclubs.html ~/files/reports/)
+
 # Copy info from Dropbox
 (cd data; ../copywebfiles.py)
