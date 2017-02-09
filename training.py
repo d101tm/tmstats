@@ -279,5 +279,6 @@ if __name__ == "__main__":
         outfile.write(tmutil.getClubBlock(luckyclubs))
         outfile.write(' for earning %s.</p>' % parms.bonusreward)
 
-    outfile.write("""<p>Information current as of %s.</p>
+    if (lucky or bonus):
+        outfile.write("""<p>Training data was last updated on %s.</p>
     """ % ( datetime.today().strftime('%m/%d/%Y'),))
