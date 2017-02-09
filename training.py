@@ -131,7 +131,7 @@ if __name__ == "__main__":
         curs.execute("SELECT clubnumber FROM clubperf INNER JOIN (SELECT MAX(asof) AS m FROM clubperf) ao ON ao.m = clubperf.asof WHERE offtrainedround1 >= 4")
         qualified = set()
         for l in curs.fetchall():
-            qualified.add(l[0])
+            qualified.add('%d' % l[0])
             
     if not parms.lastmonth:
         thismonth = datetime.today().month
