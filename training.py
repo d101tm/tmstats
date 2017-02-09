@@ -266,18 +266,31 @@ if __name__ == "__main__":
     class localclub:
         def __init__(self, club):
             self.clubname = club[2]
-                    
+
+    if parms.bonus9a and parms.lastmonth == 'February':
+     
+        outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.bonusreward)
+        if bonus:
+            luckyclubs = [localclub(club) for club in bonus]
+            outfile.write('<p><b>Congratulations</b> to ')
+            outfile.write(tmutil.getClubBlock(luckyclubs))
+            outfile.write(' for earning %s.</p>\n' % parms.bonusreward)
+
+        outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period but trained fewer than 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
+
+    elif parms.require9a and parms.lastmonth == 'February':
+        outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
+
+    else:
+        outfile.write('<p>Clubs which have all 7 Officers trained earn <b>%s</b>.</p>\n' % parms.reward)
+ 
+
+
     if lucky:
         luckyclubs = [localclub(club) for club in lucky]
         outfile.write('<p><b>Congratulations</b> to ')
         outfile.write(tmutil.getClubBlock(luckyclubs))
-        outfile.write(' for earning %s.</p>' % parms.reward)
-     
-    if bonus:
-        luckyclubs = [localclub(club) for club in bonus]
-        outfile.write('<p><b>Congratulations</b> to ')
-        outfile.write(tmutil.getClubBlock(luckyclubs))
-        outfile.write(' for earning %s.</p>' % parms.bonusreward)
+        outfile.write(' for earning %s.</p>\n' % parms.reward)
 
     if (lucky or bonus):
         outfile.write("""<p>Training data was last updated on %s.</p>
