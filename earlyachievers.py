@@ -84,6 +84,7 @@ outfile = open(parms.outfileprefix + '.text', 'w')
 if len(winners) > 0:
     outfile.write("<b>Congratulations to our Early Achiver Club%s</b>:  " % ('s' if len(winners) > 1 else ''))
     outfile.write(getClubBlock(winners))
+    outfile.write('.')
     outfile.write('\n')
 outfile.close()   
 
