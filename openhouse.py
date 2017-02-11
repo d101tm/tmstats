@@ -116,7 +116,7 @@ if __name__ == "__main__":
             return ''
         if len(winners) == 1:
             return '<p>Congratulations to <span class="clubname">%s</span> for earning %s in District Credit.</p>\n' % (winners[0].clubname, amount)
-        return '<p>Congratulations to these clubs for earning %s in District Credit: %s</p>.\n' % (amount, tmutil.getClubBlock(winners))
+        return '<p>Congratulations to these clubs for earning %s in District Credit: %s.</p>\n' % (amount, tmutil.getClubBlock(winners))
         
     with open(parms.outfile, 'w') as outfile:
         outfile.write(makecongrat("$25", level0clubs))
