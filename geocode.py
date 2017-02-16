@@ -194,12 +194,12 @@ def updateclubstocurrent(conn, clubs, apikey):
     for (clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude)  in c.fetchall():
         print (clubnumber, clubname)
         print (address, city, state, zip)
-        oldaddress = address
-        # Let's clean up some common problems in the address
-        address = address.replace('Community Room','')
-        address = address.replace('SW2-130','')
-        if 'Lucas Hall' in address:
-            address = 'Lucas Hall'
+        gaddress = address
+        # Let's clean up some common problems in the gaddress
+        gaddress = gaddress.replace('Community Room','')
+        gaddress = gaddress.replace('SW2-130','')
+        if 'Lucas Hall' in gaddress:
+            gaddress = 'Lucas Hall'
         patterns = (r'Classroom [A-Za-z0-9-]*',
                     r'Room [A-Za-z0-9-]*',
                     r'Rm [A-Za-z0-9-]*',
@@ -207,13 +207,13 @@ def updateclubstocurrent(conn, clubs, apikey):
         patterns = [re.compile(p, re.IGNORECASE) for p in patterns]
         
         for p in patterns:
-            address = p.sub('', address)
+            gaddress = p.sub('', gaddress)
             
-        if address != oldaddress:
-            print ('rewrote to', address)
+        if gaddress != address:
+            print ('rewrote to', gaddress)
 
                     
-        gres = gmaps.geocode("%s, %s, %s %s" % (address, city, state, zip))
+        gres = gmaps.geocode("%s, %s, %s %s" % (gaddress, city, state, zip))
         pprint.pprint(gres)
         print ("=================")
         club = myclub(clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude).update(gres, c)
