@@ -102,7 +102,7 @@ if __name__ == "__main__":
     
     elif filetype in ['.csv']:
         csvfile = open(parms.roster, 'rbU')
-        reader = UnicodeReader(csvfile, encoding='Latin-1')
+        reader = UnicodeReader(csvfile, encoding='utf-8')
 
         # Get the field names and normalize them; find the name columns
         fieldnames = normalizefieldnames(reader.next())
