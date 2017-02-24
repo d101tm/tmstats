@@ -2,10 +2,10 @@
 
 
 cd data
-# ZZrm latesttraining.html 2>/dev/null
+# rm latesttraining.html 2>/dev/null
 ../getfromdropbox.py --outfile latesttraining.html --namefile trainingfileinfo.txt --cfile trainingcursor.txt --ext htm html --dir Training  || exit $?
 echo $(date +"%B %e") | sed 's/  / /' > trainingreportdate.txt
-../training.py latesttraining.html || exit $?
+../training.py latesttraining.html --bonus9a || exit $?
 export TARGET=$HOME/files/reports
 
 if [ -d $TARGET ] ; then  
@@ -13,8 +13,7 @@ if [ -d $TARGET ] ; then
     do
         cp $name $TARGET/${name/report/}
     done
-    cp lucky7.html $TARGET/lucky7.table
-    cp lucky7frag.html $TARGET/lucky7frag.html
+    cp lucky7.html $TARGET/lucky7.html
 
 
 
@@ -32,7 +31,7 @@ ${filemsg}.
 See http://files.d101tm.org/reports/training.html
 There is an Excel version of the report at http://files.d101tm.org/reports/training.xlsx
 
-The "Lucky 7" report is at http://files.d101tm.org/reports/lucky7.table  (it's an HTML fragment)
+The "Lucky 7" report is at http://files.d101tm.org/reports/lucky7.html  (it's an HTML fragment)
 EOF
 
 ../sendmail.py --textfile trainingmessage.txt --to quality@d101tm.org --bcc david@d2j.us --subject "$filemsg"
