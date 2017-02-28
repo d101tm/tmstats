@@ -160,11 +160,14 @@ if [[ "$dorun" = "yes" ]] ; then
         fi
         # convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
 
-        echo "Running Stellar September"
-        ../stellar.py && cp stellar.* ~/www/files/reports
+        # Run renewals when appropriate
+        if (( $(date +'%m') > 6 )); then program="stellar"; else program="madness"; fi
+        echo "Running seasonal renewals: $program"
+        ../renewals.py --program "$program"  && cp ${program}.* ~/www/files/reports
 
         echo "Running Early Achievers"
         ../earlyachievers.py && cp earlyachievers.* ~/www/files/reports
+
     fi
     
     ### Run daily housekeeping
