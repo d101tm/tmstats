@@ -3,39 +3,12 @@
     Uses "alignment.xlsx" and the latest available files in the data directory
     """
 
-import xlsxwriter, csv, sys, os, codecs, cStringIO, re
+import xlsxwriter, csv, sys, os, codecs, cStringIO, re, sets
 import dbconn, tmparms
 from datetime import datetime
 from simpleclub import Club
+from tmutil import gotodatadir
 
-class UnicodeWriter:
-    """
-    A CSV writer which will write rows to CSV file "f",
-    which is encoded in the given encoding.
-    """
-
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-        self.writer.writerow([s.encode("utf-8") for s in row])
-        # Fetch UTF-8 output from the queue ...
-        data = self.queue.getvalue()
-        data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
-        data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
-
-    def writerows(self, rows):
-        for row in rows:
-            self.writerow(row)
 
 def normalize(s):
     if s:
@@ -44,24 +17,22 @@ def normalize(s):
         return
 
 
- 
-import tmparms
-# Make it easy to run under TextMate
-if 'TM_DIRECTORY' in os.environ:
-    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-    
+# Set up
+gotodatadir()    
 reload(sys).setdefaultencoding('utf8')
 
 # Handle parameters
 parms = tmparms.tmparms()
 parms.parser.add_argument("--date", dest='date', default=datetime.today().strftime('%Y-%m-%d'))
+parms.add_argument('--infile', default='d101align.csv')
+parms.add_argument('--outfile', default='d101migration.html')
+parms.add_argument('--color', action='store_true')
 parms.parse()
-#print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
 conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
 curs = conn.cursor()
 
-# Get club information from the database as of the date requested (or today)
-clubs = Club.getClubsOn(curs)
+# Get club information from the database as of today
+clubs = Club.getClubsOn(curs, date=parms.date)
 
 # Now, add relevant club performance information.  If there are clubs in the 
 # performance data which aren't in the master list from TMI, note it and add
@@ -69,8 +40,7 @@ clubs = Club.getClubsOn(curs)
 
 perffields = ['clubnumber', 'clubname', 'district', 'area', 'division', 'eligibility', 'color', 'membase', 'activemembers', 'goalsmet']
 
-print parms.date
-curs.execute("SELECT clubnumber, clubname, district, area, division, clubstatus as eligibility, color, membase, activemembers, goalsmet FROM clubperf WHERE asof = %s", (parms.date,))
+curs.execute("SELECT clubnumber, clubname, district, area, division, clubstatus as eligibility, color, membase, activemembers, goalsmet FROM clubperf WHERE entrytype = 'L' and district = %s", (parms.district,))
 
 for info in curs.fetchall():
     clubnum = Club.stringify(info[0])
@@ -84,136 +54,27 @@ for info in curs.fetchall():
         
 # Now patch in suspension dates
 
-curs.execute("SELECT clubnumber, suspdate FROM distperf WHERE asof = %s", (parms.date,))
-for (clubnum, suspdate) in curs.fetchall():
+curs.execute("SELECT clubnumber, suspenddate FROM distperf WHERE entrytype = 'L' and district = %s", (parms.district,))
+for (clubnum, suspenddate) in curs.fetchall():
     if clubnum in clubs:
-        clubs[clubnum].addvalues(['suspended'],[suspdate])
+        clubs[clubnum].addvalues(['suspended'],[suspenddate])
       
            
-
-
-
-
-# Now, onward to the alignment.  All we care about is the new area and new division, if any.
-csvfile = open('alignment.csv', 'rbU')
-r = csv.reader(csvfile)
-
-# This is terrible, but I'm hard-coding the layout of the file.
-clubcol = 4
-cdatecol = 5
-newdistcol = 7
-newareacol = 8
-newdivcol = 9
-
-for row in r:
-    clubnum = Club.fixcn(row[clubcol])
+# And read in the alignment.  
+reader = csv.DictReader(open(parms.infile, 'rbU'))
+alignfields = ['newarea', 'newdivision', 'likelytoclose', 'meetingday', 'meetingtime', 'place', 'address', 'city',
+        'state', 'zip']
+for row in reader:
+    newarea = row['newarea']
+    row['newarea'] = newarea[1:]
+    row['newdivision'] = newarea[0]
     try:
-        c = clubs[clubnum]
-        nd = row[newdistcol].strip()
-        if nd:
-            c.newdistrict = nd
-        else:
-            c.newdistrict = c.district
-        ndiv = row[newdivcol].strip()
-        if ndiv:
-            c.newdivision = ndiv
-        else:
-            c.newdivision = c.division
-        narea = row[newareacol].strip()
-        if narea:
-            c.newarea = narea
-        else:
-            c.newarea = c.area
+        club = clubs[Club.stringify(row['clubnumber'])]
     except KeyError:
-        pass   # Don't care about lost clubs
-
-csvfile.close()
-
-# We're not done...now we need to add new clubs.
-csvfile = open('newclubs.csv', 'rbU')
-r = csv.reader(csvfile)
-
-# This is terrible, but I'm hard-coding the layout of the file.
-clubcol = 4
-cdatecol = 3
-newdistcol = 6
-newareacol = 7
-newdivcol = 8
-
-for row in r:
-    clubnum = Club.fixcn(row[clubcol])
-    try:
-        c = clubs[clubnum]
-        nd = row[newdistcol].strip()
-        if nd:
-            c.newdistrict = nd
-        else:
-            c.newdistrict = c.district
-        ndiv = row[newdivcol].strip()
-        if ndiv:
-            c.newdivision = ndiv
-        else:
-            c.newdivision = c.division
-        narea = row[newareacol].strip()
-        if narea:
-            c.newarea = narea
-        else:
-            c.newarea = c.area
-        ncd = row[cdatecol].strip()
-        if ncd:
-            c.charterdate = ncd
-    except KeyError:
-        pass   # Don't care about lost clubs
-
-csvfile.close()
-
-
-
-# Add the new information to the file...at the front
-finalheaders = ['newdistrict', 'newdivision', 'newarea']
-finalheaders.extend(Club.fieldnames)
-
-# Swap order
-areacol = finalheaders.index('area')
-divisioncol = finalheaders.index('division')
-finalheaders[areacol] = 'division'
-finalheaders[divisioncol] = 'area'
-
-
-outfile = open('snapshot.csv', 'wb')
-w = UnicodeWriter(outfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-w.writerow(finalheaders)
-def getkey(x):
-    key = ''
-    try:
-        key += x.newdistrict
-    except AttributeError:
-        key += ' '
-    try:
-        key += x.newdivision
-    except AttributeError:
-        key += ' '
-    try:
-        key += x.newarea
-    except AttributeError:
-        key += ' '
-    try:
-        key += x.clubnumber.zfill(8)
-    except AttributeError:
-        key += '00000000'
-    return key
-
-for c in sorted(clubs.values(), key=lambda x:getkey(x)):
-    row = []
-    for it in finalheaders:
-        try:
-            row.append(c.__dict__[it])
-        except KeyError:
-            row.append('')
-    row = ['%s' % x for x in row]
-    w.writerow(row)
-
-outfile.close()
+        print 'Club %s (%d) is new.' % (row['clubname'], row['clubnumber'])
+        continue
+    alignvalues = [row[p] for p in alignfields]
+    club.addvalues(alignvalues, alignfields)
 
 # Assign clubs to their new areas.  If they've changed, also assign to the area they're leaving
 gonefrom = {}
@@ -236,23 +97,26 @@ for c in clubs.values():
         gonefrom[old] = []
     if new not in newareas:
         newareas[new] = []
-    if c.eligibility != 'Suspended':
-        newareas[new].append(c)
-        if old != new:
+    try:
+        if c.eligibility != 'Suspended':
+            newareas[new].append(c)
+            if old != new:
+                gonefrom[old].append(c)
+            if c.newdivision not in divs:
+                divs[c.newdivision] = {}
+            divs[c.newdivision][new] = new
+        else:
             gonefrom[old].append(c)
-        if c.newdivision not in divs:
-            divs[c.newdivision] = {}
-        divs[c.newdivision][new] = new
-    else:
-        gonefrom[old].append(c)
+    except AttributeError:
+        print 'no eligibility for', c.clubname
 
-# Now, let's create an HTML file...because I love HTML files
-hout = open('snapshot.html', 'w')
+# Now, create the output file
+hout = open(parms.outfile, 'w')
 hout.write(""" <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Style-Type" content="text/css">
-<title>District 4 Realignment</title>
+<title>District Realignment</title>
 <style type="text/css">
 
 
@@ -362,19 +226,28 @@ for div in sorted(divs.keys()):
     clubcount = 0
     basecount = 0
     membercount = 0
-    hout.write('<h1 %s name="div%s">Division %s</h1>\n' % (h1class, div, div))
+    if (div.strip()):
+        hout.write('<h1 %s name="div%s">Division %s</h1>\n' % (h1class, div, div))
+    else:
+        hout.write('<h1 %s>Unassigned Clubs</h1>\n' % (h1class,))
     h1class = 'class="divh1"'  # Don't have a blank page first
     hout.write('  <table class="divtable">\n')
-    hout.write('  <thead><tr><td class="divname" colspan="2">Division %s</td></tr></thead>\n' % div)
+    hout.write('  <thead><tr>\n')
+    if (div.strip()):
+        hout.write('  <td class="divname" colspan="2">Division %s</td>\n' % div)
+    else:
+        hout.write('  <td class="divname" colspan="2">Unassigned Clubs</td>\n')
+    hout.write('</tr></thead>\n')
     hout.write('    <tbody><!--begin areas-->\n')
     for a in areas:
         hout.write('  <tr><td>\n')
         hout.write('    <table class="areatable">\n')
         hout.write('      <colgroup span="2">\n')
-        hout.write('      <thead>\n')
-        hout.write('        <tr><td class="areaname" colspan="2">Area %s</td></tr>\n' % a)
-        hout.write('        <tr><td class="newhead">New Alignment</td><td class="gonehead">Clubs Leaving Area</td></tr>\n')
-        hout.write('      </thead>\n')
+        if a.strip():
+            hout.write('      <thead>\n')
+            hout.write('        <tr><td class="areaname" colspan="2">Area %s</td></tr>\n' % a)
+            hout.write('        <tr><td class="newhead">New Alignment</td><td class="gonehead">Clubs Leaving Area</td></tr>\n')
+            hout.write('      </thead>\n')
         hout.write('      <tbody><!-- Area %s-->\n' % a)
         hout.write('        <tr>\n')
         (cc, bc, mc) = writeNewAlignment(hout, newareas, a)
