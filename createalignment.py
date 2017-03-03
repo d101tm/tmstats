@@ -189,7 +189,10 @@ if __name__ == "__main__":
                     except AttributeError:
                         v = ''   # Handle missing items
                     if v:
-                        print 'overriding', f, 'for', c.clubname, 'from', c.__dict__[f], 'to', v
+                        if f in c.__dict__:
+                            print 'overriding', f, 'for', c.clubname, 'from', c.__dict__[f], 'to', v
+                        else:
+                            print 'setting c.%s to %s for %s' % (f, v, c.clubname)
                         c.__dict__[f] = v
             except KeyError:
                 # Must create a new club.  Oh, boy!
