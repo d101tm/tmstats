@@ -56,7 +56,7 @@ if __name__ == "__main__":
         <li>As a <a href="d101align.htm">map</a> (updated %s)</li>
         <li>As a <a href="d101proforma.html"><i>pro forma</i> Green/Yellow/Red report</a> (updated %s)</li>
         <li>As a <a href="d101location.html">summary report</a> (updated %s)</li>
-        <li>As a <a href="d101snapshot.html">club movement report</a> (updated %s)</li>
+        <li>As a <a href="d101migration.html">club movement report</a> (updated %s)</li>
       </ul>
       %s
     </body>

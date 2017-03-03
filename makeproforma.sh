@@ -8,7 +8,7 @@ cd data
 ../snapshot.py --infile d101align.csv
 ../makealignmentpage.py > d101index.html
 
-if (( $? )) ; then 
+if [[ $? ]]; then 
     if [[ "block15" == $(hostname) ]] ; then
         echo "Copying to alignment"
         cp d101proforma.html ~/files/alignment
