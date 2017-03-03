@@ -214,7 +214,7 @@ if __name__ == "__main__":
             if c.clubstatus != 'Suspended':
                 writer.writerow(c.__dict__)
         except:
-            pass
+            writer.writerow(c.__dict__)
     outfile.close()
         
     

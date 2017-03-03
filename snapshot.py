@@ -71,7 +71,7 @@ for row in reader:
     try:
         club = clubs[Club.stringify(row['clubnumber'])]
     except KeyError:
-        print 'Club %s (%d) is new.' % (row['clubname'], row['clubnumber'])
+        print 'Club %s (%s) is new.' % (row['clubname'], row['clubnumber'])
         continue
     alignvalues = [row[p] for p in alignfields]
     club.addvalues(alignvalues, alignfields)
