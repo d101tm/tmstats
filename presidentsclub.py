@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import dbconn, tmparms, os, sys
 from datetime import date, datetime
-from tmutil import showclubswithoutvalues, cleandate, stringify
+from tmutil import showclubswithoutvalues, cleandate, stringify, getClubBlock
 
 
 class myclub:
@@ -31,6 +31,8 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.parser.add_argument("--finaldate", dest='finaldate', type=str, default='4/15')
+    parms.parser.add_argument('--outfile', default='presidentsclub.txt')
+    parms.parser.add_argument('--earning', default='$100 in District Credit')
     # Add other parameters here
     parms.parse() 
    
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     final = (targetdate == parms.finaldate)
     
     # Open the output file
-    outfile = sys.stdout
+    outfile = open(parms.outfile, 'w')
     
     # Get the qualifying clubs
     
@@ -61,14 +63,10 @@ if __name__ == "__main__":
         winners.append(myclub(*c))
 
 
-    outfile.write("""<h3 id="presidentsclub">Presidents Club</h3>
-    <p>
-    Clubs achieving President's Distinguished status by April 15 join the Presidents Club.  This report is %s.</p>
-    """ % status)
-
     if len(winners) > 0:
-        showclubswithoutvalues(winners, outfile)
+        outfile.write('<p><b>Congratulations</b> to %s for earning %s!</p>' % (getClubBlock(winners), parms.earning))
         print >> sys.stderr, "%d clubs have qualified" % len(winners)
+    outfile.close()
 
 
     
