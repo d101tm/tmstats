@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
         # And another gross hack for Rancho San Antonio
         RanchoSanAntonio = (37.321972, -122.096326)
-        sites[RanchoSanAntonio] = 'E'
+        sites[RanchoSanAntonio] = 'B'
         points.append(RanchoSanAntonio)
         
         voronoipolys = pytess.voronoi(points, buffer_percent=200)
