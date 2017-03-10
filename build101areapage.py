@@ -7,6 +7,9 @@ import dbconn, tmparms, xlrd, csv
 import os, sys, urllib2
 from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs, gotodatadir
+from overridepositions import overrideClubPositions
+from makemap import Bounds, setClubCoordinatesFromGEO
+
 
 class Division():
     divisions = {}
@@ -139,6 +142,9 @@ parms = tmparms.tmparms(description=__doc__)
 parms.add_argument('--outfile', dest='outfile', default='areasanddivisions.html')
 parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
 parms.add_argument('--officers', dest='officers', help='URL of the CSV export form of a Google Spreadsheet with Area/Division Directors')
+parms.add_argument('--mapdir', default=None, help='Directory to use for the area map files.')
+parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
+parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
 parms.parse()
 
 # Connect to the database
@@ -159,6 +165,13 @@ clubs = removeSuspendedClubs(clubs, curs)
 for c in clubs.keys():
     if int(clubs[c].district) != parms.district:
         del clubs[c]
+        
+# Add current coordinates and remove clubs without coordinates
+setClubCoordinatesFromGEO(clubs, curs)
+
+# If there are overrides to club positioning, handle them now
+if parms.mapoverride:
+    overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
 
 # Now, assign clubs to Areas and Divisions
 
@@ -197,3 +210,50 @@ for d in sorted(Division.divisions):
 outfile.write("""[/et_pb_tabs]
 
 """)
+
+# Create map pages if mapdir was specified.
+if parms.mapdir:
+    for d in sorted(Division.divisions):
+        if d.lower() != 'new':
+            div = Division.divisions[d]
+            for a in sorted(div.areas):
+                with open(os.path.join(parms.mapdir, '%s.html' % a),'w') as mapfile:
+                    b = Bounds()
+                    mapbase="https://maps.googleapis.com/maps/api/staticmap?"
+                    mapparts = []
+
+                    clubinfo = []
+                    marker = 'A'
+                    for c in sorted(div.areas[a].clubs, key=lambda x:x.clubnumber.zfill(8)):
+                        b.extend(float(c.latitude), float(c.longitude))
+                        mapparts.append('markers=label:%s%%7C%s,%s' % (marker, c.latitude, c.longitude))
+                        
+                        clubinfo.append('<tr><td class="marker">%s</td>' % marker)
+                        clubinfo.append('<td class="clubnum">%s</td>' % c.clubnumber)
+                        clubinfo.append('<br />\n'.join(('<td><b>%s</b>' % c.clubname, c.place, c.address, '%s, %s %s' % (c.city, c.state, c.zip))))
+                        clubinfo.append('<br />\n'.join(('<td>%s' % c.meetingday, c.meetingtime)))
+                        clubinfo.append('</td></tr>\n')
+                
+                        
+                        marker = chr(ord(marker)+1)
+                        
+                        
+   
+                    mapparts.append("size=640x640&scale=2")   # As large as possible, at least for now
+                    mapfile.write('<html>\n')
+                    mapfile.write('<head>\n')
+                    mapfile.write('<style type="text/css">\n')
+                    mapfile.write('.areamap {width:640px, height:640px;}\n')
+                    mapfile.write('</style>\n')
+                    mapfile.write('</head>\n<body>\n')
+                    mapfile.write('<div class="areamap">\n')
+                    mapfile.write('<img width="640px" height="640px" src="%s%s">\n' % (mapbase, '&'.join(mapparts)))
+                    mapfile.write('</div>\n')
+                    mapfile.write('<div class="clubinfo">\n')
+                    mapfile.write('<table>\n')
+                    mapfile.write('\n'.join(clubinfo))
+                    mapfile.write('</table>\n</div>\n')                
+                    mapfile.write('</body>\n</html>\n')
+                    
+  
+                    
