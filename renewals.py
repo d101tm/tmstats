@@ -81,7 +81,28 @@ if __name__ == "__main__":
     # Because WHQ has fouled up the base for some clubs in 2016-17, we
     #   have to do the computation in the program instead of the database
 
-    specials = {5042810: 36, 5404978: 25, 5474126: 44, 5477675: 29}
+    specials = {225:14,
+            1829:10,
+            2693:13,
+            2914:23,
+            4004:16,
+            4124:9,
+            8124:29,
+            8499:14,
+            9473:32,
+            586504:42,
+            607909:36,
+            668615:44,
+            685103:15,
+            1776130:13,
+            1852523:29,
+            2410520:21,
+            4528013:29,
+            4967250:33,
+            5042810:36,
+            5404978:25,
+            5474126:44,
+            5477675:29}
     clubs = []
     if parms.program == 'madness':
         rtype = 'aprrenewals'
