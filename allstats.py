@@ -618,7 +618,7 @@ for info in curs.fetchall():
     
 # We need to get charter date from the clubs table because Toastmasters is not posting it consistently
 #   to the performance files.
-curs.execute("""select clubnumber, charterdate, clubname from clubs where charterdate >= %s and charterdate <= %s group by clubnumber """, ('%d-07-01' % tmyear, '%d-06-30' % (tmyear+1)))
+curs.execute("""select clubs.clubnumber, clubs.charterdate, clubs.clubname from clubs inner join (select clubnumber, max(lastdate) as mld from clubs group by clubnumber) a on clubs.clubnumber = a.clubnumber and clubs.lastdate = a.mld  where charterdate >= %s and charterdate <= %s """, ('%d-07-01' % tmyear, '%d-06-30' % (tmyear+1)))
 for (clubnumber, charterdate, clubname) in curs.fetchall():
     try:
         clubs[clubnumber].charterdate = charterdate.strftime('%m/%d/%y')
