@@ -5,6 +5,7 @@
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
 import dbconn, tmutil, sys, os, xlrd, re, csv, codecs
+from datetime import datetime
 
 
 def inform(*args, **kwargs):
@@ -104,16 +105,32 @@ if __name__ == "__main__":
         csvfile = open(parms.roster, 'rbU')
         reader = UnicodeReader(csvfile, encoding='utf-8')
 
-        # Get the field names and normalize them; find the name columns
+        # Get the field names and normalize them; find the name and date columns
         fieldnames = normalizefieldnames(reader.next())
         fieldnames.append('fullname')
         ifirstname = fieldnames.index('firstname')
         imiddle = fieldnames.index('middle')
         ilastname = fieldnames.index('lastname')
+        datecols = [cname for cname in fieldnames if cname.endswith('date')]
+        idates = [fieldnames.index(cname) for cname in datecols]
+        ijoin = fieldnames.index('joindate')
+        itermbegin = fieldnames.index('termbegindate')
         
         
         # And get the values
         for row in reader:
+            # Convert dates
+            # Watch out for missing join date - use term start if so
+            if not row[ijoin].strip():
+                row[ijoin] = row[itermbegin]
+            for col in idates:
+                try:
+                    row[col] = datetime.strptime(row[col], '%m/%d/%Y')
+                except Exception, e:
+                    print e
+                    print row[col]
+                    print row
+                    sys.exit(1)
             values.append(row)
             # And add the fullname
             values[-1].append(('%s, %s %s' % (row[ilastname],row[ifirstname],row[imiddle])).strip())
@@ -125,6 +142,8 @@ if __name__ == "__main__":
     for f in fieldnames:
         if f.endswith('num'):
             declare.append(f + ' INT')
+        elif f.endswith('date'):
+            declare.append(f + ' DATE')
         else:
             declare.append(f + ' VARCHAR(100)')
         

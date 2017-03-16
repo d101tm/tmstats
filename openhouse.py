@@ -5,10 +5,6 @@ import dbconn, tmutil, sys, os
 from simpleclub import Club
 from datetime import datetime
 
-class myclub:
-    def __init__(self, clubname, clubnumber):
-        self.clubname = clubname
-        self.clubnumber = clubnumber
         
 def fixdate(d):
     # Fix a date (as text) in the appropriate TM year.  Return as string.
@@ -42,6 +38,7 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', default='openhouseclubs.html')
     parms.add_argument('--basedate', default='12/31')
     parms.add_argument('--finaldate', default='2/15')
+    parms.add_argument('--renewto', default='9/30')
     # Add other parameters here
     parms.parse() 
    
@@ -54,13 +51,16 @@ if __name__ == "__main__":
     # Figure out the full base and final dates, anchoring them in the current TM year
     basedate = fixdate(tmutil.cleandate(parms.basedate))
     finaldate = fixdate(tmutil.cleandate(parms.finaldate))
+    # Also figure out the term end date we need, anchored to this year
+    renewtodate = tmutil.cleandate(parms.renewto)
  
     # And get the clubs on the base date
     clubs = Club.getClubsOn(curs,date=basedate)
     
-    # And index them by name as well as number
+    # And index them by name as well as number; set memdiff = 0 for each club.
     clubsByName = {}
     for c in clubs.keys():
+        clubs[c].memdiff = 0
         clubname = simplify(clubs[c].clubname)
         clubsByName[clubname] = clubs[c]
     
@@ -79,39 +79,26 @@ if __name__ == "__main__":
 
     
     # And build "IN" clause.  We know all the items are numbers, so we don't have to worry about SQL injection.
-    eligibilityclause = ' IN (' + ','.join(eligible.keys()) + ') '
+    eligibilityclause = ' clubnum IN (' + ','.join(eligible.keys()) + ') '
     
-    
-    # Now, get membership difference for today or the end of the contest
+    # Now, get the count for each club of new members who have renewed for the following term
+    curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE joindate >= %s AND termenddate >= %s AND" + eligibilityclause + "GROUP BY clubnum", (basedate, renewtodate))
 
-    curs.execute("SELECT c.clubnumber, c.clubname, c.asof, (c.activemembers - c.membase) - (p.activemembers - p.membase) AS delta FROM clubperf c INNER JOIN (SELECT activemembers, membase, clubnumber FROM clubperf WHERE asof = %s) p ON p.clubnumber = c.clubnumber WHERE asof = %s AND c.clubnumber" + eligibilityclause +  "ORDER BY LCASE(c.clubname)" , (basedate, finaldate))
-    if curs.rowcount:
-        final = True
-    else:
-        # No data returned; use today's data instead
-        curs.execute("SELECT c.clubnumber, c.clubname, c.asof, (c.activemembers - c.membase) - (p.activemembers - p.membase) AS delta FROM clubperf c INNER JOIN (SELECT activemembers, membase, clubnumber FROM clubperf WHERE asof = %s)  p ON p.clubnumber = c.clubnumber WHERE entrytype = 'L' AND c.clubnumber" + eligibilityclause + "ORDER BY LCASE(c.clubname)",  (basedate, ))
-        final = False
+    for (clubnum, clubname, memdiff) in curs.fetchall():
+        eligible[tmutil.stringify(clubnum)].memdiff = memdiff
         
-    
-    for (clubnum, clubname, asof, delta) in curs.fetchall():
-        eligible[tmutil.stringify(clubnum)].delta = delta
-        
-    # And check the renewal status for each eligible club, as of today
-    curs.execute("SELECT c.clubnumber, c.memduesontimeapr FROM clubperf c WHERE entrytype = 'L' AND c.clubnumber" + eligibilityclause)
-    for (clubnum, ontime) in curs.fetchall():
-        eligible[tmutil.stringify(clubnum)].renewed = ontime
         
     # Now, make the three lists:
     level0clubs = []   # Open House only
-    level1clubs = []   # Open House, renewed, added 1 or 2 members
-    level2clubs = []   # Open House, renewed, added 3 or more members
+    level1clubs = []   # Open House, added 1 or 2 members who have renewed
+    level2clubs = []   # Open House, added 3 or more members who have renewed
     
     
     
     for c in eligible.values():
-        if c.renewed and c.delta >= 3:
+        if c.memdiff >= 3:
             level2clubs.append(c)
-        elif c.renewed and c.delta > 0:
+        elif c.memdiff > 0:
             level1clubs.append(c)
         else:
             level0clubs.append(c)
