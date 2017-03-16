@@ -17,7 +17,13 @@ def fixdate(d):
         dt = dt.replace(year=dt.year-1)
     return dt.strftime('%Y-%m-%d')
     
-    
+def simplify(name):
+    # Simplify club name by lowercasing, removing spaces, "Toastmasters", and "Club"
+    name = name.lower()
+    name = name.replace('toastmasters','')
+    name = name.replace('club','')
+    name = name.replace(' ','')
+    return name
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -55,14 +61,14 @@ if __name__ == "__main__":
     # And index them by name as well as number
     clubsByName = {}
     for c in clubs.keys():
-        clubname = clubs[c].clubname
+        clubname = simplify(clubs[c].clubname)
         clubsByName[clubname] = clubs[c]
     
     # Now read the openhouse clubs and get their numbers
     eligible = {}
     with open(parms.infile, 'r') as infile:
         for l in infile.readlines():
-            l = l.strip()
+            l = simplify(l.strip())
             if l in clubs:
                 eligible[l] = clubs[l]
             elif l in clubsByName:
