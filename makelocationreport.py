@@ -5,7 +5,7 @@
 import dbconn, tmutil, sys, os, csv, re
 from tmutil import distance_on_unit_sphere 
 from makemap import Bounds
-
+global parms
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
           suppress is the minimum number of 'quiet's that need be specified for
@@ -79,7 +79,7 @@ def closearea(outfile, text, locations):
         outfile.write(''.join(text))
     outfile.write('</tbody></table>\n')
     outfile.write('</div>\n')
-    if len(locations) > 1:
+    if len(locations) > 1 and parms.map:
         outfile.write('<div class="areamap">')
         outfile.write('<img src="%s" width="640px">' % makeareamap(text[1].split()[2], locations))
         outfile.write('</div>')
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parms.add_argument('--infile', default='d101align.csv')
     parms.add_argument('--outfile', default='d101location.html')
     parms.add_argument('--color', action='store_true')
-    parms.add_argument('--mapdir', default=None, help='Directory to use for the area map files.')
+    parms.add_argument('--map', action='store_true')
     
     # Add other parameters here
     parms.parse() 
