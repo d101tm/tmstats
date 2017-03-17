@@ -61,6 +61,7 @@ def openarea(outfile, area, color):
     ret.append('<tr>\n')
     if parms.map:
         ret.append('<th class="marker">ID</th>')
+    ret.append('<th class="from">From</th>')
     ret.append('<th class="cnum">Number</th><th class="cname">Name</th>')
     ret.append('<th class="members">Members</th><th class="goals">Goals</th><th class="loc">Location</th><th class="mtg">Time</th>\n')
     ret.append('</tr>\n')
@@ -139,7 +140,7 @@ if __name__ == "__main__":
       .cname {text-align: left; width: 15%; font-weight: bold;}
       .color {text-align: left; width: 5%;}
       .marker {text-align: left; width: 5%; font-weight: bold;}
-      .from {text=align: left; width: 5%;}
+      .from {text-align: center; width: 5%;}
       .red {background-color: red;}
       .yellow {background-color: yellow;}
       .green {background-color: lightgreen;}
@@ -200,10 +201,11 @@ if __name__ == "__main__":
         thisdiv = div
         outrow = []
         row['closing'] = '<br />(Probably closing)' if row['likelytoclose'] else ''
-        outrow.append('<tr class="myrow%s%s">' % (' ghost' if row['likelytoclose'] else '', ' {color}' if parms.color else ''))
+        outrow.append('<tr class="myrow%s">' % (' ghost' if row['likelytoclose'] else '') )
         if parms.map:
             outrow.append('  <td class="marker">%s</marker>' % marker)
-        outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}{closing}</td>')
+        outrow.append('  <td class="from">%s</td>' % (row['oldarea'] if row['oldarea'] != row['newarea'] else ''))
+        outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname%s">{clubname}{closing}</td>' % ' {color}' if parms.color else '')
         outrow.append('  <td class="members">{activemembers}</td>\n')
         outrow.append('  <td class="goals">{goalsmet}</td>\n')
         outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
