@@ -59,10 +59,9 @@ def openarea(outfile, area, color):
     ret.append('<table class="areatable">\n')
     ret.append('<thead>\n')
     ret.append('<tr>\n')
-    ret.append('<th class="marker">ID</th>')
+    if parms.map:
+        ret.append('<th class="marker">ID</th>')
     ret.append('<th class="cnum">Number</th><th class="cname">Name</th>')
-    if color:
-        ret.append('<th class="color">Color</th>')
     ret.append('<th class="members">Members</th><th class="goals">Goals</th><th class="loc">Location</th><th class="mtg">Time</th>\n')
     ret.append('</tr>\n')
     ret.append('</thead><tbody>\n')
@@ -121,6 +120,7 @@ if __name__ == "__main__":
     outfile.write("""
     <html>
     <head>
+    <title>Proposed District Realignment</title>
     <style type="text/css">
     
     
@@ -136,12 +136,13 @@ if __name__ == "__main__":
       .ghost {background-color: #C0C0C0;}
       .myrow {border: 1px solid black; border-collapse: collapse;}
       .cnum {text-align: right; width: 7%;}
-      .cname {text-align: left; width: 15%;}
+      .cname {text-align: left; width: 15%; font-weight: bold;}
       .color {text-align: left; width: 5%;}
       .marker {text-align: left; width: 5%; font-weight: bold;}
+      .from {text=align: left; width: 5%;}
       .red {background-color: red;}
       .yellow {background-color: yellow;}
-      .green {background-color: green;}
+      .green {background-color: lightgreen;}
       .goals {text-align: right; width: 5%;}
       .members {text-align: right; width: 5%;}
       .mtg {text-align: left; width: 25%;}
@@ -152,6 +153,9 @@ if __name__ == "__main__":
           margin: auto;
           padding: 10px;
       }
+""")
+    if parms.map:
+        outfile.write("""
       .areainfo {
           width: 45%;
           float: left;
@@ -159,7 +163,13 @@ if __name__ == "__main__":
       .areamap {
           margin-left: 50%;
       }
+""")
+    else:
+        outfile.write("""
+      .areainfo { width: 95%; float: left;}
+""")
       
+    outfile.write("""
       .clearfix:after {
         content: "";
         display: table;
@@ -190,15 +200,14 @@ if __name__ == "__main__":
         thisdiv = div
         outrow = []
         row['closing'] = '<br />(Probably closing)' if row['likelytoclose'] else ''
-        outrow.append('<tr class="myrow%s">' % (' ghost' if row['likelytoclose'] else ''))
-        outrow.append('  <td class="marker">%s</marker>' % marker)
+        outrow.append('<tr class="myrow%s%s">' % (' ghost' if row['likelytoclose'] else '', ' {color}' if parms.color else ''))
+        if parms.map:
+            outrow.append('  <td class="marker">%s</marker>' % marker)
         outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}{closing}</td>')
-        if parms.color:
-            outrow.append('  <td class="color {color}">{color}</td>\n')
         outrow.append('  <td class="members">{activemembers}</td>\n')
         outrow.append('  <td class="goals">{goalsmet}</td>\n')
         outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
-        outrow.append('  <td class="mtg">{meetingday}<br />{meetingtime}</td>')
+        outrow.append('  <td class="mtg"><b>{meetingday}</b><br />{meetingtime}</td>')
         outrow.append('</tr>')
         accum.append(('\n'.join(outrow)).format(**row))
         locations.append((row['clubname'], row['latitude'], row['longitude']))
