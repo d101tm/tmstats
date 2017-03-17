@@ -331,7 +331,10 @@ def getClubBlock(clubs):
     res = ['<span class="clubname">%s</span>' % club.clubname for club in sorted(clubs, key=lambda club: club.clubname.lower())]
     if len(clubs) > 1:
         res[-1] = 'and ' + res[-1]
-    return ', '.join(res)
+    if len(clubs) != 2:
+        return ', '.join(res)
+    else:
+        return ' '.join(res)
 
 def parseWPConfig(f):
     """ Parses a WordPress configuration file 
