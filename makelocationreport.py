@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-
-# This is a standard skeleton to use in creating a new program in the TMSTATS suite.
+"""Create the proposed relocation report"""
 
 import dbconn, tmutil, sys, os, csv, re
 from tmutil import distance_on_unit_sphere 
 from makemap import Bounds
+from simpleclub import Club
+from datetime import datetime
+
 global parms
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
@@ -68,7 +70,7 @@ def openarea(outfile, area, color):
     ret.append('</thead><tbody>\n')
     return ret
     
-def closearea(outfile, text, locations):
+def closearea(outfile, text, locations, gonefrom):
     # This is gross and relies on knowing what "openarea" does.
     
     if len(locations) > 1:
@@ -78,6 +80,17 @@ def closearea(outfile, text, locations):
         text[1] = re.sub(r'\(.*\)', '', text[1])  # Remove distance
         outfile.write(''.join(text))
     outfile.write('</tbody></table>\n')
+    if gonefrom:
+        outfile.write('<p>Club%s leaving area:</p>\n' % ('' if len(gonefrom) == 1 else 's'))
+        outfile.write('<ul class="gonelist">\n')
+        for club in gonefrom:
+            outfile.write('<li><b>%s</b>' % club.clubname)
+            if club.eligibility == 'Suspended':
+                outfile.write(' (Suspended)')
+            elif club.newarea and club.newdivision:
+                outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
+            outfile.write('</li>\n')
+        outfile.write('</ul>\n')
     outfile.write('</div>\n')
     if len(locations) > 1 and parms.map:
         outfile.write('<div class="areamap">')
@@ -116,7 +129,9 @@ if __name__ == "__main__":
     curs = conn.cursor()
     
     # Your main program begins here.
-    # Simple and ugly program to create location/time realignment listings
+
+
+    # Write the header of the output file
     outfile = open(parms.outfile, 'w')
     outfile.write("""
     <html>
@@ -180,43 +195,126 @@ if __name__ == "__main__":
     </head>
     <body>
     """)
-    reader = csv.DictReader(open(parms.infile, 'rbU'))
-    thisdiv = ''
-    thisarea = ''
-    locations = []
+
+    # Get club information from the database as of today
+    clubs = Club.getClubsOn(curs, date=datetime.today().strftime('%y-%m-%d'))
+
+    # Now, add relevant club performance information.  If there are clubs in the 
+    # performance data which aren't in the master list from TMI, note it and add
+    # them anyway.
+
+    perffields = ['clubnumber', 'clubname', 'district', 'area', 'division', 'eligibility', 'color', 'membase', 'activemembers', 'goalsmet']
+
+    curs.execute("SELECT clubnumber, clubname, district, area, division, clubstatus as eligibility, color, membase, activemembers, goalsmet FROM clubperf WHERE entrytype = 'L' and district = %s", (parms.district,))
+
+    for info in curs.fetchall():
+        clubnum = Club.stringify(info[0])
+        try:
+            club = clubs[clubnum]
+            club.addvalues(info, perffields)
+        except KeyError:
+            print 'Club %s (%d) not in CLUBS table, patching in.' % (info[1], info[0])
+            clubs[clubnum] = Club(info, perffields)
+            clubs[clubnum].charterdate = ''
+            
+    # Now patch in suspension dates
+
+    curs.execute("SELECT clubnumber, suspenddate FROM distperf WHERE entrytype = 'L' and district = %s", (parms.district,))
+    for (clubnum, suspenddate) in curs.fetchall():
+        if clubnum in clubs:
+            clubs[clubnum].addvalues(['suspended'],[suspenddate])
+          
+
+    # And read in the alignment.  
+    reader = csv.DictReader(open(parms.infile, 'rbu'))
+    alignfields = ['newarea', 'newdivision', 'likelytoclose', 'meetingday', 'meetingtime', 'place', 'address', 'city',
+            'state', 'zip', 'latitude', 'longitude']
     for row in reader:
-        area = row['newarea']
-        div = area[0]
-        if thisarea and thisarea != area:
-            closearea(outfile, accum, locations)
-            locations = []
-        if thisdiv and thisdiv != div:
-            closediv(outfile)
-        if thisdiv != div:
-            opendiv(outfile, div)
-        if thisarea != area:
-            accum = openarea(outfile, area, parms.color)
-            marker = 'A'
-        thisarea = area
-        thisdiv = div
-        outrow = []
-        row['closing'] = '<br />(Probably closing)' if row['likelytoclose'] else ''
-        outrow.append('<tr class="myrow%s">' % (' ghost' if row['likelytoclose'] else '') )
-        if parms.map:
-            outrow.append('  <td class="marker">%s</marker>' % marker)
-        outrow.append('  <td class="from">%s</td>' % (row['oldarea'] if row['oldarea'] != row['newarea'] else ''))
-        outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname%s">{clubname}{closing}</td>' % ' {color}' if parms.color else '')
-        outrow.append('  <td class="members">{activemembers}</td>\n')
-        outrow.append('  <td class="goals">{goalsmet}</td>\n')
-        outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
-        outrow.append('  <td class="mtg"><b>{meetingday}</b><br />{meetingtime}</td>')
-        outrow.append('</tr>')
-        accum.append(('\n'.join(outrow)).format(**row))
-        locations.append((row['clubname'], row['latitude'], row['longitude']))
-        marker = chr(ord(marker)+1)
+        newarea = row['newarea']
+        row['newarea'] = newarea[1:]
+        row['newdivision'] = newarea[0]
+        try:
+            club = clubs[club.stringify(row['clubnumber'])]
+        except KeyError:
+            print 'club %s (%s) is new.' % (row['clubname'], row['clubnumber'])
+            clubvalues = [row['clubnumber'], row['clubname'], ' ', ' ', parms.district, 0, 0, 'Prospective', '']
+            clubfields = ['clubnumber', 'clubname', 'area', 'division', 'district', 
+                    'activemembers', 'goalsmet', 'eligibility', 'color']
+            club = Club(clubvalues, fieldnames=clubfields)
+            clubs[club.stringify(row['clubnumber'])] = club
+        alignvalues = [row[p] for p in alignfields]
+        club.addvalues(alignvalues, alignfields)
+        if row['latitude']:
+            club.latitude = row['latitude']
+        if row['longitude']:
+            club.longitude = row['longitude']
+
         
-    closearea(outfile, accum, locations)
-    closediv(outfile)
+    # Assign clubs to their new areas.  If they've changed, also assign to the area they're leaving
+    gonefrom = {}
+    newareas = {}
+    divs = {}
+
+    for c in clubs.values():
+        old = c.division + c.area
+        try:
+            new = c.newdivision + c.newarea
+        except AttributeError:
+            new = '  '
+            c.newdivision = ' '
+            c.newarea = ' '
+        if old != new:
+            c.was = '(from %s)' % old
+        else:
+            c.was = '&nbsp;'
+        if old not in gonefrom:
+            gonefrom[old] = []
+        if new not in newareas:
+            newareas[new] = []
+        try:
+            if c.eligibility != 'Suspended':
+                newareas[new].append(c)
+                if old != new:
+                    gonefrom[old].append(c)
+                if c.newdivision not in divs:
+                    divs[c.newdivision] = {}
+                divs[c.newdivision][new] = new
+            else:
+                gonefrom[old].append(c)
+        except AttributeError:
+            print 'no eligibility for', c.clubname
+
+
+    for div in sorted(divs.keys()):
+        if div.strip():
+            areas = sorted(divs[div].keys())
+            opendiv(outfile, div)
+            for area in areas:
+                locations = []
+                accum = openarea(outfile, area, parms.color)
+                for c in sorted(newareas[area], key=lambda x:int(x.clubnumber)):
+                    marker = 'A'
+                    row = c.__dict__  
+                    outrow = []
+                    row['closing'] = '<br />(probably closing)' if row['likelytoclose'] else ''
+                    outrow.append('<tr class="myrow%s">' % (' ghost' if row['likelytoclose'] else '') )
+                    if parms.map:
+                        outrow.append('  <td class="marker">%s</marker>' % marker)
+                    oldarea = c.division + c.area
+                    newarea = c.newdivision + c.newarea
+                    outrow.append('  <td class="from">%s</td>' % (oldarea if oldarea != newarea else ''))
+                    outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname%s">{clubname}{closing}</td>' % ' {color}' if parms.color else '')
+                    outrow.append('  <td class="members">{activemembers}</td>\n')
+                    outrow.append('  <td class="goals">{goalsmet}</td>\n')
+                    outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
+                    outrow.append('  <td class="mtg"><b>{meetingday}</b><br />{meetingtime}</td>')
+                    outrow.append('</tr>')
+                    accum.append(('\n'.join(outrow)).format(**row))
+                    locations.append((row['clubname'], row['latitude'], row['longitude']))
+                    marker = chr(ord(marker)+1)
+            
+                closearea(outfile, accum, locations, gonefrom.get(area,[]))
+            closediv(outfile)
     outfile.write("</body></html>\n")
     outfile.close()
     
