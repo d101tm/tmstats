@@ -6,18 +6,10 @@ from tmutil import showclubswithoutvalues, cleandate, stringify, getClubBlock
 
 class myclub:
     """ Just enough club info to sort the list nicely """
-    def __init__(self, clubnumber, clubname, asof, goalsmet, division, area):
-        self.area = '%s%s' % (division, area)
+    def __init__(self, clubnumber, clubname):
         self.clubnumber = clubnumber
         self.clubname = clubname
-        self.asof = asof
-        self.goalsmet = goalsmet
 
-    def tablepart(self):
-        return ('    <td>%s</td><td>%s</td>' % (self.area, self.clubname))
-
-    def key(self):
-        return (self.area, self.clubnumber)
 
 if __name__ == "__main__":
  
@@ -48,19 +40,27 @@ if __name__ == "__main__":
     parms.finaldate = cleandate(parms.finaldate)
     targetdate = min(latest, parms.finaldate)
     final = (targetdate == parms.finaldate)
+    status = "final" if final else "updated daily"
     
     # Open the output file
     outfile = open(parms.outfile, 'w')
-    
-    # Get the qualifying clubs
-    
-    curs.execute("SELECT clubnumber, clubname, asof, goalsmet, division, area FROM clubperf where goalsmet >= 9 and asof = %s and memduesontimeapr >= 1 and (activemembers >= 20 or activemembers - membase >= 5)", (targetdate,))
-
-    status = "final" if final else "updated daily"
 
     winners = []
+    
+    # See if WHQ has posted any President's Distinguished Clubs; if so,
+    #   use their information.  If not, calculate on our own.
+
+    curs.execute("SELECT clubnumber, clubname FROM clubperf WHERE clubdistinguishedstatus = 'P' AND asof = %s", (targetdate,))
+
     for c in curs.fetchall():
         winners.append(myclub(*c))
+
+    if not winners:
+        print >> sys.stderr, 'No President\'s Distinguished Clubs from WHQ.'
+        # Either WHQ hasn't posted or no one qualifies.  Use our calculation.
+        curs.execute("SELECT c.clubnumber, c.clubname FROM clubperf c INNER JOIN distperf d ON c.clubnumber = d.clubnumber AND c.entrytype = 'L' AND d.entrytype = 'L' AND ((d.aprrenewals > 20) OR (d.aprrenewals - c.membase) >= 5) WHERE c.goalsmet >= 9")
+        for c in curs.fetchall():
+            winners.append(myclub(*c))
 
 
     if len(winners) > 0:
