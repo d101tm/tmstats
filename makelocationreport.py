@@ -117,7 +117,7 @@ minimalhead = """
 
 .area {width: 100%; page-break-inside: avoid; display: block; clear: both;}
 
-.division {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
+.division {border: none; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important; column-count: 2}
   .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse;}
   .myrow td {vertical-align: top; padding-left: 3px; padding-right: 3px; border: 1px solid black; border-collapse: collapse}
   th {font-weight: bold; border: 1px solid black; border-collapse: collapse;}
@@ -127,6 +127,7 @@ minimalhead = """
   .cname {text-align: left; width: 80%; font-weight: bold;}
   .from {text-align: center; width: 5%;}
   .gone {font-style: italic; background-color: #E0E0E0}
+  .areadiv {display: inline-block; margin-bottom: 24pt;}
   
   .area {
       width: 95%;
@@ -193,8 +194,8 @@ if __name__ == "__main__":
 
     .area {margin-bottom: 12pt; width: 100%; page-break-inside: avoid; display: block; clear: both;}
 
-    .division {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
-      .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse;}
+    .division {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important; column-count: 2;}
+      .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse; page-break-inside:avoid; break-inside: avoid; -webkit-column-break-inside: avoid;}
       .myrow td {vertical-align: top; padding-left: 3px; padding-right: 3px; border: 1px solid black;}
       th {font-weight: bold; border: 1px solid black; border-collaps: collapse;}
       .ghost {background-color: #C0C0C0;}
@@ -372,10 +373,13 @@ if __name__ == "__main__":
     left = True
     for div in sorted(divs.keys()):
         if div.strip():
-            if left:
-                outfile.write('<div class="clearfix division">\n')
+            #if left:
+                #outfile.write('<div class="clearfix division">\n')
             areas = sorted(divs[div].keys())
-            outfile.write('<div class="%s">\n' % ('left' if left else 'right'))
+            #outfile.write('<div class="%s">\n' % ('left' if left else 'right'))
+            outfile.write('<h2 align="center">Division %s</h2>' % div)
+            
+            outfile.write('<div class="division">')
             left = not left
             for area in areas:
                 locations = []
@@ -416,10 +420,10 @@ if __name__ == "__main__":
                 
             outfile.write('</div>\n')    
                 
-            if left:
-                outfile.write('</div>\n')
-    if not left:
-        outfile.write('</div>\n')
+            #if left:
+                #outfile.write('</div>\n')
+    #if not left:
+        #outfile.write('</div>\n')
     outfile.write("</body></html>\n")
     outfile.close()
 
