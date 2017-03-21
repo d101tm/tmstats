@@ -104,6 +104,53 @@ def opendiv(outfile, division):
 def closediv(outfile):
     outfile.write('</div>\n')
 
+minimalhead = """
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+<title>Proposed District Realignment</title>
+<style type="text/css">
+
+
+ body {font-family: Arial; font-size: 10pt;}
+
+
+.area {width: 100%; page-break-inside: avoid; display: block; clear: both;}
+
+.division {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
+  .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse;}
+  .myrow td {vertical-align: top; padding-left: 3px; padding-right: 3px; border: 1px solid black; border-collapse: collapse}
+  th {font-weight: bold; border: 1px solid black; border-collapse: collapse;}
+  .ghost {background-color: #C0C0C0;}
+  .myrow {border: 1px solid black; border-collapse: collapse;}
+ .cnum {text-align: right; width: 10%;}
+  .cname {text-align: left; width: 80%; font-weight: bold;}
+  .from {text-align: center; width: 5%;}
+  .gone {font-style: italic; background-color: #404040}
+  
+  .area {
+      width: 95%;
+      margin: auto;
+      padding: 10px;
+  }
+
+  
+
+  .left {
+      width: 45%; float: left }
+  .right {
+      width: 45%; margin-left: 50%; }
+  
+  .clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+</style>
+</head>
+<body>
+    """
+
 if __name__ == "__main__":
  
     import tmparms
@@ -120,6 +167,7 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', default='d101location.html')
     parms.add_argument('--color', action='store_true')
     parms.add_argument('--map', action='store_true')
+    parms.add_argument('--minimal', default='d101minimal.html')
     
     # Add other parameters here
     parms.parse() 
@@ -318,6 +366,61 @@ if __name__ == "__main__":
     outfile.write("</body></html>\n")
     outfile.close()
     
+    # And now, create the mimimal version of the report
+    outfile = open(parms.minimal, 'w')
+    outfile.write(minimalhead)
+    left = True
+    for div in sorted(divs.keys()):
+        if div.strip():
+            if left:
+                outfile.write('<div class="clearfix division">\n')
+            areas = sorted(divs[div].keys())
+            outfile.write('<div class="%s">\n' % ('left' if left else 'right'))
+            left = not left
+            for area in areas:
+                locations = []
+                outfile.write('<div class="areadiv">\n')
+                outfile.write('<table class="areatable"><thead>\n')
+                outfile.write('<tr><th class="areaname" colspan="3">Area %s</th></tr>' % area)
+                outfile.write('<tr>\n')
+                outfile.write('<th class="from">From</th>')
+                outfile.write('<th class="cnum">Number</th><th class="cname">Name</th>')
+                outfile.write('</tr>\n')
+                outfile.write('</thead><tbody>\n')
+                for c in sorted(newareas[area], key=lambda x:int(x.clubnumber)):
+                    row = c.__dict__  
+                    outrow = []
+                    outrow.append('<tr class="myrow">')
+                    oldarea = c.division + c.area
+                    newarea = c.newdivision + c.newarea
+                    outrow.append('  <td class="from">%s</td>' % (oldarea if oldarea != newarea else ''))
+                    outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}</td>')
+                    outrow.append('</tr>')
+                    outfile.write(('\n'.join(outrow)).format(**row))
+                outfile.write('</tbody></table>\n') 
+                
+                gonelist = gonefrom.get(area,[])
+                if gonelist:
+                    outfile.write('<p>Club%s leaving area:</p>\n' % ('' if len(gonelist) == 1 else 's'))
+                    outfile.write('<ul class="gonelist">\n')
+                    for club in gonelist:
+                        outfile.write('<li><b>%s</b>' % club.clubname)
+                        if club.eligibility == 'Suspended':
+                            outfile.write(' (Suspended)')
+                        elif club.newarea and club.newdivision:
+                            outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
+                        outfile.write('</li>\n')
+                    outfile.write('</ul>\n')
+                outfile.write('</div>\n')
+                
+            outfile.write('</div>\n')    
+                
+            if left:
+                outfile.write('</div>\n')
+    if not left:
+        outfile.write('</div>\n')
+    outfile.write("</body></html>\n")
+    outfile.close()
 
 
 
