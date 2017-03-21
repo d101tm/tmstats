@@ -126,7 +126,7 @@ minimalhead = """
  .cnum {text-align: right; width: 10%;}
   .cname {text-align: left; width: 80%; font-weight: bold;}
   .from {text-align: center; width: 5%;}
-  .gone {font-style: italic; background-color: #404040}
+  .gone {font-style: italic; background-color: #E0E0E0}
   
   .area {
       width: 95%;
@@ -397,20 +397,21 @@ if __name__ == "__main__":
                     outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}</td>')
                     outrow.append('</tr>')
                     outfile.write(('\n'.join(outrow)).format(**row))
-                outfile.write('</tbody></table>\n') 
-                
+                # Now, process clubs which moved away or were 
                 gonelist = gonefrom.get(area,[])
                 if gonelist:
-                    outfile.write('<p>Club%s leaving area:</p>\n' % ('' if len(gonelist) == 1 else 's'))
-                    outfile.write('<ul class="gonelist">\n')
                     for club in gonelist:
-                        outfile.write('<li><b>%s</b>' % club.clubname)
+                        outfile.write('<tr><td class="gone" colspan="3">%s' % club.clubname)
                         if club.eligibility == 'Suspended':
                             outfile.write(' (Suspended)')
-                        elif club.newarea and club.newdivision:
+                        elif club.newarea.strip() and club.newdivision.strip():
                             outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
-                        outfile.write('</li>\n')
-                    outfile.write('</ul>\n')
+                        else:
+                            outfile.write(' (Out of Division 101)')
+                        outfile.write('</td></tr>\n')
+
+                outfile.write('</tbody></table>\n') 
+                
                 outfile.write('</div>\n')
                 
             outfile.write('</div>\n')    
