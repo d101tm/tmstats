@@ -61,7 +61,13 @@ def cleandate(indate, usetmyear=True):
         indate = indate.split('/')
         if len(indate) == 2:
             # We need to add the year
-            indate.append('%d' % (globals.tmyear if usetmyear else globals.today.year))
+            if usetmyear:
+                if int(indate[0])>= 7:
+                    indate.append('%d' % globals.tmyear)
+                else:
+                    indate.append('%d' % (globals.tmyear+1))
+            else:
+                indate.append('%d' % globals.today.year)
         indate = [indate[2], indate[0], indate[1]]
     elif '-' in indate:
         indate = indate.split('-')
