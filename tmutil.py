@@ -4,6 +4,8 @@ from datetime import date, timedelta, datetime
 import csv, cStringIO, codecs
 import os
 import numbers
+import tmglobals
+globals = tmglobals.tmglobals()
 
 def gotodatadir():
     """ Go to the 'data' directory if we're not already there """
@@ -54,10 +56,12 @@ def neaten(date):
 def dateAsWords(date):
     return date.strftime('%B %d').replace(' 0', ' ')
 
-def cleandate(indate):
+def cleandate(indate, usetmyear=True):
     if '/' in indate:
-        indate = indate + '/' + date.today().strftime("%Y")  # Default to this year
         indate = indate.split('/')
+        if len(indate) == 2:
+            # We need to add the year
+            indate.append('%d' % (globals.tmyear if usetmyear else globals.today.year))
         indate = [indate[2], indate[0], indate[1]]
     elif '-' in indate:
         indate = indate.split('-')
