@@ -21,11 +21,11 @@ class Singleton(object):
 class tmglobals(Singleton):
     def __init__(self, *args, **kwargs):
         if args:
-            self.setup(args[0],kwargs)
+            self.setup(*args,**kwargs)
         return
 
-    def setup(self, parms, kwargs):
-        self.parms = parms
+    def setup(self, *args, **kwargs):
+        self.parms = args[0]
         self.conn = None
         self.curs = None
         self.tmyear = None
@@ -42,3 +42,7 @@ class tmglobals(Singleton):
         self.today = date.today()
         return self
 
+if __name__ == '__main__':
+    p = tmparms.tmparms()
+    g = tmglobals()
+    g.setup(p)
