@@ -18,7 +18,7 @@ class Singleton(object):
             type._the_instance = object.__new__(type)
         return type._the_instance
 
-class tmsetup(Singleton):
+class tmglobals(Singleton):
     def __init__(self, *args, **kwargs):
         if args:
             self.setup(args[0],kwargs)
