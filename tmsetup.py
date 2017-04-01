@@ -19,25 +19,26 @@ class Singleton(object):
         return type._the_instance
 
 class tmsetup(Singleton):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        if args:
+            self.setup(args[0],kwargs)
         return
 
-    def setup(self, parms, parse=True, connect=True, gotodatadir=True, defaultencoding='UTF8'):
+    def setup(self, parms, kwargs):
         self.parms = parms
         self.conn = None
         self.curs = None
         self.tmyear = None
-        if gotodatadir:
+        if kwargs.get('gotodatadir', True):
             tmutil.gotodatadir()
-        if defaultencoding:
+        if kwargs.get('defaultencoding', ''):
             reload(sys).setdefaultencoding(defaultencoding)
-        if parse:
+        if kwargs.get('parse', True):
             self.parms.parse()
-        if connect:
+        if kwargs.get('connect', True):
             self.conn = dbconn.dbconn(self.parms.dbhost, self.parms.dbuser, self.parms.dbpass, self.parms.dbname)
             self.curs = self.conn.cursor()
             self.tmyear = tmutil.getTMYearFromDB(self.curs)
-            self.today = date.today()
+        self.today = date.today()
         return self
-
 
