@@ -179,7 +179,7 @@ if [[ "$dorun" = "yes" ]] ; then
         ../runclubchanges.sh 
 	
         echo "Running alignment-related"
-        (cd ..;./tonight.sh)
+        (cd ..;./dodailyalignment.sh)
     fi
 
 
