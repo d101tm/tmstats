@@ -29,7 +29,7 @@ parms.parser.add_argument("--toend", dest='toend', type=int, default=10)
 parms.parser.add_argument("--outfileprefix", dest='outfileprefix', type=str, default='earlyachievers')
 
 # Do setup
-setup = tmsetup.tmsetup().setup(parms)
+setup = tmsetup.tmsetup(parms)
 
 conn = setup.conn
 curs = setup.curs
