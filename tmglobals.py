@@ -9,7 +9,7 @@
     6)  Go to the data directory (via tmutil)
 
 """
-import tmutil, tmparms, dbconn, sys
+import dbconn, sys, os
 from datetime import date
 
 class Singleton(object):
@@ -30,7 +30,10 @@ class tmglobals(Singleton):
         self.curs = None
         self.tmyear = None
         if kwargs.get('gotodatadir', True):
-            tmutil.gotodatadir()
+            curdir = os.path.realpath(os.curdir)  # Get the canonical directory
+            lastpart = curdir.split(os.sep)[-1]
+            if lastpart.lower() != 'data':
+                os.chdir('data')   # Fails if there is no data directory; that is intentional.
         if kwargs.get('defaultencoding', ''):
             reload(sys).setdefaultencoding(defaultencoding)
         if kwargs.get('parse', True):
@@ -38,11 +41,13 @@ class tmglobals(Singleton):
         if kwargs.get('connect', True):
             self.conn = dbconn.dbconn(self.parms.dbhost, self.parms.dbuser, self.parms.dbpass, self.parms.dbname)
             self.curs = self.conn.cursor()
-            self.tmyear = tmutil.getTMYearFromDB(self.curs)
+            self.curs.execute("SELECT MAX(tmyear) FROM lastfor")
+            self.tmyear = self.curs.fetchone()[0]
         self.today = date.today()
         return self
 
 if __name__ == '__main__':
+    import tmparms
     p = tmparms.tmparms()
     g = tmglobals()
     g.setup(p)
