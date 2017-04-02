@@ -9,6 +9,9 @@ import json
 import csv
 from uncodeit import myclub
 
+import tmglobals
+globals = tmglobals.tmglobals()
+
 style = """
 .deltatable {
         margin:0px;padding:0px;
@@ -262,23 +265,19 @@ class Clubinfo:
 
 if __name__ == "__main__":
  
-    import tmparms
-    from tmutil import gotodatadir
-    # Make it easy to run under TextMate
-    gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
+
     
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--skipload', action='store_true')
-    # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    c = conn.cursor()
+    
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    c = globals.curs
+    
+
 
 
     # And now, create the final comparison as a table
