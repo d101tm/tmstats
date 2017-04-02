@@ -8,7 +8,7 @@
     The output work file is used by other programs in the alignment process such as 'alignmap' and 'makelocationreport'
     """
 
-import dbconn, tmutil, sys, os, csv
+import sys, os, csv
 import requests
 from simpleclub import Club
 import dropbox
@@ -17,6 +17,9 @@ from datetime import datetime
 from makemap import setClubCoordinatesFromGEO
 from overridepositions import overrideClubPositions
 import time, calendar
+
+import tmglobals, tmparms
+globals = tmglobals.tmglobals()
 
 
 state_file = 'alignstate.txt'
@@ -115,13 +118,6 @@ def inform(*args, **kwargs):
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
 if __name__ == "__main__":
- 
-    import tmparms
-    from tmutil import gotodatadir
-    # Make it easy to run under TextMate
-    gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
     
     # Handle parameters
     parms = tmparms.tmparms()
@@ -130,13 +126,12 @@ if __name__ == "__main__":
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     parms.add_argument('--alignment', dest='alignment', default=None, help='Use this file instead of going to Dropbox.')
     parms.add_argument('--trustWHQ', dest='trust', action='store_true', help='Specify this to use information from WHQ because we are in the new year')
-    # Add other parameters here
-    parms.parse() 
     
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
+
     
     # Get all defined clubs from the database.
     clubs = Club.getClubsOn(curs)
