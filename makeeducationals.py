@@ -3,18 +3,10 @@
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
-import dbconn, tmutil, sys, os, datetime, subprocess
+import tmutil, sys, os, datetime, subprocess, codecs
+import tmglobals, tmparms
+globals = tmglobals.tmglobals()
 
-
-def inform(*args, **kwargs):
-    """ Print information to 'file' unless suppressed by the -quiet option.
-          suppress is the minimum number of 'quiet's that need be specified for
-          this message NOT to be printed. """
-    suppress = kwargs.get('suppress', 1)
-    file = kwargs.get('file', sys.stderr)
-
-    if parms.quiet < suppress:
-        print >> file, ' '.join(args)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -50,8 +42,8 @@ class Award:
         if award not in knowns:
             unknowns.add(award)
 
-    def __repr__(self):
-        return '<tr class="awardline"><td class="awardmember" width="48%%">%s</td><td class="awardclub" width="48%%">%s</td></tr>' % (self.membername, self.clubname)
+    def show(self):
+        return u'<tr class="awardline"><td class="awardmember" width="48%%">'+ unicode(self.membername) +u'</td><td class="awardclub" width="48%">' + unicode(self.clubname) + u'</td></tr>' 
 
 def printawards(awards, knownawards, k):
     if k in awards:
@@ -59,7 +51,7 @@ def printawards(awards, knownawards, k):
         print '<table>'
         #print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
         for each in sorted(awards[k], key=lambda x:x.key):
-            print each
+            print each.show()
         print '</table>'
         print '[/et_pb_toggle]'
 
@@ -104,12 +96,7 @@ def makeCongratulations(count, district, timing, parms):
 
 if __name__ == "__main__":
 
-    import tmparms
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
 
-    reload(sys).setdefaultencoding('utf8')
 
     # Handle parameters
     parms = tmparms.tmparms()
@@ -126,17 +113,17 @@ if __name__ == "__main__":
     parms.add_argument('--baseslide', type=str, default='ed-achieve-base.png',
             help='Slide to use as the base for the "Congratulations" slide')
 
-    # Add other parameters here
-    parms.parse()
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
 
-    # Connect to the database
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+    
 
     # Your main program begins here.
     # Close stdout and reassign it to the output file
     sys.stdout.close()
-    sys.stdout = open(parms.prefix + '.shtml', 'w')
+    sys.stdout = codecs.open(parms.prefix + '.shtml', 'w', 'utf-8')
 
     clauses = []
     # Figure out the timeframe for the queries.
