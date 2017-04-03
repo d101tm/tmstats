@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 """ Creates the "Share the Wealth" report """
 
-import xlsxwriter, csv, sys, os, codecs, cStringIO, re
+import sys, os, codecs, cStringIO, re
 import dbconn, tmparms, datetime
 from tmutil import cleandate, UnicodeWriter, daybefore, stringify, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords, neaten
 
+import tmglobals
+globals = tmglobals.tmglobals()
 
 class myclub:
     """ Just enough club info to sort the list nicely """
@@ -27,17 +29,17 @@ class myclub:
 
 
 if __name__ == "__main__":
-    from tmutil import gotodatadir
-    gotodatadir()
-    reload(sys).setdefaultencoding('utf8')
 
     # Handle parameters
     parms = tmparms.tmparms()
     parms.parser.add_argument("--basedate", dest='basedate', default='M3')
     parms.parser.add_argument("--finaldate", dest='finaldate', default='M5')
-    parms.parse()
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+    
+    # Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
+    
 
     # See if we have the data needed to run and build the base part of the query
     if parms.basedate.upper().startswith('M'):
@@ -110,8 +112,6 @@ if __name__ == "__main__":
         pass
 
     # Open both output files
-    divfile = open('sharethewealth.csv', 'wb')
-    divwriter = UnicodeWriter(divfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     clubfile = open('sharethewealthclubs.html', 'w')
     clubfile.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
     <html>
@@ -142,12 +142,10 @@ if __name__ == "__main__":
     """)
     clubfile.write("""
     <h1>Share The Wealth Report</h1>
-    <p>Clubs receive $5 in District Credit for every new member added after %s through %s.  These statistics are %s.</p>
-    <p>The club or clubs in each division which adds the most new members in that division will receive an additional $25 Credit; current leaders are highlighted in the table below.</p>
+    <p>Clubs receive $5 in District Credit for every new member added after %s through %s.  Clubs adding five or more members receive an additional $25 in District Credit.</p>
+    <p>The club or clubs in each division which adds the most new members in that division will receive an additional $50 Credit; current leaders are highlighted in the table below.  These statistics are %s.</p>
     """ % (msgbase, msgfinal, 'final' if final else 'updated daily'))
-    divheaders = ['Division', 'New Members']
     clubheaders = ['Division', 'Area', 'Club', 'Club Name', friendlybase, friendlyend, 'Members Added']
-    divwriter.writerow(divheaders)
 
 
 
@@ -189,14 +187,5 @@ if __name__ == "__main__":
     </html>
     """)
 
-    divs = sorted([d for d in divisions.keys() if not d.startswith('0')])
-    for d in divs:
-        divwriter.writerow((d, '%d' % divisions[d]))
-
-    # @@HACK@@: The JA_Google Chart module chokes when the last line ends with a line end.  Let's remove it.
-
-    divfile.seek(-2, os.SEEK_END)
-    divfile.truncate()
 
     clubfile.close()
-    divfile.close()
