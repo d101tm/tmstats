@@ -1,22 +1,14 @@
 #!/usr/bin/env python
 """ Populate the 'lastfor' table in the database. """
-import dbconn, tmutil, sys, os, datetime
+import tmutil, sys, os, datetime
+import tmglobals
+globals = tmglobals.tmglobals()
 
-
-def inform(*args, **kwargs):
-    """ Print information to 'file' unless suppressed by the -quiet option.
-          suppress is the minimum number of 'quiet's that need be specified for
-          this message NOT to be printed. """
-    suppress = kwargs.get('suppress', 1)
-    file = kwargs.get('file', sys.stderr)
-    
-    if parms.quiet < suppress:
-        print >> file, ' '.join(args)
         
 
 def dotable(curs, name, tmyear):
     """ Get the lastfor ids for the named table and year """
-    stmt = """select ?.clubnumber, ?.id, ?.asof, ?.monthstart from ? inner join (select clubnumber, max(asof) as m from ? where entrytype in ('M', 'L') and monthstart >= %s and monthstart <= %s group by clubnumber order by monthstart desc,  m desc, clubnumber) latest on ?.clubnumber = latest.clubnumber and ?.asof = latest.m"""
+    stmt = """select ?.clubnumber, ?.id, ?.asof, ?.monthstart from ? inner join (select clubnumber, max(asof) as m from ? where entrytype in ('M', 'L') and monthstart >= %s and monthstart <= %s group by clubnumber, monthstart order by monthstart desc,  m desc, clubnumber) latest on ?.clubnumber = latest.clubnumber and ?.asof = latest.m"""
     stmt = stmt.replace('?', name)  # Interpolate the table name
     curs.execute(stmt, ('%d-07-01' % tmyear, '%d-06-01' % (tmyear + 1)))
     
@@ -95,22 +87,17 @@ def doit(curs, parms):
 if __name__ == "__main__":
  
     import tmparms
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
-    reload(sys).setdefaultencoding('utf8')
     
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--latestonly', action='store_true')
-    # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+    
+    # Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
+    
     
     doit(curs, parms)
     conn.commit()
