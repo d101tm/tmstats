@@ -1,12 +1,32 @@
 #!/usr/bin/env python
-""" Creates the "Share the Wealth" report """
+""" Creates the "Spring Forward" report """
 
-import sys, os, codecs, cStringIO, re
-import dbconn, tmparms, datetime
+import sys
+import tmparms, datetime
 from tmutil import cleandate, UnicodeWriter, daybefore, stringify, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords, neaten
 
 import tmglobals
 globals = tmglobals.tmglobals()
+
+def getClubBlock(final, clubs):
+    """ Returns a text string representing the clubs.  Each club's name is
+        enclosed in a span of class 'clubname'. """
+    res = []
+    for club in sorted(clubs, key=lambda club: club.clubname.lower()):
+        htmlclass = 'clubname' + (' leader' if club.leader else '')
+        amount = 5*club.growth
+        if club.growth >= 5:
+            amount += 25
+        if final and club.leader:
+            amount += 50
+        res.append('<span class="clubname">%s%s%s</span> (%d)' % ('<i>' if club.leader else '', club.clubname, '</i>' if club.leader else '', club.growth))
+         
+    if len(clubs) > 1:
+        res[-1] = 'and ' + res[-1]
+    if len(clubs) != 2:
+        return ', '.join(res)
+    else:
+        return ' '.join(res)
 
 class myclub:
     """ Just enough club info to sort the list nicely """
@@ -18,6 +38,7 @@ class myclub:
         self.growth = growth
         self.endnum = endnum
         self.startnum = startnum
+        self.leader = False
 
 
     def tablepart(self):
@@ -32,8 +53,9 @@ if __name__ == "__main__":
 
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.parser.add_argument("--basedate", dest='basedate', default='M3')
-    parms.parser.add_argument("--finaldate", dest='finaldate', default='M5')
+    parms.add_argument("--basedate", dest='basedate', default='M3')
+    parms.add_argument("--finaldate", dest='finaldate', default='M5')
+    parms.add_argument('--outfile', dest='outfile', default='springforward.txt')
     
     # Do global setup
     globals.setup(parms)
@@ -88,20 +110,18 @@ if __name__ == "__main__":
     curs.execute(query)
 
     # Create the data for the output files.
-    clubs = {}
-    divisions = {}
     divmax = {}
+    divisions = {}
     for (clubnumber, clubname, division, area, endnum, startnum) in curs.fetchall():
         if not startnum:
             startnum = 0      # Handle clubs added during the period
         growth = endnum - startnum
 
         if growth > 0:
-            clubs[clubnumber] = myclub(clubnumber, clubname, division, area, endnum, startnum, growth)
             if division not in divisions:
-                divisions[division] = 0
                 divmax[division] = 0
-            divisions[division] += growth
+                divisions[division] = []
+            divisions[division].append(myclub(clubnumber, clubname, division, area, endnum, startnum, growth))
             if growth > divmax[division]:
                 divmax[division] = growth
 
@@ -110,82 +130,29 @@ if __name__ == "__main__":
         divmax['0D'] += 1
     except KeyError:
         pass
+        
+    
 
-    # Open both output files
-    clubfile = open('sharethewealthclubs.html', 'w')
-    clubfile.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-    <html>
-    <head>
-    <meta http-equiv="Content-Style-Type" content="text/css">
-    <title>Share The Wealth</title>
-    <style type="text/css">
+    # Open the output file
+    clubfile = open(parms.outfile, 'w')
 
-
-            html {font-family: Arial, "Helvetica Neue", Helvetica, Tahoma, sans-serif;
-                  font-size: 75%;}
-
-            table {width: 75%; font-size: 14px; border-width: 1px; border-spacing: 1px; border-collapse: collapse; border-style: solid;}
-            td, th {border-color: black; border-width: 1px;  vertical-align: middle;
-                padding: 2px; padding-right: 5px; padding-left: 5px; border-style: solid;}
-
-            .name {text-align: left; font-weight: bold; width: 40%;}
-            .number {text-align: right; width: 5%;}
-
-            .bold {font-weight: bold;}
-            .italic {font-style: italic;}
-            .leader {background-color: aqua;}
-
-
-            </style>
-    </head>
-    <body>
-    """)
     clubfile.write("""
-    <h1>Share The Wealth Report</h1>
     <p>Clubs receive $5 in District Credit for every new member added after %s through %s.  Clubs adding five or more members receive an additional $25 in District Credit.</p>
-    <p>The club or clubs in each division which adds the most new members in that division will receive an additional $50 Credit; current leaders are highlighted in the table below.  These statistics are %s.</p>
+    <p>The club or clubs in each division adding the most new members in that division will receive an additional $50 Credit; current leaders are italicized in the listing below.  These statistics are %s.</p>
     """ % (msgbase, msgfinal, 'final' if final else 'updated daily'))
-    clubheaders = ['Division', 'Area', 'Club', 'Club Name', friendlybase, friendlyend, 'Members Added']
 
 
 
+    for division in sorted(divisions.keys()):
 
-    # Write the table header for the club report
-    clubfile.write("""
-    <table>
-       <thead>
-         <tr>
-    """)
-    for h in clubheaders:
-        style = ' style="text-align: left;"' if h=='Club Name' else ''
-        clubfile.write("""
-            <th%s>%s</th>
-    """ % (style, h))
-    clubfile.write("""
-         </tr>
-       </thead>
-       <tbody>
-    """)
-
-
-    for club in sorted(clubs.values(), key=lambda c:c.key()):
-        clubfile.write('      <tr%s>\n' % (' class="leader"' if club.growth == divmax[club.division] else ''))
-        clubfile.write('        <td class="number">%s</td>\n' % club.division)
-        clubfile.write('        <td class="number">%s</td>\n' % club.area)
-        clubfile.write('        <td class="number">%s</td>\n' % club.clubnumber)
-        clubfile.write('        <td class="name%s">%s</td>\n' % (" bold italic" if club.growth == divmax[club.division] else "", club.clubname))
-        clubfile.write('        <td class="number">%s</td>\n' % club.startnum)
-        clubfile.write('        <td class="number">%s</td>\n' % club.endnum)
-        clubfile.write('        <td class="number%s">%s</td>\n' % (" bold italic" if club.growth == divmax[club.division] else "", club.growth))
-        clubfile.write('     </tr>\n')
-
-
-    # Close out the club file
-    clubfile.write("""  </tbody>
-    </table>
-    </body>
-    </html>
-    """)
+        if division != '0D':
+            # Mark the leader(s)
+            for club in divisions[division]:
+                club.leader = (club.growth == divmax[division])
+               
+        
+            clubfile.write('<h4>Division %s</h4>\n' % division)
+            clubfile.write('<p>%s.</p>\n' % getClubBlock(final, divisions[division]))
 
 
     clubfile.close()
