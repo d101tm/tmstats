@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """ Send mail congratulating award recipients. """
-# This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
-import dbconn, tmutil, sys, os
+import dbconn, tmutil, sys, os, yaml
 import tmparms, os, sys, argparse, smtplib, time
+from tmutil import cleandate
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
 
+import tmglobals
+globals = tmglobals.tmglobals()
 
 import collections
 
@@ -206,13 +208,7 @@ class Award:
 
 
 if __name__ == "__main__":
- 
-    import tmparms, yaml
-    from tmutil import gotodatadir, cleandate
-    # Make it easy to run under TextMate
-    gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
+
     
     # Handle parameters
     parms = tmparms.tmparms()
@@ -228,8 +224,13 @@ if __name__ == "__main__":
     parms.parser.add_argument("--bcc", dest='bcc', nargs='+', default=[], action='append')
     parms.add_argument('--fromdate', default='yesterday', dest='fromdate', help="First date for congrats.")
     parms.add_argument('--todate', default='yesterday', dest='todate', help="Last date for congrats")
-    # Add other parameters here
-    parms.parse() 
+    parms.add_argument('--dryrun', action='store_true', help="Don't send letters; do say who they'd go to.")
+    
+    # Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
+    
     
     parms.fromdate = cleandate(parms.fromdate)
     parms.todate = cleandate(parms.todate)
@@ -243,9 +244,6 @@ if __name__ == "__main__":
     parms.sender = parms.__dict__['from']    
     
 
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
     
     report = []
     
@@ -274,15 +272,18 @@ if __name__ == "__main__":
             award = Award(membername, firstname if firstname else '<b>Not in roster</b>', item[0], awarddate, email if email else '<b>No email found</b>', item[1], item[3])
             report.append(award)
             letterinfo.append(award)    
-
-        sendletter(email, firstname, letterinfo, parms)
-        # And mark this one as acknowledged
-        for l in letterinfo:
-            curs.execute('UPDATE awards SET acknowledged = 1 WHERE id = %s', (l.id,))
-        conn.commit()
-        time.sleep(5)
+            
+        if not parms.dryrun:
+            sendletter(email, firstname, letterinfo, parms)
+            # And mark this one as acknowledged
+            for l in letterinfo:
+                curs.execute('UPDATE awards SET acknowledged = 1 WHERE id = %s', (l.id,))
+            conn.commit()
+            time.sleep(5)
+        else:
+            print 'Would send to', email
         
-    if len(report) > 0:
+    if len(report) > 0 and not parms.dryrun:
         sendreport(report)
         
 
