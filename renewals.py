@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Generate the March Madness report for the What's Trending page. """
+""" Generate reports for renewal programs (March Madness, Stellar September) """
     
 
 
@@ -24,15 +24,13 @@ class myclub:
         return (self.area, self.clubnumber)
 
 if __name__ == "__main__":
-    import dbconn, tmparms, latest, os, sys, argparse
+    import tmparms, latest, os, sys
     from datetime import datetime
     from tmutil import showclubswithvalues, cleandate, getClubBlock, gotodatadir
+    import tmglobals
+    globals = tmglobals.tmglobals()
     
-    gotodatadir()           # Move to the proper data directory
-        
 
-    # Get around unicode problems
-    reload(sys).setdefaultencoding('utf8')
     
     # Define args and parse command line
     parms = tmparms.tmparms(description=__doc__)
@@ -41,7 +39,12 @@ if __name__ == "__main__":
     parms.add_argument('--outfileprefix', default='', dest='outfileprefix', type=str, help="Output file prefix.")
     parms.add_argument('--earning', default='$50 in District Credit')
     parms.add_argument('--program', choices=['madness', 'stellar'])
-    parms.parse()
+    
+    # Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
+    
 
     # Conditionally resolve unspecified parameters
     if not parms.program:
@@ -57,9 +60,7 @@ if __name__ == "__main__":
         parms.outfileprefix = parms.program
 
     finaldate = cleandate(parms.finaldate)
-    # print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+
     
     # We want data for the earlier of "finaldate" or the most recent in the database
     mostrecent = latest.getlatest('distperf', conn)[1]

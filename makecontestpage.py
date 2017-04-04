@@ -8,6 +8,8 @@
 import dbconn, tmutil, sys, os
 from datetime import datetime
 import re
+import tmglobals
+globals = tmglobals.tmglobals()
 
 
 
@@ -81,9 +83,7 @@ def output(what, outfile):
 if __name__ == "__main__":
  
     import tmparms
-    tmutil.gotodatadir()           # Move to the proper data directory
-        
-    reload(sys).setdefaultencoding('utf8')
+    
     
     # Handle parameters
     parms = tmparms.tmparms()
@@ -95,13 +95,13 @@ if __name__ == "__main__":
     parms.add_argument('--season', type=str, choices=['fall', 'spring', 'Fall', 'Spring', ''], default='')
     parms.add_argument('--year', type=int, default=0)
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
-    # Add other parameters here
-    parms.parse() 
+    
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
    
- 
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+
       
     # Figure out the contest period.
     parms.now = datetime.now()   

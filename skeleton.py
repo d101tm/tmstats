@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """ Insert description of this program here """
 
-import dbconn, tmutil, sys, os
+import tmutil, sys
+import tmglobals
+globals = tmglobals.tmglobals()
 
 
 
@@ -10,19 +12,13 @@ import dbconn, tmutil, sys, os
 if __name__ == "__main__":
  
     import tmparms
-    tmutil.gotodatadir()           # Move to the proper data directory
-        
-    reload(sys).setdefaultencoding('utf8')
     
-    # Handle parameters
+    # Establish parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--quiet', '-q', action='count')
-    parms.add_argument('--verbose', '-v', action='count')
     # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+
+    # Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
     
-    # Your main program begins here.

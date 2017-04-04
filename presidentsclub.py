@@ -1,8 +1,9 @@
-#!/usr/bin/python
-import dbconn, tmparms, os, sys
+#!/usr/bin/env python
+import tmparms, os, sys
 from datetime import date, datetime
 from tmutil import showclubswithoutvalues, cleandate, stringify, getClubBlock
-
+import tmglobals
+globals = tmglobals.tmglobals()
 
 class myclub:
     """ Just enough club info to sort the list nicely """
@@ -13,11 +14,7 @@ class myclub:
 
 if __name__ == "__main__":
  
-    from tmutil import gotodatadir
-    # Make it easy to run under TextMate
-    gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
+
     
     # Handle parameters
     parms = tmparms.tmparms()
@@ -25,12 +22,12 @@ if __name__ == "__main__":
     parms.parser.add_argument("--finaldate", dest='finaldate', type=str, default='4/15')
     parms.parser.add_argument('--outfile', default='presidentsclub.txt')
     parms.parser.add_argument('--earning', default='$100 in District Credit')
-    # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+
+    # Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
+    
     
     # Your main program begins here.
     

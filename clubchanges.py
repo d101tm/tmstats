@@ -15,6 +15,8 @@ from simpleclub import Club
 import os, sys
 from tmutil import cleandate, removeSuspendedClubs, stringify
 import datetime, argparse
+import tmglobals, tmparms
+globals = tmglobals.tmglobals()
 
 
         
@@ -24,14 +26,7 @@ def sortclubs(what):
 
 
 if __name__ == "__main__":
-    import dbconn, tmparms
-    
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
-    # Get around unicode problems
-    reload(sys).setdefaultencoding('utf8')
+
     
     # Define args and parse command line
     parms = tmparms.tmparms(description=__doc__)
@@ -41,9 +36,14 @@ if __name__ == "__main__":
                         help='Day of the week (Mon, Tue...) on which to run.  Runs daily if omitted.')
     parms.add_argument('--outfile', default='-', dest='outfile', type=argparse.FileType('w'), help="Output file.")
     parms.add_argument('--short', action='store_true', help="Print short output instead of creating HTML")
-    parms.parse()
-    fromdate = cleandate(parms.fromdate)
-    todate = cleandate(parms.todate)
+    
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
+    fromdate = cleandate(parms.fromdate,usetmyear=False)
+    todate = cleandate(parms.todate,usetmyear=False)
+    cleanedtodate = todate
     
     # Let's see if we're supposed to run today.
     if parms.runon:
@@ -53,10 +53,7 @@ if __name__ == "__main__":
             #sys.stderr.write('Not running because today is %s but --runon=%s was specified\n' % (weekday, ' '.join(parms.runon)))
             sys.exit(0)  # Not running is a normal exit.
       
-    # print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
-    
+
     # Correct the dates to fit the data in the database 
     curs.execute("SELECT MAX(loadedfor) FROM loaded where tablename = 'clubs' AND loadedfor <= %s", (fromdate,))
     fromdate = stringify(curs.fetchone()[0])
@@ -64,7 +61,7 @@ if __name__ == "__main__":
     curs.execute("SELECT MIN(loadedfor) FROM loaded where tablename = 'clubs' AND loadedfor >= %s", (todate,))
     todate = stringify(curs.fetchone()[0])
     if todate is None:
-        todate = cleandate(parms.todate)
+        todate = cleanedtodate
     
 
   

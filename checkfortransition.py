@@ -14,15 +14,12 @@
 
 """
 
-import dbconn, tmutil, sys, os, time
+import dbconn, tmutil, sys, os, time, tmglobals, tmparms
+globals = tmglobals.tmglobals()
 
 
 if __name__ == "__main__":
- 
-    import tmparms
-    tmutil.gotodatadir()           # Move to the proper data directory
-        
-    reload(sys).setdefaultencoding('utf8')
+
     
     # Handle parameters
     parms = tmparms.tmparms()
@@ -31,11 +28,12 @@ if __name__ == "__main__":
     parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
     parms.add_argument('--officers', dest='officers', default=None, help='URL of the CSV export form of a Google Spreadsheet with Area/Division Directors')
     # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+    
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
+    
     
     # What year do we think we should be in?
     if parms.tmyear:
@@ -48,7 +46,7 @@ if __name__ == "__main__":
             desiredyear = year
     ans = '%s=' % parms.varname   # Assume we unset it
     f = parms.varname
-    if desiredyear != int(tmutil.getTMYearFromDB(curs)):
+    if desiredyear != int(globals.tmyear):
         if parms.__dict__[f]:
             ans = "%s=\"--%s %s\"" % (f, f, parms.__dict__[f])
         elif desiredyear in parms.__dict__:

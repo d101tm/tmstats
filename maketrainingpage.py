@@ -8,6 +8,8 @@
 import dbconn, tmutil, sys, os
 from datetime import datetime
 import re
+import tmglobals
+globals = tmglobals.tmglobals()
 
 
 
@@ -70,9 +72,7 @@ def output(what, outfile):
 if __name__ == "__main__":
  
     import tmparms
-    tmutil.gotodatadir()           # Move to the proper data directory
-        
-    reload(sys).setdefaultencoding('utf8')
+
     
     # Handle parameters
     parms = tmparms.tmparms()
@@ -83,8 +83,8 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', type=str, default='trainingschedule.html')
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
     # Add other parameters here
-    parms.parse() 
-   
+    globals.setup(parms, connect=False)
+
  
       
     # Figure out the training period.

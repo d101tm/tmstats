@@ -45,15 +45,9 @@ The "gotodatadir()" routine in tmutil.py handles this.  At this time, the progra
 
 ## Driver Script
 
-Each installation of the __tmstats__ suite needs its own driver script to adapt to local conditions (such as versions of Python and the eventual destination of the output files).  There are two driver scripts in the package:
+Each installation of the __tmstats__ suite needs its own driver script to adapt to local conditions (such as versions of Python and the eventual destination of the output files).  The driver script is for D101 Toastmasters on Dreamhost:
 
-* gator.sh (used by District 4 Toastmasters on HostGator)
 * dreamhost.sh (used by District 101 Toastmasters on Dreamhost)
-
-The __gator.sh__ script was written before I knew how to use a virtual environment; it also has to do a lot to cope with the downlevel Python environment on HostGator (2.6.6 by default, latest available 2.7.8).
-
-Neither script is very pretty; I use a lot of brute-force and ignorance.
-
 
 
 ### Basic Logic ###
@@ -144,13 +138,7 @@ Create an HTML file with changes in club information between two dates, based on
 * Clubs which have been added to the list (with detailed infomation about each club)
 * Clubs whose information has been changed (by default, only the area, division, place, address, and meeting information is checked or displayed.)
 
-### clubsfromjson.py ###
 
-An alternative way of getting the current club information from WHQ and writing the clubs._date_.csv file.  Uses the undocumented JSON feed from WHQ.  Not currently in use, but available if they break the CSV feed.
-
-### clubsizes.py ###
-
-Creates CSV files for "largest clubs" and "clubs with most new members".  Not currently used.
 
 ### codeit.py ###
 
@@ -160,7 +148,7 @@ Probably no longer necessary; replaced by geocode.py.
 
 ### copywebfiles.py ###
 
-Hacky program to copy files from the Webmaster Dropbox account's "D101 Web Files" directory to the local ~/files directory, creating subdirectories as needed.  Probably not necessary any more.
+Hacky program to copy files from the Webmaster Dropbox account's "D101 Web Files" directory to the local ~/files directory, creating subdirectories as needed.  
 
 ### createalignment.py ###
 
@@ -179,7 +167,7 @@ Return 2 in any other case.
     
 Uses the 'loaded' table.
 
-### d101.py ###
+### d101borders.py ###
 
 Contains the borders of District 101.
 
@@ -193,7 +181,7 @@ Fetches the most current training report (using [gettrainingstatus.py][]); if it
 
 ### earlyachievers.py ###
 
-Creates the "Early Achievers" report based on District 4's criteria.  The end date is a parameter, but nothing else is.
+Creates the "Early Achievers" report based on District 101's criteria.  The end date is a parameter, but nothing else is.
 
 ### emptytables.sql ###
 
@@ -203,17 +191,11 @@ Drops most of the tables.  Don't use it unless you are rebuilding everything.
 
 Wraps Google Maps geocoding functions for other programs.  If called as a stand-alone program, geocodes all clubs in the database.
 
-### geocompare.py ###
-
-Tries to compare our geocoding to that of WHQ and builds a report.  Not used on a regular basis.
 
 ### georeverse.py ###
 
 Tries to compare our geocoding to that of WHQ and builds a report.  Not uses on a regular basis.  Not sure why I needed both this and [geocompare.py][] anymore!
 
-### getd4clubs.py ###
-
-Used to create a ["test alignment" file][] for District 4 clubs.  No longer needed.
 
 ### geteducationals.py ###
 
@@ -251,10 +233,6 @@ Creates an HTML file and fragments which list clubs by city.
 
 Takes the *perf.__date__.csv and clubs.__date__.csv files and puts them into the database.  Works around some problems with the Toastmasters "clubs" file.
 
-### madness.py ###
-
-Creates the March Madness awards HTML fragment.  Nothing is parameterized.
-
 ### makealignmap.sh ###
 
 No longer used.
@@ -285,13 +263,6 @@ Creates the club locator map.  [alignmap.py][] wrappers it.
 
 @@TODO@@ The two should be consolidated.
 
-### nothinbutnet.py ###
-
-Creates the HTML fragment for the "Nothin' But Net" awards program.  Never modified to use the database; delete this program or rewrite it.
-
-### overridegeo.py ###
-
-Updates the "geo" table based on the ["map override" file][].  Not used as far as I can tell.
 
 ### overridepositions.py ###
 
@@ -305,9 +276,6 @@ Populates the "lastfor" table in the database, which many programs use to find t
 
 Creates the HTML fragment for the "President's Club" award.
 
-### processoldmap.py ###
-
-Pulled coordinate information from the old, hand-built, D4 map.  No longer needed.
 
 ### punch12.py ###
 
@@ -316,6 +284,10 @@ Creates the HTML fragment for the "1-2 Punch" awards.
 ### reload.sh ###
 
 Empties and reloads the entire database.  Don't use it.
+
+### renewals.py ###
+
+Generates the Stellar September and March Madness reports.
 
 ### resetdbto.py ###
 
@@ -353,17 +325,6 @@ The class implementation used to maintain information about a club.  The name is
 
 A starting point for a new program in the suite.
 
-### smedley.py ###
-
-Creates the HTML fragment for the "Smedley Stretch" and "Smedley Award" awards.
-
-### snapshot.py ###
-
-Used for 2015-16.  No longer needed.
-
-### snapshot.sh ### ###
-
-Used for 2015-16.  No longer needed.
 
 ### syncdata.sh ###
 
@@ -401,9 +362,6 @@ Creates the Triple Crown report HTML fragment using the District 4 definition (3
 
 Rebuilds the "geo" table based on information originally captured by [codeit.py][].
 
-### updategrouped.py ###
-
-Updates the grouped.txt file, probably no longer needed.
 
 ## Use of Dropbox and Google Documents ##
 

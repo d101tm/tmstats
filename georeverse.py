@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+""" Reverse-Geocode coordinates from WHQ and from our encoding and add them to the GEO table. """
 import googlemaps
 import urllib3
 import logging
@@ -7,6 +8,9 @@ import pprint
 import dbconn, tmutil, sys, os
 import json
 from uncodeit import myclub
+
+import tmglobals
+globals = tmglobals.tmglobals()
 
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
@@ -54,27 +58,19 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
 if __name__ == "__main__":
- 
-    import tmparms
-    from tmutil import gotodatadir
-    # Make it easy to run under TextMate
-    gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
-    
-    # Handle parameters
+
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
-    # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    c = conn.cursor()
+    
+    # Do global setup
+    globals = globals.setup(parms)
+    conn = globals.conn
+    c = globals.curs
+
 
     # Your main program begins here.
 
-    gmaps = googlemaps.Client(key='AIzaSyAQJ_oe8p5ldJGJEQLSHvGpJcFocCRnxYg')
+    gmaps = googlemaps.Client(key=parms.googlemapsapikey)
     c.execute("SELECT clubnumber, clubname, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs) ORDER BY clubnumber;")
     for (clubnumber, clubname, whqlatitude, whqlongitude) in c.fetchall():
         # Now, reverse-geocode the address and add it to the table

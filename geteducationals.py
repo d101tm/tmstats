@@ -4,6 +4,8 @@
 
 import dbconn, tmutil, sys, os, urllib
 from bs4 import BeautifulSoup
+import tmglobals
+globals = tmglobals.tmglobals()
 
 
 def inform(*args, **kwargs):
@@ -22,26 +24,18 @@ def makekey(membername, clubname, award, awarddate):
     return '%s+%s+%s+%s' % (membername, clubname, award, awarddate)
 
 if __name__ == "__main__":
- 
-    import tmparms
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
-    reload(sys).setdefaultencoding('utf8')
     
     # Handle parameters
+    import tmparms
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--district', type=int)
-    parms.parse()
+    
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
 
-    # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
     
     # Get the existing awards (significant parts only) so we don't create duplicates.  We can't 
     #   let the datbase do it because we don't have a valid unique key - a person can earn 

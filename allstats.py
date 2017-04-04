@@ -8,6 +8,9 @@ import csv
 
 from operator import attrgetter
 
+from tmglobals import tmglobals
+globals = tmglobals()
+
 dists = {
     'P': 'President\'s Distinguished = %d',
     'S': 'Select Distinguished = %d',
@@ -520,13 +523,9 @@ class Area(Aggregate):
         return res
         
         
+### Main Program Starts Here ###
 
-# Make it easy to run under TextMate
-if 'TM_DIRECTORY' in os.environ:
-    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-    
-# Get around unicode problems
-reload(sys).setdefaultencoding('utf8')
+
 
 # Define args and parse command line
 parms = tmparms.tmparms(description=__doc__)
@@ -534,14 +533,16 @@ parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help
 parms.add_argument("--newAlignment", dest="newAlignment", default=None, help="CSV file with alignment information to create a report with a new alignment.")
 parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
-parms.parse()
 
-conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-curs = conn.cursor()
+# Do global setup
+globals.setup(parms)
+
+conn = globals.conn
+curs = globals.curs
 district = '%02d' % parms.district 
 
 # Find the latest date in the system and work backwards from there to the beginning of the TM year.
-today = datetime.date.today()
+today = globals.today
 (latestmonth, latestdate) = latest.getlatest('clubperf', conn)
 (latestyear, latestmonth) = [int(f) for f in latestmonth.split('-')[0:2]]
 latestdate = datetime.datetime.strptime(latestdate, "%Y-%m-%d")

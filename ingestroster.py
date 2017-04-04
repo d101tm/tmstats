@@ -7,16 +7,9 @@
 import dbconn, tmutil, sys, os, xlrd, re, csv, codecs
 from datetime import datetime
 
+import tmglobals
+globals = tmglobals.tmglobals()
 
-def inform(*args, **kwargs):
-    """ Print information to 'file' unless suppressed by the -quiet option.
-          suppress is the minimum number of 'quiet's that need be specified for
-          this message NOT to be printed. """
-    suppress = kwargs.get('suppress', 1)
-    file = kwargs.get('file', sys.stderr)
-    
-    if parms.quiet < suppress:
-        print >> file, ' '.join(args)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -61,23 +54,20 @@ class UnicodeReader:
 
 if __name__ == "__main__":
  
-    import tmparms
-    from tmutil import gotodatadir
-    gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
+
     
     # Handle parameters
+    import tmparms
     parms = tmparms.tmparms()
     parms.add_argument('roster', type=str, nargs=1, help='Name of the roster file')
-    parms.add_argument('--quiet', '-q', action='count')
-    # Add other parameters here
-    parms.parse() 
+    
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
     
     parms.roster = parms.roster[0]
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+
     
     filetype = os.path.splitext(parms.roster)[1].lower()
     values = []
@@ -116,7 +106,7 @@ if __name__ == "__main__":
         ijoin = fieldnames.index('joindate')
         itermbegin = fieldnames.index('termbegindate')
         
-        
+        format = '%m/%d/%Y'
         # And get the values
         for row in reader:
             # Convert dates
@@ -125,12 +115,16 @@ if __name__ == "__main__":
                 row[ijoin] = row[itermbegin]
             for col in idates:
                 try:
-                    row[col] = datetime.strptime(row[col], '%m/%d/%Y')
-                except Exception, e:
-                    print e
-                    print row[col]
-                    print row
-                    sys.exit(1)
+                    row[col] = datetime.strptime(row[col], format)
+                except ValueError, e:
+                    format = '%m/%d/%y'
+                    try:
+                        row[col] = datetime.strptime(row[col], format)
+                    except Exception, e:
+                        print e
+                        print row[col]
+                        print row
+                        sys.exit(1)
             values.append(row)
             # And add the fullname
             values[-1].append(('%s, %s %s' % (row[ilastname],row[ifirstname],row[imiddle])).strip())

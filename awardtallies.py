@@ -2,44 +2,31 @@
 
 # Create the "awards by division" and "awards by type" CSVs
 
-import dbconn, tmutil, sys, os, datetime
+import dbconn, tmutil, sys, os, datetime, tmglobals, tmparms, argparse
+globals = tmglobals.tmglobals()
 
 
-def inform(*args, **kwargs):
-    """ Print information to 'file' unless suppressed by the -quiet option.
-          suppress is the minimum number of 'quiet's that need be specified for
-          this message NOT to be printed. """
-    suppress = kwargs.get('suppress', 1)
-    file = kwargs.get('file', sys.stderr)
-    
-    if parms.quiet < suppress:
-        print >> file, ' '.join(args)
+
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
 if __name__ == "__main__":
- 
-    import tmparms, argparse
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
-    reload(sys).setdefaultencoding('utf8')
+
     
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--divfile', default='awardsbydivision.csv', dest='divfile', type=argparse.FileType('w'), help="CSV file: awards by division")
     parms.add_argument('--typefile', default='awardsbytype.csv', dest='typefile', type=argparse.FileType('w'), help="CSV file: awards by type")
     parms.add_argument('--tmyear', default=None, dest='tmyear', type=int, help='TM Year (current if omitted)')
-    # Add other parameters here
-    parms.parse() 
+    
+    # Do global setup
+    globals.setup(parms)
    
     # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
-    
-    # Main program begins here.
+    conn = globals.conn
+    curs = globals.curs
+
+    # We go by the calendar, not the TMyear in the database, because WHQ never stops processing awards    
     if parms.tmyear:
         tmyear = parms.tmyear
     else:
