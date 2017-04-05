@@ -4,43 +4,9 @@ There are many programs and datasources used by the __tmstats__ suite.  This doc
 
 ## Directory Structure ##
 
-The programs should all be in one directory (I'll call it __tmstats__); data files for the programs, including the all-important [tmstats.yml][], belong in a subdirectory named __data__ of the tmstats directory.  Most of the programs will chdir to the data subdirectory of the current directory if one exists; otherwise, they'll use the current directory as their __working directory__, so the driver script would need to ensure that the current directory is set to the data directory before invoking any of the programs.
+The programs should all be in one directory (I'll call it __tmstats__); data files for the programs, including the all-important [tmstats.yml][], belong in a subdirectory named __data__ of the tmstats directory.  The programs will chdir to the data subdirectory of the current directory if one exists; otherwise, they'll use the current directory as their __working directory__, so the driver script would need to ensure that the current directory is set to the data directory before invoking any of the programs.
 
-The programs do the "cd to data" trick to make it easier to test them from (for example) an editor, without having to get the editor to change to the right directory before invoking the program.
-
-The "gotodatadir()" routine in tmutil.py handles this.  At this time, the programs which _do not_ use this routine are:
-
-    allstats.py
-    awardtallies.py
-    buildareapage.py
-    clubchanges.py
-    clubsfromjson.py
-    clubsizes.py
-    codeit.py
-    currency.py
-    d101.py
-    dbconn.py
-    earlyachievers.py
-    geteducationals.py
-    getperformancefiles.py
-    latest.py
-    listclubsbycity.py
-    loaddb.py
-    madness.py
-    makeeducationals.py
-    nothinbutnet.py
-    overridepositions.py
-    populatelastfor.py
-    processoldmap.py
-    resetdbto.py
-    sanity.py
-    sendmail.py
-    simpleclub.py
-    smedley.py
-    snapshot.py
-    tmparms.py
-    triplecrown.py
-    uncodeit.py
+Note that this means that any filenames on the command line or in the YMLfile are interpreted AFTER the program has changed to the proper directory!
 
 
 ## Driver Script
