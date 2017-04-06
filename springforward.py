@@ -1,32 +1,29 @@
 #!/usr/bin/env python
 """ Creates the "Spring Forward" report """
 
-import sys
+import sys, csv
 import tmparms, datetime
 from tmutil import cleandate, UnicodeWriter, daybefore, stringify, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords, neaten
 
 import tmglobals
 globals = tmglobals.tmglobals()
 
-def getClubBlock(final, clubs):
-    """ Returns a text string representing the clubs.  Each club's name is
-        enclosed in a span of class 'clubname'. """
+def createResults(final, clubs):
+    """ Returns a text string representing the clubs.  
+        As a side effect, computes the award amount due for each club.
+        Each club's name is enclosed in a span of class 'clubname'. """
     res = []
     for club in sorted(clubs, key=lambda club: club.clubname.lower()):
         htmlclass = 'clubname' + (' leader' if club.leader else '')
-        amount = 5*club.growth
+        club.amount = 5*club.growth
         if club.growth >= 5:
-            amount += 25
+            club.amount += 25
         if final and club.leader:
-            amount += 50
-        res.append('<span class="clubname">%s%s%s</span> (%d)' % ('<i>' if club.leader else '', club.clubname, '</i>' if club.leader else '', club.growth))
+            club.amount += 50
+        res.append('<span class="clubname">%s%s%s</span> (%d, $%d)' % ('<i>' if club.leader else '', club.clubname, '</i>' if club.leader else '', club.growth, club.amount))
          
-    if len(clubs) > 1:
-        res[-1] = 'and ' + res[-1]
-    if len(clubs) != 2:
-        return ', '.join(res)
-    else:
-        return ' '.join(res)
+    return('<br>\n'.join(res))
+   
 
 class myclub:
     """ Just enough club info to sort the list nicely """
@@ -38,6 +35,7 @@ class myclub:
         self.growth = growth
         self.endnum = endnum
         self.startnum = startnum
+        self.amount = 0
         self.leader = False
 
 
@@ -56,6 +54,7 @@ if __name__ == "__main__":
     parms.add_argument("--basedate", dest='basedate', default='M3')
     parms.add_argument("--finaldate", dest='finaldate', default='M5')
     parms.add_argument('--outfile', dest='outfile', default='springforward.txt')
+    parms.add_argument('--csvfile', dest='csvfile', default='springforward.csv')
     
     # Do global setup
     globals.setup(parms)
@@ -133,7 +132,7 @@ if __name__ == "__main__":
         
     
 
-    # Open the output file
+    # Open the output files
     clubfile = open(parms.outfile, 'w')
 
     clubfile.write("""
@@ -141,7 +140,13 @@ if __name__ == "__main__":
     <p>The club or clubs in each division adding the most new members in that division will receive an additional $50 Credit; current leaders are italicized in the listing below.  These statistics are %s.</p>
     """ % (msgbase, msgfinal, 'final' if final else 'updated daily'))
 
-
+    # And now, make a CSV with all of the information
+    columns = ['Division', 'Area', 'Club Number', 'Club Name', 'Members Added', 'Amount Earned', 'Division Leader']
+    fields = ['division', 'area', 'clubnumber', 'clubname', 'growth', 'amount', 'leader']
+    csvfile = open(parms.csvfile, 'wb')
+    writer = csv.DictWriter(csvfile, fieldnames=fields, extrasaction='ignore')
+    csvfile.write(','.join(columns))
+    csvfile.write('\n')
 
     for division in sorted(divisions.keys()):
 
@@ -152,7 +157,13 @@ if __name__ == "__main__":
                
         
             clubfile.write('<h4>Division %s</h4>\n' % division)
-            clubfile.write('<p>%s.</p>\n' % getClubBlock(final, divisions[division]))
+            clubfile.write('<p>%s.</p>\n' % createResults(final, divisions[division]))
+            
+            for club in sorted(divisions[division], key=lambda c: '%.2s%.2s%0.8d' % (c.division, c.area, c.clubnumber)):
+                writer.writerow(club.__dict__)
 
 
     clubfile.close()
+    csvfile.close()
+
+        
