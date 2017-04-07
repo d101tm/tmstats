@@ -14,7 +14,7 @@ def createResults(final, clubs):
         Each club's name is enclosed in a span of class 'clubname'. """
     res = []
     for club in sorted(clubs, key=lambda club: club.clubname.lower()):
-        htmlclass = 'clubname' + (' leader' if club.leader else '')
+        htmlclass = 'clubname' 
         info = []
         club.amount = 5*club.growth
         info.append('%d added member%s' % (club.growth, 's' if club.growth > 1 else ''))
@@ -26,11 +26,11 @@ def createResults(final, clubs):
                 club.amount += 50
                 info.append('\\$50 bonus for leading Division %s' % club.division)
             else:
-                info.append('currently leading Divsion %s' % club.division)
+                info.append('currently leading Division %s' % club.division)
         
-        res.append('<span class="clubname">%s%s%s</span> (\\$%d: %s)' % ('<i>' if club.leader else '', club.clubname, '</i>' if club.leader else '', club.amount, '; '.join(info)))
+        res.append('<span class="clubname">%s</span> (\\$%d: %s)' % (club.clubname, club.amount, '; '.join(info)))
          
-    return('<br>\n'.join(res))
+    return('\n'.join(res))
    
 
 class myclub:
@@ -149,7 +149,11 @@ if __name__ == "__main__":
      	<li>Earn an additional \\$25 when you add 5 or more members</li>
      	<li><b>BONUS</b>: The club(s) adding the most members in each Division earn(s) an additional \\$50</li>
     </ul>
+    <p>Click on a division to see the clubs which have earned awards.</p>
     """ % (msgbase, msgfinal))
+    
+    clubfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
+    """)
 
     # Also make a CSV with all of the information
     columns = ['Division', 'Area', 'Club Number', 'Club Name', 'Members Added', 'Amount Earned', 'Division Leader']
@@ -165,15 +169,15 @@ if __name__ == "__main__":
             # Mark the leader(s)
             for club in divisions[division]:
                 club.leader = (club.growth == divmax[division])
-        
-            clubfile.write('[et_pb_toggle title="Division %s" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000000"]\n' % division)
+                
+            clubfile.write('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="1.3em" body_line_height_tablet="1.3em" body_line_height_phone="1.3em"]\n' % division)
             clubfile.write('<p>%s.</p>\n' % createResults(final, divisions[division]))
-            clubfile.write('[/et_pb_toggle]\n')
+            clubfile.write('[/et_pb_tab]\n')
             
             for club in sorted(divisions[division], key=lambda c: '%.2s%.2s%0.8d' % (c.division, c.area, c.clubnumber)):
                 writer.writerow(club.__dict__)
 
-
+    clubfile.write('[/et_pb_tabs]\n')
     clubfile.close()
     csvfile.close()
 
