@@ -5,21 +5,24 @@ Clubs earn $40 for every DCP level they increase from the previous year.
 For example, a club going from not Distinguished to Select Distinguished earns $80.
 New clubs are considered "not Distinguished" for the previous year. """
 
-import tmutil, sys
+import tmutil, sys, csv
 import tmglobals
 globals = tmglobals.tmglobals()
 
 levels = {' ':0, 'D': 1, 'S': 2, 'P': 3}
 
 class myclub:
-    def __init__(self, division, area, clubnumber, clubname, thisyear):
-        self.division = division
-        self.area = area
-        self.clubnumber = clubnumber
-        self.clubname = clubname
-        self.thisyear = levels[(thisyear+' ')[0]]
+    def __init__(self, dict):
+        for item in dict:
+            self.__dict__[item[0]] = item[1]
+        self.thisyear = levels[(self.clubdistinguishedstatus+' ')[0]]
         self.lastyear = 0
+        if self.activemembers < 20:
+            self.needed = min(20-self.activemembers, self.membase+5-self.activemembers)
+        else:
+            self.needed = 0
         
+ 
 clubs = {}
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
@@ -32,6 +35,7 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--tmyear', default=0, type=int, help="Toastmasters year to report on.")
     parms.add_argument('--outfile', default='takealeap.html')
+    parms.add_argument('--csvfile', default='takealeap.csv')
     # Add other parameters here
 
     # Do global setup
@@ -52,15 +56,22 @@ if __name__ == "__main__":
                
 
     # Get current clubs
-    curs.execute("SELECT division, area, clubnumber, clubname, clubdistinguishedstatus FROM clubperf WHERE asof = %s", (thisyearsdate,))
+    curs.execute("SELECT * FROM clubperf WHERE asof = %s", (thisyearsdate,))
+    # Get the column names
+    columns = [item[0] for item in curs.description]
+    columnsforcsv = columns[columns.index('district'):columns.index('color')]
+    columnsforcsv.append('laststatus')
+    columnsforcsv.append('delta')
+    columnsforcsv.append('needed')
     for row in curs.fetchall():
-        club = myclub(*row)
+        club = myclub(zip(columns, row))
         clubs[club.clubnumber] = club
         
     # Now, update to include last year's status
     curs.execute("SELECT clubnumber, clubdistinguishedstatus FROM clubperf WHERE asof = %s", (lastyearsdate,))
     for (clubnumber, status) in curs.fetchall():
         try:
+            clubs[clubnumber].laststatus = status
             clubs[clubnumber].lastyear = levels[(status+' ')[0]]
         except KeyError:
             pass
@@ -68,9 +79,9 @@ if __name__ == "__main__":
     # Now, compute results
     leapers = [[],[],[],[]]    # For 0-3 levels
     for club in clubs.values():
-        delta = club.thisyear - club.lastyear
-        if delta > 0:
-            leapers[delta].append(club)
+        club.delta = max(0,club.thisyear - club.lastyear)
+        if club.delta > 0:
+            leapers[club.delta].append(club)
             
     # And create the output file
     outfile = open(parms.outfile, 'w')
@@ -80,3 +91,11 @@ if __name__ == "__main__":
             outfile.write(tmutil.getClubBlock(leapers[i]))
             outfile.write(' for earning $%d for leaping %d level%s.<p>\n' % (40*i, i, 's' if i > 1 else ''))
     outfile.close()
+    
+    csvfile = open(parms.csvfile, 'wb')
+    csvwriter = csv.DictWriter(csvfile, fieldnames=columnsforcsv, extrasaction="ignore")
+    csvwriter.writeheader()
+    for club in sorted(clubs.values(), key=lambda c:'%s%s%.8d' % (c.division, c.area, c.clubnumber)):
+        csvwriter.writerow(club.__dict__)
+    csvfile.close()
+    
