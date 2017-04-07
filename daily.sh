@@ -163,12 +163,15 @@ if [[ "$dorun" = "yes" ]] ; then
         # Run renewals when appropriate
         if (( $(date +'%m') > 6 )); then program="stellar"; else program="madness"; fi
         echo "Running seasonal renewals: $program"
-        ../renewals.py --program "$program"  && cp ${program}.* ~/www/files/reports
+        ../renewals.py --program "$program"  && cp ${program}.* ~/www/files/reports/
         echo "Running President's Club"
         ../presidentsclub.py && cp presidentsclub.txt ~/www/files/reports/
 
         echo "Running Early Achievers"
-        ../earlyachievers.py && cp earlyachievers.* ~/www/files/reports
+        ../earlyachievers.py && cp earlyachievers.* ~/www/files/reports/
+        
+        echo "Running Take A Leap"
+        ../takealeap.py && cp takealeap.* ~/www/files/reports/
 
     fi
     
