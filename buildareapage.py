@@ -41,7 +41,7 @@ class Division():
         
     def html(self):
         res = []
-        res.append('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="2em" body_line_height_tablet="2em" body_line_height_phone="2em"]' % self.name.upper())
+        res.append('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="1.3em" body_line_height_tablet="1.3em" body_line_height_phone="1.3em"]' % self.name.upper())
         res.append('<table class="divisiontable">')
 
         if self.director:
@@ -200,7 +200,7 @@ for row in reader:
 # And now we go through the Divisions and Areas and build the output.
 outfile = open(parms.outfile, 'wb')
 outfile.write("<p><b>Click on a Division to see the clubs and Areas it contains.<b></p>")
-outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="24"]
+outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
 """)
 for d in sorted(Division.divisions):
     if d.lower() != 'new':
