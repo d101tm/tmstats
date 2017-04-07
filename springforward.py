@@ -15,12 +15,20 @@ def createResults(final, clubs):
     res = []
     for club in sorted(clubs, key=lambda club: club.clubname.lower()):
         htmlclass = 'clubname' + (' leader' if club.leader else '')
+        info = []
         club.amount = 5*club.growth
+        info.append('%d added member%s' % (club.growth, 's' if club.growth > 1 else ''))
         if club.growth >= 5:
             club.amount += 25
-        if final and club.leader:
-            club.amount += 50
-        res.append('<span class="clubname">%s%s%s</span> (%d, $%d)' % ('<i>' if club.leader else '', club.clubname, '</i>' if club.leader else '', club.growth, club.amount))
+            info.append('\\$25 bonus for at least 5 new members')
+        if club.leader:
+            if final:
+                club.amount += 50
+                info.append('\\$50 bonus for leading Division %s' % club.division)
+            else:
+                info.append('currently leading Divsion %s' % club.division)
+        
+        res.append('<span class="clubname">%s%s%s</span> (\\$%d: %s)' % ('<i>' if club.leader else '', club.clubname, '</i>' if club.leader else '', club.amount, '; '.join(info)))
          
     return('<br>\n'.join(res))
    
@@ -136,11 +144,14 @@ if __name__ == "__main__":
     clubfile = open(parms.outfile, 'w')
 
     clubfile.write("""
-    <p>Clubs receive $5 in District Credit for every new member added after %s through %s.  Clubs adding five or more members receive an additional $25 in District Credit.</p>
-    <p>The club or clubs in each division adding the most new members in that division will receive an additional $50 Credit; current leaders are italicized in the listing below.  These statistics are %s.</p>
-    """ % (msgbase, msgfinal, 'final' if final else 'updated daily'))
+    <ul>
+     	<li>Add <strong>new/reinstated</strong> members to your Club between %s and May %s to earn TI gift certificates - \\$5 for every member added</li>
+     	<li>Earn an additional \\$25 when you add 5 or more members</li>
+     	<li><b>BONUS</b>: The club(s) adding the most members in each Division earn(s) an additional \\$50</li>
+    </ul>
+    """ % (msgbase, msgfinal))
 
-    # And now, make a CSV with all of the information
+    # Also make a CSV with all of the information
     columns = ['Division', 'Area', 'Club Number', 'Club Name', 'Members Added', 'Amount Earned', 'Division Leader']
     fields = ['division', 'area', 'clubnumber', 'clubname', 'growth', 'amount', 'leader']
     csvfile = open(parms.csvfile, 'wb')
@@ -154,10 +165,10 @@ if __name__ == "__main__":
             # Mark the leader(s)
             for club in divisions[division]:
                 club.leader = (club.growth == divmax[division])
-               
         
-            clubfile.write('<h4>Division %s</h4>\n' % division)
+            clubfile.write('[et_pb_toggle title="Division %s" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000000"]\n' % division)
             clubfile.write('<p>%s.</p>\n' % createResults(final, divisions[division]))
+            clubfile.write('[/et_pb_toggle]\n')
             
             for club in sorted(divisions[division], key=lambda c: '%.2s%.2s%0.8d' % (c.division, c.area, c.clubnumber)):
                 writer.writerow(club.__dict__)
