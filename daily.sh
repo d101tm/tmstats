@@ -173,6 +173,9 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running Take A Leap"
         ../takealeap.py && cp takealeap.* ~/www/files/reports/
 
+        echo "Running Spring Forward"
+        ../springforward.py && cp springforward.* ~/www/files/reports
+
     fi
     
     ### Run daily housekeeping
