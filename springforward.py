@@ -61,7 +61,7 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument("--basedate", dest='basedate', default='M3')
     parms.add_argument("--finaldate", dest='finaldate', default='M5')
-    parms.add_argument('--outfile', dest='outfile', default='springforward.txt')
+    parms.add_argument('--outfile', dest='outfile', default='springforward.html')
     parms.add_argument('--csvfile', dest='csvfile', default='springforward.csv')
     
     # Do global setup
