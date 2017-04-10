@@ -77,7 +77,9 @@ if __name__ == "__main__":
             sys.exit(1)
         basepart = 'monthstart = "%s" AND entrytype = "M"' % getMonthStart(basemonth, curs)
         friendlybase = 'New Members on %s' % neaten(getMonthEnd(basemonth))
-        msgdate = datetime.date(globals.today.year, basemonth, 1)
+        msgdate = datetime.date(globals.today.year, basemonth+1, 1)
+        if basemonth == 12:
+            msgdate = datetime.date(globals.today.year, 1, 1)
     else:
         basedate = cleandate(parms.basedate)
         if not haveDataFor(basedate, curs):
