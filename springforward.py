@@ -76,8 +76,8 @@ if __name__ == "__main__":
         if not isMonthFinal(basemonth, curs):
             sys.exit(1)
         basepart = 'monthstart = "%s" AND entrytype = "M"' % getMonthStart(basemonth, curs)
-        msgdate = getMonthEnd(basemonth)
-        friendlybase = 'New Members on %s' % neaten(msgdate)
+        friendlybase = 'New Members on %s' % neaten(getMonthEnd(basemonth))
+        msgdate = datetime.date(globals.today.year, basemonth, 1)
     else:
         basedate = cleandate(parms.basedate)
         if not haveDataFor(basedate, curs):
@@ -143,11 +143,12 @@ if __name__ == "__main__":
     # Open the output files
     clubfile = open(parms.outfile, 'w')
 
-    clubfile.write("""
-    <ul>
-     	<li>Add <strong>new/reinstated</strong> members to your Club between %s and May %s to earn TI gift certificates - \\$5 for every member added</li>
-     	<li>Earn an additional \\$25 when you add 5 or more members</li>
-     	<li><b>BONUS</b>: The club(s) adding the most members in each Division earn(s) an additional \\$50</li>
+    clubfile.write(r"""
+        <p>Add <strong>new/reinstated</strong> members to your Club between %s and %s to earn TI gift certificates:
+        <ul>
+        <li>\$5 for every member added</li>
+     	<li>Additional \$25 when you add 5 or more members</li>
+     	<li><b>BONUS</b>: Club(s) adding most members in each Division earn \$50</li>
     </ul>
     <p>Click on a division to see the clubs which have earned awards.</p>
     """ % (msgbase, msgfinal))
