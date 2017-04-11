@@ -7,6 +7,8 @@ from math import pi, sin, cos
 import pprint
 import datetime
 import re
+import tmglobals
+globals = tmglobals.tmglobals()
 
 # temphackfix
 from requests.adapters import HTTPAdapter
@@ -175,7 +177,7 @@ class myclub():
         curs.execute('INSERT INTO geo  (' + self.fieldnames + ') VALUES (' + self.values + ')', 
                 ([self.__dict__[k] for k in self.fields]))
             
-def updateclubstocurrent(conn, clubs, apikey):
+def updateclubstocurrent(conn, clubs, apikey, debug=False):
     # conn is a database connection
     # Clubs is an array of clubnumbers to update; if null, update all clubs.
     gmaps = googlemaps.Client(apikey)
@@ -214,7 +216,13 @@ def updateclubstocurrent(conn, clubs, apikey):
 
                     
         gres = gmaps.geocode("%s, %s, %s %s" % (gaddress, city, state, zip))
-        pprint.pprint(gres)
+        if debug:
+            pprint.pprint(gres)
+        else:
+            for each in gres:
+                print ('formatted as %s' % each['formatted_address'])
+                geo = each['geometry']
+                print ('plotted at %s (%f, %f)' % (geo['location_type'], geo['location']['lat'], geo['location']['lng']))
         print ("=================")
         club = myclub(clubnumber, clubname, place, address, city, state, zip, country, whqlatitude, whqlongitude).update(gres, c)
         
@@ -226,16 +234,10 @@ def updateclubstocurrent(conn, clubs, apikey):
 if __name__ == "__main__":
     
     import tmparms
-    from tmutil import gotodatadir
-    # Make it easy to run under TextMate
-    gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
-    sys.stdout = open('geocode.%s.txt' % datetime.datetime.now().strftime('%Y-%m-%d'), 'w')
+    parms = tmparms.tmparms()    
+    # Do Global Setup
+    globals.setup(parms)
     
-    parms = tmparms.tmparms()
-    parms.parse()
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    updateclubstocurrent(conn, [], parms.googlemapsapikey)
+    updateclubstocurrent(globals.conn, [], parms.googlemapsapikey)
     
     

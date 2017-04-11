@@ -10,8 +10,11 @@
     Uses the 'loaded' table.
     
 """
-import tmparms, dbconn, argparse, os, sys, tmutil
+import tmparms, os, sys, tmutil
 from datetime import datetime, timedelta
+
+import tmglobals
+globals = tmglobals.tmglobals()
 
 
 if 'TM_DIRECTORY' in os.environ:
@@ -25,11 +28,13 @@ yesterday = today - timedelta(1)
 today = today.strftime('%Y-%m-%d')
 yesterday = yesterday.strftime('%Y-%m-%d')
 parms.parser.add_argument("--date", dest='date', default=None)
-parms.parse()
+
+# Do global setup
+globals.setup(parms)
+conn = globals.conn
+curs = globals.curs
 
 
-conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-curs = conn.cursor()
 date = parms.date
 have = {}
 want = ['clubs', 'clubperf', 'distperf', 'areaperf']

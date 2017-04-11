@@ -6,7 +6,12 @@
 import dbconn, tmparms, xlrd, csv
 import os, sys, urllib2
 from simpleclub import Club
-from tmutil import overrideClubs, removeSuspendedClubs
+from tmutil import overrideClubs, removeSuspendedClubs, gotodatadir
+from overridepositions import overrideClubPositions
+from makemap import Bounds, setClubCoordinatesFromGEO
+
+import tmglobals
+globals = tmglobals.tmglobals()
 
 class Division():
     divisions = {}
@@ -36,17 +41,18 @@ class Division():
         
     def html(self):
         res = []
-        res.append('<p>{tab %s|align_center|alias:%s}</p>' % (self.name.upper(), self.name))
-        res.append('<table class="table1">\n  <tbody>\n')
-        res.append('  <tr><th style="background-color: #f2df74;" colspan="2"><strong>Division %s</strong></th></tr>' % self.name.upper())
+        res.append('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="1.3em" body_line_height_tablet="1.3em" body_line_height_phone="1.3em"]' % self.name.upper())
+        res.append('<table class="divisiontable">')
+
         if self.director:
-            res.append('  %s' % self.director.html())
+            res.append(u'%s' % self.director.html())
         else:
-            res.append('<tr><td></td><td>Division Director Position is Vacant</td><tr>')
+            res.append('<p>Division Director Position is Vacant</p>')
         for a in sorted(self.areas):
             res.append('  %s' % self.areas[a].html())
-        res.append('  </tbody>\n</table>')
-        return '\n'.join(res)
+        res.append('</table>')
+        res.append('[/et_pb_tab]')
+        return u'\n'.join(res)
 
 class Area():
     areas = {}
@@ -79,27 +85,32 @@ class Area():
             res.append("""  Area Director Position is Vacant""")
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append("""    %s: %s %s""" % (c.clubnumber, c.clubname, c.getLink()))
-        return '\n'.join(res)
+        return '\n'.join([value.decode('utf-8', 'xmlcharrefreplace') for value in res])
         
     def html(self):
         if self.area == '0A':
             return ''
         res = []
         res.append('<tr><td style="background-color: #f2df74;" colspan="2"><strong>Area %s</strong></td></tr>' % self.name)
+        res.append('<tr><td>')
         if self.director:
             res.append(self.director.html())
         elif self.parent.director:
             res.append(self.parent.director.html(isacting=True))
         else:
-            res.append('<tr><td></td><td>Area Director Position is Vacant</td></tr>')
+            res.append('Area Director Position is Vacant')
+        res.append('</td></tr>')
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append('<tr><td align="right">%s</td><td><a href="%s" target="_blank">%s</a></td></tr>' % (c.clubnumber, c.getLink(), c.clubname))
-        return '\n'.join(res)
-        
+
+        return u'\n'.join(res)
+
         
 class Director():
-    def __init__(self, position, first, last, email):
-        part = position.split()
+    def __init__(self, row):
+        for f in row:
+            self.__dict__[f.lower().split()[0]] = row[f]
+        part = self.title.split()
         if part[0] == 'Division':
             division = part[1]
             Division.find(division).director = self
@@ -107,47 +118,43 @@ class Director():
             area = part[1][1]
             division = part[1][0]
             Area.find(division, area).director = self
-        self.first = first
-        self.last = last
-        self.email = email
         self.position = part[0] + ' ' + part[1] + ' Director'
+        self.fullname = self.first + ' ' + self.last
 
         
     def html(self, isacting=False):
         return """<tr>
-  <td align="right"><a href="mailto:%s" target="_blank">Email</a></td>
-  <td>%s%s %s %s</td>
+  <td align="left" colspan="2">%s%s %s %s (<a href="mailto:%s">%s</a>)</td>
 </tr>
-""" % ( self.email, '<strong>Acting: </strong>' if isacting else '',self.position, self.first, self.last)
+""" % ('<strong>Acting: </strong>' if isacting else '',self.position, self.first, self.last, self.email, self.email)
+
+ 
+        
 
     def __repr__(self):
-        return "%s %s %s: %s" % (self.position, self.first, self.last, self.email)
+        return "%s %s %s: %s" % (self.position, self.first, self.last, self.email, self.photo)
        
     
 
-
-
-# Make it easy to run under TextMate
-if 'TM_DIRECTORY' in os.environ:
-    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-
-    
-# Get around unicode problems
-reload(sys).setdefaultencoding('utf8')
-
+### Main Program ###
 
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument('--outfile', dest='outfile', default='areasanddivisions.html')
 parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
 parms.add_argument('--officers', dest='officers', help='URL of the CSV export form of a Google Spreadsheet with Area/Division Directors')
-parms.parse()
+parms.add_argument('--mapdir', default=None, help='Directory to use for the area map files.')
+parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
+parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
 
-# Connect to the database
-conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-curs = conn.cursor()
+# Do global setup
+globals.setup(parms)
+conn = globals.conn
+curs = globals.curs
+
     
 # Get all clubs
 clubs = Club.getClubsOn(curs)
+
 
 if parms.newAlignment:
     overrideClubs(clubs, parms.newAlignment)
@@ -155,6 +162,17 @@ if parms.newAlignment:
 # Remove suspended clubs
 clubs = removeSuspendedClubs(clubs, curs)
 
+# Remove clubs from outside our District
+for c in clubs.keys():
+    if int(clubs[c].district) != parms.district:
+        del clubs[c]
+        
+# Add current coordinates and remove clubs without coordinates
+setClubCoordinatesFromGEO(clubs, curs)
+
+# If there are overrides to club positioning, handle them now
+if parms.mapoverride:
+    overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
 
 # Now, assign clubs to Areas and Divisions
 
@@ -172,18 +190,71 @@ officers = urllib2.urlopen(parms.officers)
 reader = csv.DictReader(officers)
 for row in reader:
     for k in row:
-        row[k] = ' '.join(row[k].split()).strip()
+        row[k] = ' '.join(unicode(row[k],'utf-8').split()).strip()
     if row['Title'] and row['First']:
-        Director(row['Title'], row['First'], row['Last'], row['Email'])
+        Director(row)
         
 
 
 
 # And now we go through the Divisions and Areas and build the output.
-outfile = open(parms.outfile, 'w')
+outfile = open(parms.outfile, 'wb')
+outfile.write("<p><b>Click on a Division to see the clubs and Areas it contains.<b></p>")
+outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
+""")
 for d in sorted(Division.divisions):
     if d.lower() != 'new':
         div = Division.divisions[d]
-        outfile.write(div.html())
+        outfile.write(div.html().encode('ascii','xmlcharrefreplace'))
         outfile.write('\n')
 
+outfile.write("""[/et_pb_tabs]
+
+""")
+
+# Create map pages if mapdir was specified.
+if parms.mapdir:
+    for d in sorted(Division.divisions):
+        if d.lower() != 'new':
+            div = Division.divisions[d]
+            for a in sorted(div.areas):
+                with open(os.path.join(parms.mapdir, '%s.html' % a),'w') as mapfile:
+                    b = Bounds()
+                    mapbase="https://maps.googleapis.com/maps/api/staticmap?"
+                    mapparts = []
+
+                    clubinfo = []
+                    marker = 'A'
+                    for c in sorted(div.areas[a].clubs, key=lambda x:x.clubnumber.zfill(8)):
+                        b.extend(float(c.latitude), float(c.longitude))
+                        mapparts.append('markers=label:%s%%7C%s,%s' % (marker, c.latitude, c.longitude))
+                        
+                        clubinfo.append('<tr><td class="marker">%s</td>' % marker)
+                        clubinfo.append('<td class="clubnum">%s</td>' % c.clubnumber)
+                        clubinfo.append('<br />\n'.join(('<td><b>%s</b>' % c.clubname, c.place, c.address, '%s, %s %s' % (c.city, c.state, c.zip))))
+                        clubinfo.append('<br />\n'.join(('<td>%s' % c.meetingday, c.meetingtime)))
+                        clubinfo.append('</td></tr>\n')
+                
+                        
+                        marker = chr(ord(marker)+1)
+                        
+                        
+   
+                    mapparts.append("size=640x640&scale=2")   # As large as possible, at least for now
+                    mapfile.write('<html>\n')
+                    mapfile.write('<head>\n')
+                    mapfile.write('<style type="text/css">\n')
+                    mapfile.write('.areamap {width:640px, height:640px;}\n')
+                    mapfile.write('</style>\n')
+                    mapfile.write('</head>\n<body>\n')
+                    mapfile.write('<div class="areamap">\n')
+                    mapfile.write('<img width="640px" height="640px" src="%s%s">\n' % (mapbase, '&'.join(mapparts)))
+                    mapfile.write('</div>\n')
+                    mapfile.write('<div class="clubinfo">\n')
+                    mapfile.write('<table>\n')
+                    mapfile.write('\n'.join(clubinfo))
+                    mapfile.write('</table>\n</div>\n')                
+                    mapfile.write('</body>\n</html>\n')
+                    
+  
+                    

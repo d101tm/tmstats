@@ -6,6 +6,9 @@
 import urllib, tmparms, os, sys
 from tmutil import cleandate
 from datetime import datetime, timedelta, date
+
+import tmglobals
+globals = tmglobals.tmglobals()
     
         
 def monthend(m, y):
@@ -82,16 +85,7 @@ def dolatest(district, altdistrict, finals, tmyearpiece):
                     f.write(''.join(data).replace('\r',''))
                 print 'Updated %s for %s (month: %s, year: %s)' % (filepart, thedate, monthend, tmyearpiece)
 
-if __name__ == "__main__":
-    
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        if not sys.argv[1:]:
-            sys.argv[1:] = '--district 4'.split()
-    
-    reload(sys).setdefaultencoding('utf8')
-            
+if __name__ == "__main__":            
     parms = tmparms.tmparms()
     parms.add_argument('--district', type=int)
     parms.add_argument('--altdistrict', type=int)
@@ -99,7 +93,8 @@ if __name__ == "__main__":
     parms.add_argument('--enddate', default='today')
     parms.add_argument('--skipclubs', action='store_true',
      help='Do not get latest club information.')
-    parms.parse()
+    
+    globals.setup(parms, connect=False)
 
     district = "%0.2d" % parms.district
     clubdistrict = district   # Unless we have a problem

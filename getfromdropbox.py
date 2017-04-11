@@ -7,6 +7,9 @@ import dropbox, os.path, requests, sys
 from dropbox.exceptions import ApiError, AuthError
 from datetime import datetime
 
+import tmglobals
+globals = tmglobals.tmglobals()
+
 # Patch around SSL problems in outdated versions of Python (*cough* HostGator *cough*)
 if sys.hexversion < 0x02070900:
     from requests.packages import urllib3
@@ -72,6 +75,7 @@ def getDropboxFile(token, directory, extensions, cursor=None):
     if directory and directory[0] != '/':
         directory = '/' + directory
 
+
     while live:
         # Get information from Dropbox
         if cursor:
@@ -90,9 +94,10 @@ def getDropboxFile(token, directory, extensions, cursor=None):
                 try:
                     if f.server_modified > latesttime:
                         latesttime = f.server_modified
-                        latestfile = f.path_display
+                        latestfile = f.path_lower
                         fileid = f.id
-                except AttributeError:
+                except AttributeError, e:
+                    print e
                     pass
 
     output.cursor = cursor
@@ -119,9 +124,8 @@ def getDropboxFile(token, directory, extensions, cursor=None):
 
 
 if __name__ == "__main__":
-    import tmutil, tmparms
-    tmutil.gotodatadir()
-    reload(sys).setdefaultencoding('utf8')
+    import tmparms
+
 
     # Handle parameters
     parms = tmparms.tmparms(description=__doc__)
@@ -135,8 +139,9 @@ if __name__ == "__main__":
     group = parms.add_mutually_exclusive_group()
     group.add_argument('--cursor', dest='cursor', default=None, help="Dropbox cursor")
     group.add_argument('--cfile', dest='cfile', default=None, help="Text file containing a Dropbox cursor; gets updated or created if required.")
-    # Add other parameters here
-    parms.parse()
+    
+    # Do global setup
+    globals.setup(parms, connect=False)
 
     # Flatten extension in case it was specified many times
     if parms.extensions:

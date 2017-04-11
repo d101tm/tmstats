@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import dbconn, tmparms, os, sys
 from datetime import date, datetime
-from tmutil import showclubswithvalues, gotodatadir, getClubBlock
+from tmutil import showclubswithvalues, gotodatadir, getClubBlock, getTMYearFromDB
 import argparse
+import tmglobals
 
 class myclub:
     """ Just enough club info to sort the list nicely """
@@ -22,22 +23,18 @@ class myclub:
 
 
 
-# Standard setup
-gotodatadir()
-reload(sys).setdefaultencoding('utf8')
-
-# Handle parameters
+# Establish parameters
 parms = tmparms.tmparms()
 parms.parser.add_argument("--toend", dest='toend', type=int, default=10)
 parms.parser.add_argument("--outfileprefix", dest='outfileprefix', type=str, default='earlyachievers')
 
-parms.parse()
+# Set up global environment
+globals = tmglobals.tmglobals(parms)
 
-conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-curs = conn.cursor()
-
-today = datetime.now()
-endmonth = '%d-%0.2d-01' % (today.year, parms.toend)
+conn = globals.conn
+curs = globals.curs
+today = globals.today
+endmonth = '%d-%0.2d-01' % (globals.tmyear, parms.toend)
 
 
 # If there's monthly data for the end date, use it; otherwise, use

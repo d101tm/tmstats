@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """ Load the performance information already gathered into a database. 
     Run from the directory containing the YML file for parms and the CSV files 
-       (but in TextMate, run from the source directory).
     Return code:
        0 if changes were made to the database
        1 if no changes were made """
@@ -10,6 +9,8 @@ import csv, dbconn, sys, os, glob
 from simpleclub import Club
 from tmutil import cleandate
 import geocode
+import tmparms, tmglobals
+globals = tmglobals.tmglobals()
 
 # Global variable to see how many entries got changed.  All we really care about is zero/nonzero.
 global changecount
@@ -666,21 +667,16 @@ def doDailyAreaPerformance(infile, conn, cdate, monthstart):
     conn.commit()
  
 if __name__ == "__main__":
- 
-    import tmparms
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
-    reload(sys).setdefaultencoding('utf8')
-    
+
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
-    parms.parse() 
+    
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
 
         
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
         
     inform("Processing Clubs", supress=1)
     doHistoricalClubs(conn, parms.googlemapsapikey)

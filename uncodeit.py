@@ -3,10 +3,11 @@ from __future__ import print_function
 import googlemaps
 import urllib3
 import logging
-import dbconn, tmparms
+import tmparms
 import os, sys
 from math import pi, sin, cos
-
+import tmglobals
+globals = tmglobals.tmglobals()
 
 
 clubs = {}
@@ -138,19 +139,18 @@ class myclub():
         
 if __name__ == "__main__":
     
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
-    reload(sys).setdefaultencoding('utf8')
 
     parms = tmparms.tmparms()
-    parms.parse()
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    c = conn.cursor()
-    c.execute("SELECT clubnumber, clubname, place, address, city, state, zip FROM clubs GROUP BY clubnumber ORDER BY lastdate DESC")
-    for (clubnumber, clubname, place, address, city, state, zip)  in c.fetchall():
-        clubs['%d' % clubnumber] = myclub(clubnumber, clubname, place, address, city, state, zip)
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
+
+    curs.execute("SELECT MAX(lastdate) FROM clubs")
+    lastdate = curs.fetchone()[0]
+    curs.execute("SELECT clubnumber, clubname, place, address, city, state, zip, latitude, longitude FROM clubs WHERE lastdate = %s", (lastdate,))
+    for (clubnumber, clubname, place, address, city, state, zip, latitude, longitude)  in curs.fetchall():
+        clubs['%d' % clubnumber] = myclub(clubnumber, clubname, place, address, city, state, zip, latitude, longitude)
     
 
 

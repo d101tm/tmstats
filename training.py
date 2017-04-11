@@ -2,9 +2,13 @@
 """ Try to convert the Toastmasters training page into something tolerable """
 from bs4 import BeautifulSoup
 import sys, re, xlsxwriter
-import dbconn, tmutil, sys, os
+import tmutil, sys, os
 from simpleclub import Club
 from datetime import datetime
+import tmglobals
+globals = tmglobals.tmglobals()
+
+
 headers = "Div,Area,Club Name,Number,Status,Trained,Pres,VPE,VPM,VPPR,Sec,Treas,SAA"
 sheets = {}
 colors = {}
@@ -13,15 +17,6 @@ colors['dcp'] = '#90EE90'
 colors['untrained'] = '#FF8E8E'
 
 
-def inform(*args, **kwargs):
-    """ Print information to 'file' unless suppressed by the -quiet option.
-          suppress is the minimum number of 'quiet's that need be specified for
-          this message NOT to be printed. """
-    suppress = kwargs.get('suppress', 1)
-    file = kwargs.get('file', sys.stderr)
-    
-    if parms.quiet < suppress:
-        print >> file, ' '.join(args)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -41,7 +36,6 @@ class mysheet:
         self.formats['dcp'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bg_color': colors['dcp']}) for i in xrange(len(self.align))]
         self.formats['untrained'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bg_color': colors['untrained']}) for i in xrange(len(self.align))]
         self.formats['bold'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bold': True}) for i in xrange(len(self.align))]
-        print 'setup complete'
 
     def __init__(self, outbook, divname):
         self.sheet = outbook.add_worksheet('Division ' + divname)
@@ -103,25 +97,21 @@ def makediv(outfile, outbook, divname, curdiv):
 if __name__ == "__main__":
  
     import tmparms
-    tmutil.gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
     
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('report', type=str, nargs='?', default='latesttraining.html', help='Name of the training report file, default is %(default)s')
-    parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--require9a', action='store_true', help='If true, only clubs which achieved goal 9a (4 or more officers trained during first cycle) are eligible.')
     parms.add_argument('--bonus9a', action='store_true', help='If true, clubs get a bonus reward if they trained at least 4 officers in the first cycle.')
     parms.add_argument('--reward', type=str, default='$50 in District Credit')
     parms.add_argument('--bonusreward', type=str, default='$100 in District Credit')
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
-    # Add other parameters here
-    parms.parse() 
-   
-    # Connect to the database        
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+    
+    # Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
+    
     
     # Your main program begins here.
     clubs = Club.getClubsOn(curs)
@@ -176,7 +166,6 @@ if __name__ == "__main__":
                     results.append(row)                
     # Now, create the HTML result file and the matching Excel spreadsheet
     results.sort(key=lambda x:(x[0], x[1], x[3]))
-    print 'results is %d long' % len(results)
     outfile = open('trainingreport.html', 'w')
     outbook = xlsxwriter.Workbook('trainingreport.xlsx')
     mysheet.setup(outbook)

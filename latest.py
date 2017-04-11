@@ -3,8 +3,8 @@
     the 'loaded' table.  
 
 """
-import tmparms, dbconn, os, sys, tmutil, MySQLdb
-
+import tmparms, tmglobals, os, sys, tmutil, MySQLdb
+globals = tmglobals.tmglobals()
 
 
 
@@ -27,14 +27,13 @@ def getlatest(table, conn):
     return ans
 
 if __name__ == '__main__':
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-
     parms = tmparms.tmparms()
     # Allow specifying a table.
     parms.add_argument('--table', dest='table', default='clubperf')
-    parms.parse()
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
     
-    ans = getlatest(parms.table, conn)
+    # Do global setup
+    globals.setup(parms)
+    parms.parse()
+    
+    ans = getlatest(parms.table, globals.conn)
     print ' '.join(ans)

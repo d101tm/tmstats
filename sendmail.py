@@ -4,6 +4,9 @@ import tmparms, os, sys, argparse, smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+import tmglobals
+globals = tmglobals.tmglobals()
+
 import collections
 def flatten(l):
     ### From http://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists-in-python
@@ -14,11 +17,6 @@ def flatten(l):
         else:
             yield el
 
-# Make it easy to run under TextMate
-if 'TM_DIRECTORY' in os.environ:
-    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-        
-reload(sys).setdefaultencoding('utf8')
 
 # Handle parameters
 parms = tmparms.tmparms(description=__doc__, YMLfile="tmmail.yml", includedbparms=False)
@@ -32,7 +30,8 @@ parms.parser.add_argument("--to", dest='to', nargs='+', default=[], action='appe
 parms.parser.add_argument("--cc", dest='cc', nargs='+', default=[], action='append')
 parms.parser.add_argument("--bcc", dest='bcc', nargs='+', default=[], action='append')
 parms.parser.add_argument("--subject", dest='subject', default='Mail from the District Webmaster')
-parms.parse()
+
+globals.setup(parms, connect=False)
 
 parms.sender = parms.__dict__['from']  # Get around reserved word
 

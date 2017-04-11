@@ -1,7 +1,7 @@
 #!/bin/sh
 cd data
 ../listclubsbycity.py
-../build101areapage.py --outfile areapage.html 
+../buildareapage.py --outfile areapage.html 
 ../makemap.py --outfile d101newmarkers.js
 
 if [[ $? ]] ; then 

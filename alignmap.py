@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-
-# This is a standard skeleton to use in creating a new program in the TMSTATS suite.
+""" Build map for tentative alignment """
 
 import dbconn, tmutil, sys, os
 from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
 from makemap import makemap, setClubCoordinatesFromGEO
-
+from tmglobals import tmglobals
+globals = tmglobals()
 
 def inform(*args, **kwargs):
     """ Print information to 'file', depending on the verbosity level.
@@ -21,12 +21,8 @@ def inform(*args, **kwargs):
 if __name__ == "__main__":
 
     import tmparms
-    from tmutil import gotodatadir
-    gotodatadir()
 
-    reload(sys).setdefaultencoding('utf8')
-
-    # Handle parameters
+    # Establish parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--verbose', '-v', action='count', default=0)
@@ -39,8 +35,11 @@ if __name__ == "__main__":
     parms.add_argument('--makedivisions', dest='makedivisions', action='store_true')
     parms.add_argument('--nomakedivisions', dest='nomakedivisions', action='store_true')
     parms.add_argument('--showdetails', dest='showdetails', action='store_true')
-    # Add other parameters here
-    parms.parse()
+
+    # Do global setup 
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
 
     # Compute verbosity level.  Default is zero.
     parms.verbosity = parms.verbose - parms.quiet
@@ -61,9 +60,6 @@ if __name__ == "__main__":
     parms.mapoverride = parms.mappoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
     parms.pindir = parms.pindir if parms.pindir else parms.makemap.get('pindir',None)
 
-    # Connect to the database
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
 
     # Get the clubs
     clubs = Club.getClubsOn(curs)
@@ -110,7 +106,7 @@ if __name__ == "__main__":
         """)
 
         # Now, compute the new divisions.
-        from d101 import d101
+        from d101boundary import d101
         d101 = Polygon(d101)
 
         sites = {}         # (lat,lng) ==> Division

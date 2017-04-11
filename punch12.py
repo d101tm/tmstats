@@ -1,8 +1,11 @@
 #!/usr/bin/env python
-import dbconn, tmparms, os, sys
+import tmparms, os, sys
 from datetime import date, datetime
 from tmutil import showclubswithvalues, showclubswithoutvalues
 import argparse
+
+import tmglobals
+globals = tmglobals.tmglobals()
 
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
@@ -41,12 +44,6 @@ class myclub:
 if __name__ == "__main__":
  
     import tmparms
-    from tmutil import gotodatadir
-    # Make it easy to run under TextMate
-    gotodatadir()
-        
-    reload(sys).setdefaultencoding('utf8')
-
 
     # Handle parameters
     parms = tmparms.tmparms()
@@ -58,10 +55,11 @@ if __name__ == "__main__":
     parms.parser.add_argument("--renewbase", dest='renewbase', type=int, default=2)
     parms.parser.add_argument("--renewbyend", dest='renewbyend', type=int, default=3)
 
-    parms.parse()
-
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
+    # Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
+    
 
     today = datetime.now()
     endmonth = '%d-%0.2d-01' % (today.year, parms.toend)

@@ -6,6 +6,8 @@ import dbconn, tmutil, sys, os
 from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
+import tmglobals
+globals = tmglobals.tmglobals()
 
 
 def inform(*args, **kwargs):
@@ -333,10 +335,6 @@ def makemap(outfile, clubs, parms):
 if __name__ == "__main__":
 
     import tmparms
-    from tmutil import gotodatadir
-    gotodatadir()
-
-    reload(sys).setdefaultencoding('utf8')
 
     # Handle parameters
     parms = tmparms.tmparms()
@@ -347,7 +345,10 @@ if __name__ == "__main__":
     parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     # Add other parameters here
-    parms.parse()
+    # Do global setup
+    globals.setup(parms)
+    conn = globals.conn
+    curs = globals.curs
 
     # Compute verbosity level.  Default is zero.
     parms.verbosity = parms.verbose - parms.quiet
@@ -357,9 +358,6 @@ if __name__ == "__main__":
     parms.mapoverride = parms.mappoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
     parms.pindir = parms.pindir if parms.pindir else parms.makemap.get('pindir',None)
 
-    # Connect to the database
-    conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-    curs = conn.cursor()
 
     # Get the clubs
     clubs = Club.getClubsOn(curs)

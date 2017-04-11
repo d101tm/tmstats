@@ -31,16 +31,14 @@ class dbconn(Singleton):
         self.conn = None
         
 if __name__ == '__main__':
-    import tmparms, os
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+    import tmparms, tmglobals
+
     parms = tmparms.tmparms()
-    parms.parse()
+    globals = tmglobals.tmglobals(parms)
     #print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
-    conn = dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
- 
-    c = conn.cursor()
-    c.execute('show tables')
-    print 'Tables:\n%s' % '\n'.join('  ' + p[0] for p in c.fetchall())
+    conn = globals.conn
+    curs = globals.curs
+
+    curs.execute('show tables')
+    print 'Tables:\n%s' % '\n'.join('  ' + p[0] for p in curs.fetchall())
     conn.close()

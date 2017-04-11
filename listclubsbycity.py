@@ -5,9 +5,10 @@
 
 import sys, re, os
 from simpleclub import Club
-import tmparms, dbconn
+import tmparms, tmglobals
 from tmutil import cleandate, overrideClubs, removeSuspendedClubs
 
+globals = tmglobals.tmglobals()
 
 # Create the templates
 
@@ -123,12 +124,14 @@ reload(sys).setdefaultencoding('utf8')
 parms = tmparms.tmparms()
 parms.parser.add_argument("--date", dest='date', default='today')
 parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
-parms.parse()
+
+# Do global setup
+globals.setup(parms)
+conn = globals.conn
+curs = globals.curs
 
 parms.date = cleandate(parms.date)
-#print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
-conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-curs = conn.cursor()
+
 
 # Get the club information for the specified date
 clubs = Club.getClubsOn(curs, parms.date)

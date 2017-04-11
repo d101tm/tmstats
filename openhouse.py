@@ -5,13 +5,10 @@ import dbconn, tmutil, sys, os
 from simpleclub import Club
 from datetime import datetime
 
-        
-def fixdate(d):
-    # Fix a date (as text) in the appropriate TM year.  Return as string.
-    dt = datetime.strptime(d, '%Y-%m-%d')
-    if (dt.month > 6):
-        dt = dt.replace(year=dt.year-1)
-    return dt.strftime('%Y-%m-%d')
+import tmglobals
+globals = tmglobals.tmglobals()
+
+
     
 def simplify(name):
     # Simplify club name by lowercasing, removing spaces, "Toastmasters", and "Club"
@@ -26,9 +23,6 @@ def simplify(name):
 if __name__ == "__main__":
  
     import tmparms
-    tmutil.gotodatadir()           # Move to the proper data directory
-        
-    reload(sys).setdefaultencoding('utf8')
     
     # Handle parameters
     parms = tmparms.tmparms()
@@ -39,8 +33,12 @@ if __name__ == "__main__":
     parms.add_argument('--basedate', default='12/31')
     parms.add_argument('--finaldate', default='2/15')
     parms.add_argument('--renewto', default='9/30')
-    # Add other parameters here
-    parms.parse() 
+
+    #Do global setup
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
+    
    
     # Connect to the database        
     conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
@@ -49,10 +47,10 @@ if __name__ == "__main__":
     # Your main program begins here.
     
     # Figure out the full base and final dates, anchoring them in the current TM year
-    basedate = fixdate(tmutil.cleandate(parms.basedate))
-    finaldate = fixdate(tmutil.cleandate(parms.finaldate))
-    # Also figure out the term end date we need, anchored to this year
-    renewtodate = tmutil.cleandate(parms.renewto)
+    basedate = tmutil.cleandate(parms.basedate)
+    finaldate = tmutil.cleandate(parms.finaldate)
+    # Also figure out the term end date we need, anchored to the calendar year
+    renewtodate = tmutil.cleandate(parms.renewto, usetmyear=False)
  
     # And get the clubs on the base date
     clubs = Club.getClubsOn(curs,date=basedate)
@@ -82,7 +80,7 @@ if __name__ == "__main__":
     eligibilityclause = ' clubnum IN (' + ','.join(eligible.keys()) + ') '
     
     # Now, get the count for each club of new members who have renewed for the following term
-    curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE joindate >= %s AND termenddate >= %s AND" + eligibilityclause + "GROUP BY clubnum", (basedate, renewtodate))
+    curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE joindate >= %s AND termenddate >= %s AND" + eligibilityclause + "GROUP BY clubnum, clubname", (basedate, renewtodate))
 
     for (clubnum, clubname, memdiff) in curs.fetchall():
         eligible[tmutil.stringify(clubnum)].memdiff = memdiff
