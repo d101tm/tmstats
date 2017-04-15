@@ -126,6 +126,7 @@ if __name__ == "__main__":
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     parms.add_argument('--alignment', dest='alignment', default=None, help='Use this file instead of going to Dropbox.')
     parms.add_argument('--trustWHQ', dest='trust', action='store_true', help='Specify this to use information from WHQ because we are in the new year')
+    parms.add_argument('--includeprecharter', dest='precharter', action='store_true', help='Specify this to include "pre-charter" clubs (ones with negative club numbers in the newAlignment file)')
     
     # Do global setup
     globals.setup(parms)
@@ -173,6 +174,9 @@ if __name__ == "__main__":
         ignore = ['clubnumber', 'clubname', 'newarea', 'oldarea']
         for row in alignment:
             clubnumber = row['clubnumber']
+            if not parms.precharter:
+                if int(clubnumber.strip()+'0') <= 0:
+                    continue   # ignore pre-charter clubs
             try:
                 c = clubs[clubnumber]
                 c.newarea = row['newarea']
