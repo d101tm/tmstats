@@ -9,6 +9,63 @@ from datetime import datetime
 import tmglobals
 globals = tmglobals.tmglobals()
 
+minimalhead = """
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+<title>Proposed District Realignment</title>
+<style type="text/css">
+
+
+ body {font-family: Arial; font-size: 10pt;}
+
+
+.area {width: 100%; page-break-inside: avoid; display: block; clear: both;}
+    .divname {font-size: 200%; font-weight: bold; text-align: center; margin-bottom: 20px;}
+    .areaname {font-size: 150%; font-weight: bold; text-align: center;}
+
+.division {border: none; display: block; float: none; position: relative; page-break-inside: avoid; }
+.notfirst {break-before: page !important; page-break-before: always !important;}
+  .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse;}
+  .myrow td {vertical-align: top; padding-left: 3px; padding-right: 3px; border: 1px solid black; border-collapse: collapse}
+  th {font-weight: bold; border: 1px solid black; border-collapse: collapse;}
+  .ghost {background-color: #C0C0C0;}
+  .myrow {border: 1px solid black; border-collapse: collapse;}
+ .cnum {text-align: right; width: 10%;}
+  .cname {text-align: left; width: 80%; font-weight: bold;}
+  .from {text-align: center; width: 5%;}
+  .gone {font-style: italic; background-color: #E0E0E0}
+  
+  .area {
+      width: 95%;
+      margin: auto;
+      padding: 10px;
+  }
+
+  .areapair {clear: both; margin-top: 30px;}
+
+  .left {
+      width: 45%; float: left }
+  .right {
+      width: 45%; margin-left: 50%; }
+  
+  .clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+    
+  .clearfix:before {
+    content: "";
+    display: table;
+    clear: both;}
+  }
+</style>
+</head>
+<body>
+    """
+
+
+
 global parms
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
@@ -91,8 +148,10 @@ def closearea(outfile, text, locations, gonefrom):
             outfile.write('<li><b>%s</b>' % club.clubname)
             if club.eligibility == 'Suspended':
                 outfile.write(' (Suspended)')
-            elif club.newarea and club.newdivision:
+            elif club.newarea and club.newdivision.strip():
                 outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
+            else:
+                outfile.write(' (Moved out of Division 101)')
             outfile.write('</li>\n')
         outfile.write('</ul>\n')
     outfile.write('</div>\n')
@@ -117,6 +176,7 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', default='d101location.html')
     parms.add_argument('--color', action='store_true')
     parms.add_argument('--map', action='store_true')
+    parms.add_argument('--minimal', default='d101minimal.html')
     
     # Do global setup
     globals.setup(parms)
@@ -138,6 +198,7 @@ if __name__ == "__main__":
     
      body {font-family: Arial }
     
+    .divname {font-size: 200%; font-weight: bold; text-align: center; margin-bottom: 20px;}
 
     .area {margin-bottom: 12pt; width: 100%; page-break-inside: avoid; display: block; clear: both;}
 
@@ -315,6 +376,70 @@ if __name__ == "__main__":
     outfile.write("</body></html>\n")
     outfile.close()
     
+
+    # And now, create the mimimal version of the report
+    outfile = open(parms.minimal, 'w')
+    outfile.write(minimalhead)
+    firstdiv = True
+    for div in sorted(divs.keys()):
+        if div.strip():
+            outfile.write('<div class="clearfix division%s">\n' % ('' if firstdiv else ' notfirst'))
+            firstdiv = False
+            outfile.write('<p class="divname">Division %s</p>' % div)
+            areas = sorted(divs[div].keys())
+            # Now, we write areas out two at a time
+            left = True
+            for area in areas:
+                if left:
+                    outfile.write('<div class="areapair clearfix">\n')
+                
+                locations = []
+                outfile.write('<div class="areadiv %s">\n' % ('left' if left else 'right'))
+                outfile.write('<table class="areatable"><thead>\n')
+                outfile.write('<tr><th class="areaname" colspan="3">Area %s</th></tr>' % area)
+                outfile.write('<tr>\n')
+                outfile.write('<th class="from">From</th>')
+                outfile.write('<th class="cnum">Number</th><th class="cname">Name</th>')
+                outfile.write('</tr>\n')
+                outfile.write('</thead><tbody>\n')
+                for c in sorted(newareas[area], key=lambda x:int(x.clubnumber)):
+                    row = c.__dict__  
+                    outrow = []
+                    outrow.append('<tr class="myrow">')
+                    oldarea = c.division + c.area
+                    newarea = c.newdivision + c.newarea
+                    outrow.append('  <td class="from">%s</td>' % (oldarea if oldarea != newarea else ''))
+                    outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}</td>')
+                    outrow.append('</tr>')
+                    outfile.write(('\n'.join(outrow)).format(**row))
+                # Now, process clubs which moved away or were 
+                gonelist = gonefrom.get(area,[])
+                if gonelist:
+                    for club in gonelist:
+                        outfile.write('<tr><td class="gone" colspan="3">%s' % club.clubname)
+                        if club.eligibility == 'Suspended':
+                            outfile.write(' (Suspended)')
+                        elif club.newarea.strip() and club.newdivision.strip():
+                            outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
+                        else:
+                            outfile.write(' (Moved out of Division 101)')
+                        outfile.write('</td></tr>\n')
+
+                outfile.write('</tbody></table>\n') 
+                
+                outfile.write('</div><!--areadiv-->\n')
+                
+                if not left:
+                  outfile.write('</div><!--areapair-->\n')
+                left = not left
+            
+            # Finished with this division    
+            outfile.write('</div>\n')    
+                
+
+    outfile.write("</body></html>\n")
+    outfile.close()
+
 
 
 
