@@ -67,7 +67,9 @@ def openarea(outfile, area, color):
         ret.append('<th class="marker">ID</th>')
     ret.append('<th class="from">From</th>')
     ret.append('<th class="cnum">Number</th><th class="cname">Name</th>')
-    ret.append('<th class="members">Members</th><th class="goals">Goals</th><th class="loc">Location</th><th class="mtg">Time</th>\n')
+    if parms.color:
+        ret.append('<th class="members">Members</th><th class="goals">Goals</th>')
+    ret.append('<th class="loc">Location</th><th class="mtg">Time</th>\n')
     ret.append('</tr>\n')
     ret.append('</thead><tbody>\n')
     return ret
@@ -297,9 +299,10 @@ if __name__ == "__main__":
                     oldarea = c.division + c.area
                     newarea = c.newdivision + c.newarea
                     outrow.append('  <td class="from">%s</td>' % (oldarea if oldarea != newarea else ''))
-                    outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname%s">{clubname}{closing}</td>' % ' {color}' if parms.color else '')
-                    outrow.append('  <td class="members">{activemembers}</td>\n')
-                    outrow.append('  <td class="goals">{goalsmet}</td>\n')
+                    outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname%s">{clubname}{closing}</td>' % (' {color}' if parms.color else ''))
+                    if parms.color:
+                        outrow.append('  <td class="members">{activemembers}</td>\n')
+                        outrow.append('  <td class="goals">{goalsmet}</td>\n')
                     outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
                     outrow.append('  <td class="mtg"><b>{meetingday}</b><br />{meetingtime}</td>')
                     outrow.append('</tr>')
