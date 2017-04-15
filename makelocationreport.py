@@ -144,7 +144,7 @@ def closearea(outfile, text, locations, gonefrom):
     if gonefrom:
         outfile.write('<p>Club%s leaving area:</p>\n' % ('' if len(gonefrom) == 1 else 's'))
         outfile.write('<ul class="gonelist">\n')
-        for club in gonefrom:
+        for club in sorted(gonefrom, key=lambda c: c.clubname.lower()):
             outfile.write('<li><b>%s</b>' % club.clubname)
             if club.eligibility == 'Suspended':
                 outfile.write(' (Suspended)')
@@ -167,53 +167,7 @@ def opendiv(outfile, division):
 def closediv(outfile):
     outfile.write('</div>\n')
 
-minimalhead = """
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
-<html>
-<head>
-<title>Proposed District Realignment</title>
-<style type="text/css">
 
-
- body {font-family: Arial; font-size: 10pt;}
-
-
-.area {width: 100%; page-break-inside: avoid; display: block; clear: both;}
-
-.division {border: none; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important; column-count: 2}
-  .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse;}
-  .myrow td {vertical-align: top; padding-left: 3px; padding-right: 3px; border: 1px solid black; border-collapse: collapse}
-  th {font-weight: bold; border: 1px solid black; border-collapse: collapse;}
-  .ghost {background-color: #C0C0C0;}
-  .myrow {border: 1px solid black; border-collapse: collapse;}
- .cnum {text-align: right; width: 10%;}
-  .cname {text-align: left; width: 80%; font-weight: bold;}
-  .from {text-align: center; width: 5%;}
-  .gone {font-style: italic; background-color: #E0E0E0}
-  .areadiv {display: inline-block; margin-bottom: 24pt;}
-  
-  .area {
-      width: 95%;
-      margin: auto;
-      padding: 10px;
-  }
-
-  
-
-  .left {
-      width: 45%; float: left }
-  .right {
-      width: 45%; margin-left: 50%; }
-  
-  .clearfix:after {
-    content: "";
-    display: table;
-    clear: both;
-  }
-</style>
-</head>
-<body>
-    """
 
 if __name__ == "__main__":
  
@@ -250,7 +204,7 @@ if __name__ == "__main__":
 
     .area {margin-bottom: 12pt; width: 100%; page-break-inside: avoid; display: block; clear: both;}
 
-    .division {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important; column-count: 2;}
+    .division {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
       .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse; page-break-inside:avoid; break-inside: avoid; -webkit-column-break-inside: avoid;}
       .myrow td {vertical-align: top; padding-left: 3px; padding-right: 3px; border: 1px solid black;}
       th {font-weight: bold; border: 1px solid black; border-collaps: collapse;}
@@ -522,7 +476,7 @@ if __name__ == "__main__":
                 # Now, process clubs which moved away or were 
                 gonelist = gonefrom.get(area,[])
                 if gonelist:
-                    for club in gonelist:
+                    for club in sorted(gonelist, key=lambda c:c.clubname.lower()):
                         outfile.write('<tr><td class="gone" colspan="3">%s' % club.clubname)
                         if club.eligibility == 'Suspended':
                             outfile.write(' (Suspended)')
