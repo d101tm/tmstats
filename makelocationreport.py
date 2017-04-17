@@ -24,16 +24,16 @@ minimalhead = """
     .divname {font-size: 200%; font-weight: bold; text-align: center; margin-bottom: 20px;}
     .areaname {font-size: 150%; font-weight: bold; text-align: center;}
 
-.division {border: none; display: block; float: none; position: relative; page-break-inside: avoid; }
+    .division {display: block; float: none; position: relative; page-break-inside: avoid; }
 .notfirst {break-before: page !important; page-break-before: always !important;}
   .areatable {font-size: 10pt; border: 1px solid black; border-collapse: collapse;}
   .myrow td {vertical-align: top; padding-left: 3px; padding-right: 3px; border: 1px solid black; border-collapse: collapse}
   th {font-weight: bold; border: 1px solid black; border-collapse: collapse;}
   .ghost {background-color: #C0C0C0;}
   .myrow {border: 1px solid black; border-collapse: collapse;}
- .cnum {text-align: right; width: 10%;}
-  .cname {text-align: left; width: 80%; font-weight: bold;}
-  .from {text-align: center; width: 5%;}
+ .cnum {text-align: right; width: 10%; padding-left: 2px; padding-right: 2px;}
+  .cname {text-align: left; width: 80%; font-weight: bold; padding-left: 2px;}
+  .from {text-align: left; width: 5%; padding-left: 2px; padding-right: 2px;}
   .gone {font-style: italic; background-color: #E0E0E0}
   
   .area {
@@ -42,12 +42,25 @@ minimalhead = """
       padding: 10px;
   }
 
-  .areapair {clear: both; margin-top: 30px;}
 
+@media all and (min-width: 768px) {
+  .areapair {clear: both; margin-top: 30px;}
   .left {
-      width: 45%; float: left }
+      width: 45%; float: left; }
   .right {
       width: 45%; margin-left: 50%; }
+  }
+
+@media all and (max-width: 767px) {
+  .left {margin-top: 20px;}
+  .right {margin-top: 20px;}
+  }
+@media not print {
+    .divname { border-top: 2px solid black; padding-top: 10px; }
+}
+@media print {
+    .division {border: none;}
+}
   
   .clearfix:after {
     content: "";
