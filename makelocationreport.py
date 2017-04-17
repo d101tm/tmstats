@@ -13,7 +13,7 @@ minimalhead = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
 <head>
-<title>Proposed District Realignment</title>
+<title>Proposed District Alignment</title>
 <style type="text/css">
 
 
@@ -158,9 +158,9 @@ def closearea(outfile, text, locations, gonefrom):
         outfile.write('<p>Club%s leaving area:</p>\n' % ('' if len(gonefrom) == 1 else 's'))
         outfile.write('<ul class="gonelist">\n')
         for club in sorted(gonefrom, key=lambda c: c.clubname.lower()):
-            outfile.write('<li><b>%s</b>' % club.clubname)
+            outfile.write('<li>%s' % club.clubname)
             if club.eligibility == 'Suspended':
-                outfile.write(' (Suspended)')
+                outfile.write(' <b>(Suspended)</b>')
             elif club.newarea and club.newdivision.strip():
                 outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
             else:
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     outfile.write("""
     <html>
     <head>
-    <title>Proposed District Realignment</title>
+    <title>Proposed District Alignment</title>
     <style type="text/css">
     
     
@@ -431,7 +431,7 @@ if __name__ == "__main__":
                     for club in gonelist:
                         outfile.write('<tr><td class="gone" colspan="3">%s' % club.clubname)
                         if club.eligibility == 'Suspended':
-                            outfile.write(' (Suspended)')
+                            outfile.write(' <b>(Suspended)</b>')
                         elif club.newarea.strip() and club.newdivision.strip():
                             outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
                         else:
@@ -492,7 +492,7 @@ if __name__ == "__main__":
                     for club in sorted(gonelist, key=lambda c:c.clubname.lower()):
                         outfile.write('<tr><td class="gone" colspan="3">%s' % club.clubname)
                         if club.eligibility == 'Suspended':
-                            outfile.write(' (Suspended)')
+                            outfile.write(' <b>(Suspended)</b>')
                         elif club.newarea.strip() and club.newdivision.strip():
                             outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
                         else:
