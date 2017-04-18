@@ -8,7 +8,7 @@ globals = tmglobals.tmglobals()
 
 def dotable(curs, name, tmyear):
     """ Get the lastfor ids for the named table and year """
-    stmt = """select ?.clubnumber, ?.id, ?.asof, ?.monthstart from ? inner join (select clubnumber, max(asof) as m from ? where entrytype in ('M', 'L') and monthstart >= %s and monthstart <= %s group by clubnumber, monthstart order by monthstart desc,  m desc, clubnumber) latest on ?.clubnumber = latest.clubnumber and ?.asof = latest.m"""
+    stmt = """select ?.clubnumber, ?.id, ?.asof, ?.monthstart from ? inner join (select clubnumber, max(asof) as m from ? where entrytype in ('M', 'L') and monthstart >= %s and monthstart <= %s group by clubnumber) latest on ?.clubnumber = latest.clubnumber and ?.asof = latest.m"""
     stmt = stmt.replace('?', name)  # Interpolate the table name
     curs.execute(stmt, ('%d-07-01' % tmyear, '%d-06-01' % (tmyear + 1)))
     
@@ -39,7 +39,7 @@ def doyear(y, curs):
     """ Update or insert information for year 'y' """
     clubinfo = {}
     distperf = dotable(curs, 'distperf', y)
-    for (clubnumber, id, asof, monthstart) in dotable(curs, 'areaperf', y):
+    for (clubnumber, id, asof, monthstart) in dotable(curs, 'distperf', y):
         clubinfo[clubnumber] = myclub(clubnumber)
         clubinfo[clubnumber].adddist(id, asof, monthstart)
     for (clubnumber, id, asof, monthstart) in dotable(curs, 'areaperf', y):
