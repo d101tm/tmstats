@@ -177,7 +177,7 @@ if [[ "$dorun" = "yes" ]] ; then
         ../springforward.py && cp springforward.* ~/www/files/reports
 
         echo "Running Five for 5"
-        ../fivefor5.py && (cp fivefor5.html ~/www/files/reports; ../sendmail.py --subject "Five for 5 Report" --to david@d2j.us --html fivefor5.email)
+        ../fivefor5.py && (cp fivefor5.html ~/www/files/reports; ../sendmail.py --subject "Five for 5 Report" --to quality@d101tm.org --html fivefor5.email)
 
     fi
     
