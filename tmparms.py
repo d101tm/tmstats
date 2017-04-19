@@ -48,8 +48,8 @@ class tmparms(Singleton):
     def add_argument(self, *args, **kwargs):
         self.parser.add_argument(*args, **kwargs)
 
-    def add_group(self, *args, **kwargs):
-        return self.parser.add_group(*args, **kwargs)
+    def add_argument_group(self, *args, **kwargs):
+        return self.parser.add_argument_group(*args, **kwargs)
 
     def add_mutually_exclusive_group(self, *args, **kwargs):
         return self.parser.add_mutually_exclusive_group(*args, **kwargs)
