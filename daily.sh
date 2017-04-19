@@ -161,23 +161,47 @@ if [[ "$dorun" = "yes" ]] ; then
         # convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
 
         # Run renewals when appropriate
-        if (( $(date +'%m') > 6 )); then program="stellar"; else program="madness"; fi
-        #echo "Running seasonal renewals: $program"
-        #../renewals.py --program "$program"  && cp ${program}.* ~/www/files/reports/
-        #echo "Running President's Club"
-        #../presidentsclub.py && cp presidentsclub.txt ~/www/files/reports/
+        # Stellar September starts with August data and continues through September 15
+        if ../require.py --newtmyear --datafor S8 --nodatafor 9/16 ; then
+            echo "Running Stellar September"
+            ../renewals.py --program "stellar" && cp stellar.* ~/www/files/reports
+        fi
 
-        #echo "Running Early Achievers"
-        #../earlyachievers.py && cp earlyachievers.* ~/www/files/reports/
+        # March Madness starts with February data and continues through March 15
+        if ../require.py --datafor S2 --nodatafor 3/16 ; then
+            echo "Running March Madness"
+            ../renewals.py --program "madness" && cp madness.* ~/www/files/reports
+        fi
+
+        # President's Club runs once we have March data and stops when we have April 16 data
+        if ../require.py --datafor S3 --nodatafor 4/16 ; then
+            echo "Running President's Club"
+            ../presidentsclub.py && cp presidentsclub.txt ~/www/files/reports/
+        fi
+
+        # Early Achievers starts when we have data for the new year and ends when we have November data
+        if ../require.py --newtmyear --nodatafor S11 ; then
+            echo "Running Early Achievers"
+            ../earlyachievers.py && cp earlyachievers.* ~/www/files/reports/
+        fi
         
-        echo "Running Take A Leap"
-        ../takealeap.py && cp takealeap.* ~/www/files/reports/
+        # Take a Leap runs once we have April data and stops when we have data for the next year
+        if ../require.py --datafor S4 --oldtmyear ; then
+            echo "Running Take A Leap"
+            ../takealeap.py && cp takealeap.* ~/www/files/reports/
+        fi
 
-        echo "Running Spring Forward"
-        ../springforward.py && cp springforward.* ~/www/files/reports
+        # Spring Forward runs once we have April data and stops when we have June data
+        if ../require.py --datafor S4 --nodatafor S6; then
+            echo "Running Spring Forward"
+            ../springforward.py && cp springforward.* ~/www/files/reports
+        fi
 
-        echo "Running Five for 5"
-        ../fivefor5.py && (cp fivefor5.html ~/www/files/reports; ../sendmail.py --subject "Five for 5 Report" --to quality@d101tm.org --html fivefor5.email)
+        # Five for 5 runs once we have April data and stops when we get data for 5/16.
+        if ../require.py --datafor S4 --nodatafor 5/16; then
+            echo "Running Five for 5"
+            ../fivefor5.py && (cp fivefor5.html ~/www/files/reports; ../sendmail.py --subject "Five for 5 Report" --to quality@d101tm.org --html fivefor5.email)
+        fi
 
     fi
     
