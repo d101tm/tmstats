@@ -45,13 +45,17 @@ if __name__ == "__main__":
     # Establish parameters
     parms = tmparms.tmparms()
     # Add other parameters here
-    parms.add_argument('--starting', type=str, help='First date this is true')
-    parms.add_argument('--ending', type=str, help='Last date this is true')
-    parms.add_argument('--between', type=str, nargs=2, help='First and last dates')
+
+    group = parms.add_argument_group('calendar parms')
+    group.add_argument('--starting', type=str, help='First date this is true')
+    group.add_argument('--ending', type=str, help='Last date this is true')
+    group.add_argument('--between', type=str, nargs=2, help='First and last dates')
     group = parms.add_argument_group('database parms', 'Specify Mn if month "n" must be complete; specify Sn if month "n" must be started.')
     group.add_argument('--datafor', type=str, help='Date or Month for which data must be available.')
     group.add_argument('--nodatafor', type=str, help='Date or Month for which data must NOT be available.')
-
+    group = parms.add_argument_group('TM Year parms')
+    group.add_argument('--newtmyear', action='store_true', help='Data is available for the TM Year beginning July 1 of this calendar year')
+    group.add_argument('--oldtmyear', action='store_true', help='Data is NOT available for the TM Year beginning July 1 of this calendar year')
 
     # Do global setup
     globals.setup(parms)
@@ -85,3 +89,10 @@ if __name__ == "__main__":
         if datacheck(parms.nodatafor):
             sys.exit(5)
         
+    if parms.newtmyear:
+        if globals.today.year != globals.tmyear:
+            sys.exit(6)
+            
+    if parms.oldtmyear:
+        if globals.today.year == globals.tmyear:
+            sys.exit(7)
