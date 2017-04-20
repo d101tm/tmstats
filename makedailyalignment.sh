@@ -3,7 +3,8 @@ export LIB=$LIB:/home/d101tm/lib/lib
 ../createalignment.py
 ../alignmap.py --pindir pins --district 101 --testalign d101align.csv --makedivisions
 ../allstats.py --outfile d101proforma.html --newAlign d101align.csv
-../makelocationreport.py --infile d101align.csv
+../makelocationreport.py --color --infile d101align.csv
+../clubchanges.py --from 3/15 --to 5/20 --outfile ~/files/dailyalignment/changes.html
 ../makealignmentpage.py > d101index.html
 
 if [[ "block15" == $(hostname) ]] ; then

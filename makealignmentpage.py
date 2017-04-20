@@ -46,6 +46,7 @@ if __name__ == "__main__":
         <li>As a <a href="d101location.html">list of club details</a> (updated %s)</li>
       </ul>
       %s
+    <p>In addition, there is a <a href="changes.html">report on club changes</a>.
     </body>
 </html>""" % (stime, mtime, rtime, ltime, open('alignmentsource.txt').read()))
     
