@@ -25,10 +25,13 @@ if __name__ == "__main__":
     lfile = 'd101location.html'
     mfile = 'd101newmarkers.js'
     rfile = 'd101proforma.html'
+    sfile = 'd101minimal.html'
+
     # Get the last-modified dates for the alignment files.
     ltime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(lfile)))
     mtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(mfile)))
     rtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(rfile)))
+    stime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(sfile)))
     
     sys.stdout.write("""<html>
     <head>
@@ -37,13 +40,14 @@ if __name__ == "__main__":
     <body>
       <p>This page lets you see the proposed realignment in four different ways:
       <ul>
+        <li>As a <a href="d101minimal.html">club movement report</a> (updated %s)</li>
         <li>As a <a href="d101align.htm">map</a> (updated %s)</li>
         <li>As a <a href="d101proforma.html"><i>pro forma</i> Green/Yellow/Red report</a> (updated %s)</li>
-        <li>As a <a href="d101location.html">summary report, including club movement</a> (updated %s)</li>
+        <li>As a <a href="d101location.html">list of club details</a> (updated %s)</li>
       </ul>
       %s
     </body>
-</html>""" % (mtime, rtime, ltime, open('alignmentsource.txt').read()))
+</html>""" % (stime, mtime, rtime, ltime, open('alignmentsource.txt').read()))
     
     
     

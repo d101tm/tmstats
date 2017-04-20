@@ -205,6 +205,12 @@ if [[ "$dorun" = "yes" ]] ; then
 
     fi
     
+    ### During alignment season, run the daily alignment report
+    if ../require.py --between 2/1 5/20; then
+        echo "Running daily alignment report"
+        ../makedailyalignment.sh > /dev/null
+    fi
+
     ### Run daily housekeeping
     if (( $haveclubs == 0 )) ; then
         
