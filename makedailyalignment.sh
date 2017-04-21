@@ -1,5 +1,5 @@
 #!/bin/sh
-export LIB=$LIB:/home/d101tm/lib/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/d101tm/lib/lib
 ../createalignment.py
 ../alignmap.py --pindir pins --district 101 --testalign d101align.csv --makedivisions
 ../allstats.py --outfile d101proforma.html --newAlign d101align.csv
