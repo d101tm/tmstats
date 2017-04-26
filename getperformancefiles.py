@@ -28,15 +28,16 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
-    #print url
     flo = urllib.urlopen(url)
     clubinfo = flo.readlines()
     # clubinfo = urllib.urlopen(url).read().split('\n')
     if len(clubinfo) < 10:
         # We didn't get anything of value
+        print "Nothing fetched for", url
         clubinfo = False
     elif clubinfo[0][0] in ['{', '<']:
         # This isn't a naked CSV
+        print "Not a CSV at", url
         clubinfo = False
     return clubinfo
         
@@ -188,8 +189,14 @@ if __name__ == "__main__":
         if clubdata:
             with open(makefilename('clubs', today), 'w') as f:
                         f.write(''.join(clubdata).replace('\r',''))
+            print "Fetched clubs"
+        else:
+            print 'No data received from %s' % url
 
-    sys.exit()   # Only today!
+    sys.exit()   # Only run for today!
+    
+    # The code below this was used to fetch data from WHQ to catch up from gaps.
+    # It may or may not still work.
 
     # We assume all reports have identical availabilities, so we
     #    use the clubperf report to find the first available report
@@ -257,7 +264,7 @@ if __name__ == "__main__":
         if clubdata:
             with open(makefilename('clubs', today), 'w') as f:
                         f.write(''.join(clubdata).replace('\r',''))
-            print "Fetched clubs"
+
      
 
 
