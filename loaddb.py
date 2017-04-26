@@ -322,6 +322,12 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
                club.longitude = 0.0
         else:
            club.longitude = 0.0
+           
+        # Sometimes, Toastmasters gets the latitude and longitude backwards
+        # If that turns out to create an impossible location (which it will in California),
+        #    let's swap them.
+        if abs(club.latitude) > 90.0:
+            (club.latitude, club.longitude) = (club.longitude, club.latitude)
 
         # And put it into the database if need be
         if club.clubnumber in clubhist:
