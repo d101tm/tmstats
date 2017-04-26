@@ -28,7 +28,7 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
-    print url
+    #print url
     flo = urllib.urlopen(url)
     clubinfo = flo.readlines()
     # clubinfo = urllib.urlopen(url).read().split('\n')
@@ -83,7 +83,7 @@ def dolatest(district, altdistrict, finals, tmyearpiece):
                 thedate = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d').date()  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
                 with open(makefilename(filepart, thedate), 'w') as f:
                     f.write(''.join(data).replace('\r',''))
-                print 'Updated %s for %s (month: %s, year: %s)' % (filepart, thedate, monthend, tmyearpiece)
+                print 'Fetched %s for %s (month: %s, year: %s)' % (filepart, thedate, monthend, tmyearpiece)
 
 if __name__ == "__main__":            
     parms = tmparms.tmparms()
@@ -257,6 +257,7 @@ if __name__ == "__main__":
         if clubdata:
             with open(makefilename('clubs', today), 'w') as f:
                         f.write(''.join(clubdata).replace('\r',''))
+            print "Fetched clubs"
      
 
 
