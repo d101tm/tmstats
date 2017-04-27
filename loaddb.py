@@ -294,7 +294,7 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
 
         
         # If a club is partially unassigned, mark it as completely unassigned.
-        if (club.area == '0A') or (club.division == '0D'):
+        if (club.area == '0A') or (club.area == '0D') or (club.division == '0D') or (club.division == '0A'):
             club.area = '0A'
             club.division = '0D'
 
