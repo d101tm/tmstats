@@ -1,0 +1,2 @@
+TM_PYTHON = "/usr/local/bin/python"
+projectDirectory = "{$CWD}"
