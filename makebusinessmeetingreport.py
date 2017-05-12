@@ -14,13 +14,15 @@ fontname = 'Myriad Pro'
 
 class myclub(object):    
     
-    def __init__(self, info):
-        keepers = ['clubnumber', 'clubname', 'oldarea', 'newarea', 'decarea']
+    def __init__(self, info, dec):
+        keepers = ['clubnumber', 'clubname', 'oldarea', 'newarea']
         for f in keepers:
-            try:
-                self.__dict__[f] = info[f]
-            except KeyError:
-                self.__dict__[f] = self.newarea
+           self.__dict__[f] = info[f]
+
+        if self.clubnumber in dec:
+            self.decarea = dec[self.clubnumber]
+        else:
+            self.decarea = 'New'
             
         self.clubnumber = int(self.clubnumber)
         self.division = self.newarea[0]
@@ -43,17 +45,26 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     # Add other parameters here
     parms.add_argument('--infile', default='d101align.csv')
+    parms.add_argument('--decfile', default='d101decalign.csv')
     parms.add_argument('--outtemplate', default='d101bm-div%s.xlsx')
 
     # Do global setup
     globals.setup(parms)
     curs = globals.curs
     conn = globals.conn
+
+    # Start by getting alignment from the DEC file
+    reader = csv.DictReader(open(parms.decfile, 'rbu'))
+    dec = {}
+    for row in reader:
+        dec[row['clubnumber']] = row['newarea']
     
     # The only information we need is in the alignment file
     reader = csv.DictReader(open(parms.infile, 'rbu'))
     for row in reader:
-        myclub(row)
+        myclub(row, dec)
+
+    
         
     # Process each division in turn
     divnames = sorted(divisions.keys())
@@ -69,7 +80,7 @@ if __name__ == "__main__":
         numformat = book.add_format({'align': 'right', 'font_name': fontname})
         bold = book.add_format({'bold':True, 'font_name': fontname})
         boldright = book.add_format({'bold': True, 'align':'right', 'font_name': fontname})
-        changedformat = book.add_format({'italic': True, 'bold': True, 'font_name': fontname})
+        changedformat = book.add_format({'italic': True, 'bold': True, 'font_name': fontname, 'bg_color': '#E0E0E0'})
         
         sheet = book.add_worksheet()
         sheet.set_column(0, 0, 15)
@@ -92,6 +103,7 @@ if __name__ == "__main__":
             for club in thisarea:
                 sheet.write(rownum, 0, club.clubnumber, numformat)
                 if club.newarea != club.decarea:
+                    print club.clubname, 'moved to', club.newarea, '- was', club.decarea
                     sheet.write(rownum, 1, club.clubname, changedformat)
                 else:
                     sheet.write(rownum, 1, club.clubname, nameformat)
