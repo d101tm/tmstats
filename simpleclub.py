@@ -130,15 +130,25 @@ class Club:
             if name in self.goodnames and name not in self.badnames:
                 self.cmp.append(normalize(value))
                 
+    def setvalue(self, name, value, evenIfEmpty=False):
+        """ Set a single value. """
+        value = self.stringify(value)
+        if value or evenIfEmpty or name not in self.__dict__:
+            self.__dict__[name] = value
+            if name not in self.badnames:
+                self.cmp.append(normalize(value))
+                
     def addvalues(self, values, fieldnames):
         """ Add values to the club; don't change anything already there. """
         for (name, value) in zip(fieldnames, values):
             if name not in self.__dict__:
-                # Let's normalize everything to strings/unicode strings
-                value = self.stringify(value)
-                self.__dict__[name] = value
-                if name not in self.badnames:
-                    self.cmp.append(normalize(value))
+                self.setvalue(name, value, evenIfEmpty=True)
+                    
+    def updatevalues(self, values, fieldnames):
+        """ Add or replace values to the club. """
+        for (name, value) in zip(fieldnames, values):
+            self.setvalue(name, value)
+
      
     def __eq__(self, other):
         return self.cmp == other.cmp

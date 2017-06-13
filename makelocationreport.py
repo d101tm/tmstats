@@ -315,11 +315,8 @@ if __name__ == "__main__":
             club = Club(clubvalues, fieldnames=clubfields)
             clubs[club.stringify(row['clubnumber'])] = club
         alignvalues = [row[p] for p in alignfields]
-        club.addvalues(alignvalues, alignfields)
-        if row['latitude']:
-            club.latitude = row['latitude']
-        if row['longitude']:
-            club.longitude = row['longitude']
+        club.updatevalues(alignvalues, alignfields)
+
 
         
     # Assign clubs to their new areas.  If they've changed, also assign to the area they're leaving
