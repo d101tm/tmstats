@@ -167,7 +167,7 @@ class Outputfiles:
         .areatable {margin-bottom: 18pt; width: 100%; page-break-inside: avoid; display: block;}
         .suspended {text-decoration: line-through; color: red;}
 
-        .divtable {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid; page-break-after: always !important;}
+        .divtable {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid;}
 
         .divtable tfoot th {border: none;}
         .footinfo {text-align: left;}
@@ -180,10 +180,14 @@ class Outputfiles:
         
         .clubcounts {margin-top: 12pt;}
         .finale {border: none; break-after: always !important; display: block; float: none; position: relative; page-break-after: always !important; page-break-inside: avoid;}
+        
+        .summary {border: none; break-before: always !important; display: block; float: none; position: relative; page-break-inside: avoid;}
     
         @media print { 
             body {-webkit-print-color-adjust: exact !important;}
-                        td {padding: 1px !important;}}
+            td {padding: 1px !important;}
+            .areatable {font-size: 8px !important;}
+            }
         """)
         outfile.write('</style>\n')
         outfile.write('</head>\n')
@@ -755,7 +759,8 @@ outfile = outfiles.add(open(parms.outfile, "w"))
     
 
 # One division at a time, please...
-for d in sorted(divisions.keys()):
+alldivs = sorted(divisions.keys())
+for d in alldivs:
     divfn = "div%s.html" % d.lower()
     if parms.makedivfiles:
         divfile = outfiles.add(open(divfn, "w"))
@@ -800,6 +805,7 @@ for d in sorted(divisions.keys()):
     outfiles.write('</table>\n')
     
     if (d != '0D') and not parms.newAlignment:
+        outfile.write('<div class="summary">\n')
         outfiles.write('<h2>Division and Area Summary</h2>')
     
         # Now, write the status and to-dos in a nice format
@@ -881,16 +887,19 @@ for d in sorted(divisions.keys()):
             outfiles.write(thisarea.clubcounts())
             outfiles.write('</tr>')
         outfiles.write('</tbody></table>\n')
+        outfile.write('</div>\n')
     
     
     
     
     outfiles.write('')
-        
-    outfiles.write('<div class="finale"><p>' + '<br />'.join(freshness) + '</p>')
+    if d != alldivs[-1]:
+        outfiles.write('<div class="finale">\n')
+    outfiles.write('<p>' + '<br />'.join(freshness) + '</p>')
     if divfile:
         divfile.write('<p>Click <a href="stats.html">here</a> for full District report.</p>\n')
-    outfiles.write('</div>\n')
+    if d != alldivs[-1]:
+        outfiles.write('</div>\n')
     if divfile:
         outfiles.close(divfile)
  

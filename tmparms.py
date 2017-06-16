@@ -85,9 +85,8 @@ class tmparms(Singleton):
 
 
 if __name__ == '__main__':
-    # Make it easy to run under TextMate
-    if 'TM_DIRECTORY' in os.environ:
-        os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
+    import tmglobals
+    globals = tmglobals.tmglobals()
     parms = tmparms()
-    parms.parse()
+    globals.setup(parms)
     print parms
