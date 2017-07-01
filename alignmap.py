@@ -27,6 +27,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--verbose', '-v', action='count', default=0)
     parms.add_argument('--outfile', dest='outfile', default=None)
+    parms.add_argument('--divfile', dest='divfile', default=None)
     parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
     parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
@@ -53,6 +54,8 @@ if __name__ == "__main__":
             parms.makedivisions = not parms.nomakedivisions
     if not parms.outfile:
         parms.outfile = 'd%snewmarkers.js' % parms.district
+    if not parms.divfile:
+        parms.divfile = 'd%sborders.js' % parms.district
 
 
 
@@ -84,7 +87,10 @@ if __name__ == "__main__":
 
     makemap(outfile, clubs, parms)
 
+    outfile.close()
+
     if parms.makedivisions:
+        outfile = open(parms.divfile, 'w')
         import pytess
         from shapely.ops import cascaded_union
         from shapely.geometry import Polygon
@@ -193,5 +199,4 @@ if __name__ == "__main__":
         DrawBoundary(d101);
         """)
 
-
-    outfile.close()
+        outfile.close()

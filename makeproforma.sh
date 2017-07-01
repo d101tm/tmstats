@@ -11,6 +11,7 @@ if [[ $? ]]; then
     if [[ "block15" == $(hostname) ]] ; then
         echo "Copying to alignment"
         cp d101proforma.html ~/files/alignment
+        cp d101borders.js ~/files/alignment
         cp d101newmarkers.js ~/files/alignment
         cp d101location.html ~/files/alignment
  #       cp d101migration.html ~/files/alignment
@@ -18,6 +19,7 @@ if [[ $? ]]; then
     else
         echo "Copying to d101tm.org"
         scp d101proforma.html d101tm.org:files/alignment/
+        scp d101borders.js d101tm.org:files/alignment/
         scp d101newmarkers.js d101tm.org:files/alignment/
         scp d101location.html d101tm.org:files/alignment/
   #      scp d101migration.html d101tm.org:files/alignment/
