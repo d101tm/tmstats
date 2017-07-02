@@ -141,7 +141,7 @@ if __name__ == "__main__":
     else:
         firstdate = datetime.datetime.strptime(tmutil.cleandate(parms.since), '%Y-%m-%d')
         clauses.append("awarddate >= '%s'" % firstdate.strftime('%Y-%m-%d'))
-        timestamp = 'since ' + firstdate.strftime('%B ') + '%d' % firstdate.day
+        timestamp = 'since {d:%B} {d.day}, {d.year}'.format(d=firstdate)
 
 
     if not parms.include_hpl:
