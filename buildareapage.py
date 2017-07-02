@@ -47,7 +47,7 @@ class Division():
         if self.director:
             res.append(u'%s' % self.director.html())
         else:
-            res.append('<p>Division Director Position is Vacant</p>')
+            res.append('<tr><td align="left" colspan="2">Division %s Director Position is Vacant</td></tr>' % self.name.upper())
         for a in sorted(self.areas):
             res.append('  %s' % self.areas[a].html())
         res.append('</table>')
@@ -92,16 +92,14 @@ class Area():
             return ''
         res = []
         res.append('<tr><td style="background-color: #f2df74;" colspan="2"><strong>Area %s</strong></td></tr>' % self.name)
-        res.append('<tr><td>')
         if self.director:
             res.append(self.director.html())
         elif self.parent.director:
             res.append(self.parent.director.html(isacting=True))
         else:
-            res.append('Area Director Position is Vacant')
-        res.append('</td></tr>')
+            res.append('<tr><td colspan="2" align="left">Area Director Position is Vacant</td></tr>')
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
-            res.append('<tr><td align="right">%s</td><td><a href="%s" target="_blank">%s</a></td></tr>' % (c.clubnumber, c.getLink(), c.clubname))
+            res.append('<tr><td align="right">%s</td><td><a href="%s" target="_blank">%s</a></td></tr>' % (c.clubnumber, c.getLink(), c.clubname.replace('&','&amp;')))
 
         return u'\n'.join(res)
 
@@ -199,7 +197,7 @@ for row in reader:
 
 # And now we go through the Divisions and Areas and build the output.
 outfile = open(parms.outfile, 'wb')
-outfile.write("<p><b>Click on a Division to see the clubs and Areas it contains.<b></p>")
+outfile.write("<p><b>Click on a Division to see the clubs and Areas it contains.</b></p>")
 outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
 """)
 for d in sorted(Division.divisions):
