@@ -534,11 +534,9 @@ class Area(Aggregate):
 # Define args and parse command line
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
-parms.add_argument("--newAlignment", dest="newAlignment", default=None, help="CSV file with alignment information to create a report with a new alignment.")
+parms.add_argument("--testalignment", dest="testalignment", default=None, help="CSV file with alignment information to create a report with a new alignment.")
 parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
-parms.add_argument("--proforma", dest="proforma", action="store_true", help="Create pro-forma statistics without Area/Division summaries.")
-
 # Do global setup
 globals.setup(parms)
 
@@ -632,8 +630,8 @@ for (clubnumber, charterdate, clubname) in curs.fetchall():
         print 'Club %s (%d) not in performance reports, ignored.' % (clubname, clubnumber)
         
     
-# New alignment processing
-if parms.newAlignment:
+# Test alignment processing
+if parms.testalignment:
     # If any clubs get created by overrideClubs, they are of the standard
     #   simpleclub.Club type.  We need to create objects of the local Club
     #   type instead, but keep the values.  
@@ -641,7 +639,7 @@ if parms.newAlignment:
     sClub.getClubsOn(curs)   # Ensure everything is defined
     from tmutil import overrideClubs
     oldkeys = set(clubs.keys())
-    clubs = overrideClubs(clubs, parms.newAlignment)
+    clubs = overrideClubs(clubs, parms.testalignment)
     for c in clubs.keys():
         if c not in oldkeys:
             nclub = clubs[c]
@@ -805,7 +803,7 @@ for d in alldivs:
 
     outfiles.write('</table>\n')
     
-    if (d != '0D') and not parms.proforma:
+    if (d != '0D') and not parms.testalignment:
         outfile.write('<div class="summary">\n')
         outfiles.write('<h2>Division and Area Summary</h2>')
     
