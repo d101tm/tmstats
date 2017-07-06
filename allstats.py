@@ -537,6 +537,7 @@ parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help
 parms.add_argument("--newAlignment", dest="newAlignment", default=None, help="CSV file with alignment information to create a report with a new alignment.")
 parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
+parms.add_argument("--proforma", dest="proforma", action="store_true", help="Create pro-forma statistics without Area/Division summaries.")
 
 # Do global setup
 globals.setup(parms)
@@ -804,7 +805,7 @@ for d in alldivs:
 
     outfiles.write('</table>\n')
     
-    if (d != '0D') and not parms.newAlignment:
+    if (d != '0D') and not parms.proforma:
         outfile.write('<div class="summary">\n')
         outfiles.write('<h2>Division and Area Summary</h2>')
     
