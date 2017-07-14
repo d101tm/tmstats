@@ -362,10 +362,6 @@ if __name__ == "__main__":
     # Get the clubs
     clubs = Club.getClubsOn(curs)
 
-    # Process new alignment, if needed
-    if parms.newAlignment:
-        overrideClubs(clubs, parms.newAlignment)
-
     # Remove suspended clubs
     clubs = removeSuspendedClubs(clubs, curs)
 
@@ -373,6 +369,10 @@ if __name__ == "__main__":
     # Add current coordinates and remove clubs without coordinates
     setClubCoordinatesFromGEO(clubs, curs)
 
+    # Process new alignment, if needed
+    if parms.newAlignment:
+        overrideClubs(clubs, parms.newAlignment)
+        
     # If there are overrides to club positioning, handle them now
     if parms.mapoverride:
         overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
