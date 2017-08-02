@@ -112,6 +112,11 @@ if __name__ == "__main__":
     curs = globals.curs
     conn = globals.conn
     
+    # If we're in the first cycle, ignore 9a, even if specified
+    thismonth = datetime.today().month
+    if thismonth >= 6 and thismonth <= 11:
+        parms.bonus9a = False
+        parms.require9a = False
     
     # Your main program begins here.
     clubs = Club.getClubsOn(curs)
@@ -124,7 +129,6 @@ if __name__ == "__main__":
             qualified.add('%d' % l[0])
             
     if not parms.lastmonth:
-        thismonth = datetime.today().month
         if thismonth >= 6 and thismonth <= 11:
             parms.lastmonth = "August"
         else:
