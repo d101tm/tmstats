@@ -167,7 +167,10 @@ if __name__ == "__main__":
     # Don't look for data for months earlier than the most recent data in the database
     if lastmonth:
         monthnum = int(lastmonth[5:7])
-        months = months[months.index(monthnum):]
+        try:
+            months = months[months.index(monthnum):]
+        except ValueError:
+            pass   # Cope with a missed month from WHQ
     months = [(m, tmyear + (1 if m <= 6 else 0)) for m in months]
     
     # Save the final and next-to-final months for "dolatest" to cope with Toastmasters'
