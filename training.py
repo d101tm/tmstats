@@ -133,6 +133,11 @@ if __name__ == "__main__":
             parms.lastmonth = "August"
         else:
             parms.lastmonth = "February"
+
+    if parms.lastmonth == "August":
+        parms.period = "June-August"
+    else:
+        parms.period = "December-February"
             
 
     finder = re.compile(r'.*AREA *([0-9A]*) *DIVISION *(0?[A-Za-z] *)')
@@ -275,7 +280,7 @@ if __name__ == "__main__":
         outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
 
     else:
-        outfile.write('<p>Clubs which have all 7 Officers trained earn <b>%s</b>.</p>\n' % parms.reward)
+        outfile.write('<p>Earn <b>%s</b> by having all seven Club Officers trained in the %s period.</p>\n' % (parms.reward, parms.period))
  
 
 

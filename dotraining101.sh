@@ -6,7 +6,7 @@ cd data
 echo "No updates to the training report were found." > trainingmessage.txt
 ../getfromdropbox.py --outfile latesttraining.html --namefile trainingfileinfo.txt --cfile trainingcursor.txt --ext htm html --dir Training  || exit $?
 echo $(date +"%B %e") | sed 's/  / /' > trainingreportdate.txt
-../training.py latesttraining.html --bonus9a || exit $?
+../training.py latesttraining.html  || exit $?
 export TARGET=$HOME/files/reports
 
 if [ -d $TARGET ] ; then  
