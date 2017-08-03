@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """ Send mail congratulating award recipients. """
 
 import dbconn, tmutil, sys, os, yaml
@@ -49,7 +50,7 @@ paras = ['The communication and leadership skills you have gained will be of lif
          'Please email us if you have questions about the educational program.  We are here to help.  If you prefer a phone call, please send us your phone number and indicate the best time to call you.',
          'Good luck as you journey forward on the educational award path!',
          'Sincerely,',
-         'Dave Spence\nProgram Quality Director\nDistrict 101 Toastmasters']
+         'Francoise Muller\nProgram Quality Director\nDistrict 101 Toastmasters']
 
 def fmtto72(s):
     words = s.split()
@@ -251,7 +252,6 @@ if __name__ == "__main__":
 
     curs.execute("SELECT awarddate, membername FROM awards WHERE awarddate >= %s AND awarddate <= %s AND acknowledged = 0 AND award != 'LDREXC' GROUP BY awarddate, membername ORDER BY awarddate, membername", (parms.fromdate, parms.todate))
     targetlist = curs.fetchall()
-
     
     # Now, for each person/date, get all of their info and generate the letter:
     for (awarddate, membername) in targetlist:
