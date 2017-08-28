@@ -22,7 +22,7 @@ class Singleton(object):
         return type._the_instance
 
 class tmparms(Singleton):
-    def __init__(self, description='A program in the TMSTATS suite.', YMLfile='tmstats.yml', includedbparms=True, customformatter=True):
+    def __init__(self, description='A program in the TMSTATS suite.', YMLfile='tmstats.yml', includedbparms=True, customformatter=True, **kwargs):
         if self.__dict__.get('parms', False):
             return
         if customformatter is True:
@@ -32,7 +32,7 @@ class tmparms(Singleton):
         else:
             formatter_class = None
         if formatter_class:
-            self.parser = argparse.ArgumentParser(description=description, formatter_class=formatter_class)
+            self.parser = argparse.ArgumentParser(description=description, formatter_class=formatter_class, **kwargs)
         else:
             self.parser = argparse.ArgumentParser(description=description)
         self.parser.add_argument('--YMLfile',  help="YML file with information for this program", default=YMLfile)
