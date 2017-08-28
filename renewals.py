@@ -2,6 +2,12 @@
 
 """ Generate reports for renewal programs (March Madness, Stellar September) """
     
+class level:
+    def __init__(self, pct, earns, name):
+        self.pct = pct
+        self.earns = earns
+        self.name = name
+        self.winners = []
 
 
 class myclub:
@@ -24,7 +30,7 @@ class myclub:
         return (self.area, self.clubnumber)
 
 if __name__ == "__main__":
-    import tmparms, latest, os, sys
+    import tmparms, latest, os, sys, csv
     from datetime import datetime
     from tmutil import showclubswithvalues, cleandate, getClubBlock, gotodatadir
     import tmglobals
@@ -33,18 +39,41 @@ if __name__ == "__main__":
 
     
     # Define args and parse command line
-    parms = tmparms.tmparms(description=__doc__)
+    parms = tmparms.tmparms(description=__doc__, epilog='pct and earns must have the same number of items.\nIf names is specified, it must have the same number as well.')
     parms.add_argument('--finaldate', default='', dest='finaldate', help="Final date for qualifying.")
-    parms.add_argument('--pct', default='75.0', dest='pct', type=float, help="Threshold to qualify (in percent)")
     parms.add_argument('--outfileprefix', default='', dest='outfileprefix', type=str, help="Output file prefix.")
-    parms.add_argument('--earning', default='$50 in District Credit')
+    parms.add_argument('--format', default='$%d in District Credit')
+    parms.add_argument('--pct', dest='pct', nargs='+', type=float, help='Threshold to qualify (in percent) for each level.', default='75.0')
+    parms.add_argument('--earns', dest='earns', nargs='+', type=int, help='Amount earned for each level.', default='50')
     parms.add_argument('--program', choices=['madness', 'stellar'])
+    parms.add_argument('--name', dest='name', nargs='+', type=str, help='Name for each level.  Specify \'\' if no name for a level.')
     
     # Do global setup
     globals.setup(parms)
     curs = globals.curs
     conn = globals.conn
+
+    # Ensure proper matching of names, pct, and earns.
+    if not isinstance(parms.pct, list):
+        parms.pct = ((parms.pct,))
+
+    if not isinstance(parms.earns, list):
+        parms.earns = ((parms.earns,))
+
     
+    if len(parms.pct) != len(parms.earns):
+        sys.stderr.write('The number of values for PCT and EARNS must be the same, but we got %d in PCT and %d in EARNS\n' % (len(parms.pct), len(parms.earns)))
+        sys.exit(1)
+
+    if parms.name:
+        if len(parms.pct) != len(parms.name):
+            sys.stderr.write('The number of values for PCT and NAME must be the same, but we got %d in PCT and %d in NAME\n' % (len(parms.pct), len(parms.name)))
+            sys.exit(1)
+    else:
+        parms.name = len(parms.pct) * ('',)
+
+    levels = [level(parms.pct[i], parms.earns[i], parms.name[i]) for i in xrange(len(parms.pct))]
+    levels.sort(key=lambda l:l.pct, reverse=True)
 
     # Conditionally resolve unspecified parameters
     if not parms.program:
@@ -79,64 +108,46 @@ if __name__ == "__main__":
         asofnice = 'for ' + asofd.strftime("%B") + " " + asofd.strftime("%d").lstrip('0')
 
     # Now, get the clubs which qualify
-    # Because WHQ has fouled up the base for some clubs in 2016-17, we
+    # Because WHQ has been known to have bad base membership, we
     #   have to do the computation in the program instead of the database
-
-    specials = {225:14,
-            1829:10,
-            2693:13,
-            2914:23,
-            4004:16,
-            4124:9,
-            8124:29,
-            8499:14,
-            9473:32,
-            586504:42,
-            607909:36,
-            668615:44,
-            685103:15,
-            1776130:13,
-            1852523:29,
-            2410520:21,
-            4528013:29,
-            4967250:33,
-            5042810:36,
-            5404978:25,
-            5474126:44,
-            5477675:29}
-    clubs = []
+    # Bring in any overrides here.    
+    from specialbase import specials
     if parms.program == 'madness':
         rtype = 'aprrenewals'
     else:
         rtype = 'octrenewals'
 
+    rawdata = [('clubnumber', 'clubname', rtype, 'membase', 'division', 'area', 'asof')]
     query = "SELECT c.clubnumber, c.clubname,  %s, c.membase, c.division, c.area   from clubperf c  inner join distperf d on c.clubnumber = d.clubnumber and c.asof = '%s' and d.asof = '%s' order by c.division, c.area" % (rtype, asof, asof)
     curs.execute(query)
     for c in curs.fetchall():
         c = list(c)
         if c[0] in specials:
             c[3] = specials[c[0]]
+        rawdata.append(c+[asof])
         club = myclub(*c)
-        if club.pct >= parms.pct:
-            clubs.append(myclub(*c))
+        for each in levels:
+            if club.pct >= each.pct:
+                each.winners.append(myclub(*c))
+                break  # We only have to add a club to the best level it reaches
 
-
-    clubs.sort(key=lambda c: c.key())
-    
-    # And write the report.
-    outfile = open(parms.outfileprefix + '.html', 'w')
-    outfile.write('<p>This report is %s.</p>\n' % asofnice)
-    showclubswithvalues(clubs, 'Renewed', outfile)
+    # Write the raw data
+    outfile = open(parms.outfileprefix + '.csv', 'w')
+    csvwriter = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL)
+    csvwriter.writerows(rawdata)
     outfile.close()
 
-    # And write the paragraph form.
-    qualifiers = getClubBlock(clubs)
-    if len(clubs) == 0:
-        res = ''
-    else:
-        res = '<p><b>Congratulations</b> to %s for earning %s!</p>' % (qualifiers, parms.earning)
+    # Now, write the results for each level
+    outfile = open(parms.outfileprefix + '.text', 'w')
 
-    with open(parms.outfileprefix + '.text', 'w') as outfile:
-        if res:
+    for each in levels:
+        if len(each.winners) > 0:
+            winners = getClubBlock(each.winners)
+            res = '<p><b>Congratulations</b> to\n' + winners + '\n for renewing at least' + ' %d%% ' % each.pct + 'of their base membership and earning ' + (parms.format % each.earns)
+            if each.name:
+                res += '. Welcome to <b>' + each.name + '</b> status'
+            res += '!</p>\n'
             outfile.write(res)
+
+    outfile.close()
     
