@@ -47,7 +47,7 @@ class Award:
 
 def printawards(awards, knownawards, k):
     if k in awards:
-        print '[et_pb_toggle title="%s" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000000"]' % knownawards[k]
+        print '[et_pb_toggle title="%s (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (knownawards[k], len(awards[k]))
         print '<table>'
         #print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
         for each in sorted(awards[k], key=lambda x:x.key):
@@ -162,6 +162,7 @@ if __name__ == "__main__":
     print '<h3>Member Educationals %s</h3>' % timestamp
     print '<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals %s.  Will we see YOUR name here next?</p>' % timestamp
     print '<p>Achievements not shown here can be found on the Toastmasters International <a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
+    print '<p>Click on an award title to show the names of Toastmasters who have earned that award.</p>'
 
     # And now print the awards themselves.
 
