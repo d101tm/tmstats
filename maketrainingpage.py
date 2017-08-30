@@ -44,7 +44,7 @@ class Event:
         self.start = datetime.strptime(self.EventStartDate, self.ptemplate)
         self.end = datetime.strptime(self.EventEndDate, self.ptemplate)
         self.include = (self.start >= parms.start) and (self.end <= parms.end)
-        self.showreg = parms.showpast or (self.start > parms.now)
+        self.showreg = parms.showpast or (self.end > parms.now)
         self.name = name
         self.title = title
 
