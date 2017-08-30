@@ -101,8 +101,8 @@ if __name__ == "__main__":
             parms.end = parms.end.replace(year=parms.end.year+1)
         else:
             parms.start = parms.start.replace(year=parms.start.year-1)
-    # But we don't care about past trainings, so...
-    parms.start = parms.now
+    # But we don't care about past trainings, set start to today
+    parms.start = parms.now.replace(hour=0,minute=0,second=0)
     
 
     # Parse the configuration file
