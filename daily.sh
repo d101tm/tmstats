@@ -164,7 +164,7 @@ if [[ "$dorun" = "yes" ]] ; then
         # Stellar September starts with August data and continues through September 15
         if ../require.py --newtmyear --datafor S8 --nodatafor 9/16 ; then
             echo "Running Stellar September"
-            ../renewals.py --program "stellar" && cp stellar.* ~/www/files/reports
+            ../renewals.py --program "stellar" --pct 75 90 100 --earn 50 75 101 --name '' '' 'Gold Club' && cp stellar.* ~/www/files/reports
         fi
 
         # March Madness starts with February data and continues through March 15
