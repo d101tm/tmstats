@@ -26,6 +26,7 @@ knownawards = {
 commtrack = ['CC', 'ACB', 'ACS', 'ACG']
 ldrtrack = ['CL', 'ALB', 'ALS']
 dtm = ['DTM']
+awardorder = ['DTM', 'CL', 'CC', 'ALB', 'ACB', 'ALS', 'ACS', 'ACG']
 knowns = commtrack + ldrtrack + dtm
 unknowns = set()
 
@@ -167,11 +168,7 @@ if __name__ == "__main__":
     # And now print the awards themselves.
 
     print '<div class="awardstable">'
-    for k in dtm:
-        printawards(awards, knownawards, k)
-    for k in commtrack:
-        printawards(awards, knownawards, k)
-    for k in ldrtrack:
+    for k in awardorder:
         printawards(awards, knownawards, k)
     print '</div>'
 
