@@ -237,6 +237,8 @@ if [[ "$dorun" = "yes" ]] ; then
         
     rm marker
     rm *.success 2>/dev/null
+
+    ../clearcache.py --all
     
     echo "Finished at $(date)" > "$success"
     cat "$success"

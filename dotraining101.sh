@@ -16,6 +16,7 @@ if [ -d $TARGET ] ; then
     done
     cp lucky7.html $TARGET/lucky7.html
 
+    ../clearcache.py district-programs
 
 
     # Now, create the message to the Program Quality Directors

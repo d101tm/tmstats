@@ -20,7 +20,7 @@ echo "<p>Getting new roster</p>"
 ../getroster.sh
 echo "<p>Processing Open House Report</p>"
 echo "<pre>"
-../openhouse.py && cp openhouseclubs.html ~/files/reports/
+../openhouse.py && cp openhouseclubs.html ~/files/reports/ && ../clearcache.py district-programs
 echo "</pre>"
 echo "<p>Open House Report has been updated on the <a href="/district-programs#openhousechallenge">District Programs</a> page.</p>"
 
