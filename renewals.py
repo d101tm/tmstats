@@ -143,7 +143,7 @@ if __name__ == "__main__":
     for each in levels:
         if len(each.winners) > 0:
             winners = getClubBlock(each.winners)
-            res = '<p><b>Congratulations</b> to\n' + winners + '\n for renewing at least' + ' %d%% ' % each.pct + 'of their base membership and earning ' + (parms.format % each.earns)
+            res = '<p><b>Congratulations</b> to\n' + winners + '\n for renewing' + (' at least' if each.pct < 100.0 else '') + ' %d%% ' % each.pct + 'of their base membership and earning ' + (parms.format % each.earns)
             if each.name:
                 res += '. Welcome to <b>' + each.name + '</b> status'
             res += '!</p>\n'
