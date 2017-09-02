@@ -30,6 +30,7 @@ if __name__ == "__main__":
     parms.add_argument('--cachedir')
     parms.add_argument('--clearhome', action='store_true')
     parms.add_argument('--verbose', action='store_true')
+    parms.add_argument('--all', action='store_true')
     # Add other parameters here
 
     # Do global setup
@@ -55,8 +56,15 @@ if __name__ == "__main__":
         sys.stderr.write('Cache directory %s not found.\n' % parms.cachedir)
         sys.exit(2)
 
-    if parms.clearhome:
+    if parms.clearhome or parms.all:
         wipe()
+
+    if parms.all:
+        for name in os.listdir('.'):
+            if os.path.isdir(name) and name != 'feed':
+                parms.what.append(name)
+        if parms.verbose:
+            sys.stderr.write('Removing\n  %s\n' % '\n  '.join(parms.what))
 
     for d in parms.what:
         try:
@@ -67,5 +75,9 @@ if __name__ == "__main__":
             continue
         wipe()
         os.chdir(parms.cachedir)
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass   # Something re-created it, probably
 
 
