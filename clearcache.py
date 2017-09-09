@@ -22,6 +22,8 @@ def wipe():
 
 if __name__ == "__main__":
  
+    # @@TACKY@@ Move to the source directory
+    os.chdir(os.path.dirname(sys.argv[0]))
     import tmparms
     
     # Establish parameters
