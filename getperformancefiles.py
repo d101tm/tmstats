@@ -135,6 +135,7 @@ if __name__ == "__main__":
     today = date.today()
     yesterday = today - timedelta(1)
 
+
     # Figure out what months we need info for:
     tmmonths = (7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6)
     # If it's January-July, we care about the TM year which started the previous July 1; otherwise, it's this year.
@@ -186,89 +187,16 @@ if __name__ == "__main__":
         
         
     # And get and write current club data unless told not to
+    # WHQ doesn't supply date information, but it's always as of yesterday
     if not parms.skipclubs:
         url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % clubdistrict
         clubdata = getresponse(url)
         if clubdata:
-            with open(makefilename('clubs', today), 'w') as f:
+            with open(makefilename('clubs', yesterday), 'w') as f:
                         f.write(''.join(clubdata).replace('\r',''))
             print "Fetched clubs"
         else:
             print 'No data received from %s' % url
 
-    sys.exit()   # Only run for today!
     
-    # The code below this was used to fetch data from WHQ to catch up from gaps.
-    # It may or may not still work.
-
-    # We assume all reports have identical availabilities, so we
-    #    use the clubperf report to find the first available report
-    #    on or after our startdate.
     
-    # Try to get the obvious first candidate report if we're not looking at the most recent data
-    thedate = startdate
-    if thedate and (thedate < yesterday):
-        report = getreportfromWHQ('clubperformance', district, altdistrict, tmyearpiece, months[0], thedate)
-    else:
-        report = None       # We'll get the latest data instead.
-
-  
-    # If we didn't get data and we're looking at the past,
-    #   we may have gone past a month boundary.
-    while not report and thedate <= enddate and thedate < yesterday:
-        
-        # See if there's data for "thedate" in the next month
-        report = getreportfromWHQ('clubperformance', district, altdistrict, tmyearpiece, months[1], thedate)
-        if report:
-             # All is well; we're in a new month of data
-             months = months[1:]
-             break
-            
-        print 'No report available for month %d on %s' % (months[0][0], thedate.strftime('%Y-%m-%d'))
-        # Try the next day
-        
-        thedate += timedelta(1)
-        report = getreportfromWHQ('clubperformance', district, altdistrict, tmyearpiece, months[0], thedate)
-
-    
-    # OK, now we should have a report in hand.
-    while (months and thedate <= enddate and thedate < yesterday):
-        if report:
-            writedailyreports(report, district, altdistrict, tmyearpiece, months[0], thedate)
-        thedate += timedelta(1)
-        report = getreportfromWHQ('clubperformance', district, altdistrict, tmyearpiece, months[0], thedate)
-        if not report:
-            # We might have found the end of the data for the previous month
-            # print 'months[0][0] = %s, thedate.month = %s' % (months[0][0], thedate.month)
-            if months[0][0] != thedate.month:
-                months = months[1:]
-                if not months:
-                    break
-                if thedate < yesterday:
-                    print "Checking %d/%d" %  months[0]
-                report = getreportfromWHQ('clubperformance', district, altdistrict, tmyearpiece, months[0], thedate)
-            if not report and (thedate < yesterday):
-                # Don't complain about missing data for today or yesterday; that's to be expected.
-                print 'No data available for %s' % (thedate.strftime('%Y-%m-%d'))
-                
-
-        
-    # If the enddate is today, get today's information and write it by the appropriate 'asof' thedate
-
-    if enddate.year == today.year and enddate.month == today.month and enddate.day == today.day:
-        print "Getting the latest performance info"
-        dolatest(district, altdistrict, finals, tmyearpiece)
-        
-        
-    # And get and write current club data unless told not to
-    if not parms.skipclubs:
-        url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % clubdistrict
-        clubdata = getresponse(url)
-        if clubdata:
-            with open(makefilename('clubs', today), 'w') as f:
-                        f.write(''.join(clubdata).replace('\r',''))
-
-     
-
-
-

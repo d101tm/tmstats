@@ -47,10 +47,10 @@ else
     zip="zip"
 fi
 
-# If we have today's club file and all of yesterday's performance files,
+# If we have all of yesterday's performance files,
 #   exit with RC=1 (no changes) (unless forced to run).
 
-if [[ -z "$force" && -e "clubs.$today.csv" && -e "clubperf.$yday.csv" && -e "areaperf.$yday.csv" && -e "distperf.$yday.csv" ]]
+if [[ -z "$force" && -e "clubs.$yday.csv" && -e "clubperf.$yday.csv" && -e "areaperf.$yday.csv" && -e "distperf.$yday.csv" ]]
 then
     exit 1
 fi
@@ -60,7 +60,7 @@ let ret=0  # Assume all is well
 ../getperformancefiles.py
 
 # Note the file status
-if [ ! -e "clubs.$today.csv" ]
+if [ ! -e "clubs.$yday.csv" ]
 then
     let ret=ret+2
 fi
@@ -87,7 +87,8 @@ fi
 # Move old files to history unless otherwise requested
 if [[ "$zip" = "zip" ]]
 then
-    zip -mT history.zip clubs.*.csv clubperf.*.csv areaperf.*.csv distperf.*.csv -x clubs.$today.csv *perf.$yday.csv
+    year=${yday:0:4}
+    zip -mT hist$year.zip clubs.$year*.csv clubperf.$year*.csv areaperf.$year*.csv distperf.$year*.csv -x clubs.$yday.csv *perf.$yday.csv
 fi
 
 # Get the educational achievements
