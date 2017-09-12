@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """ Check currency of all four tables for the date specified.
-    If no date is specified, we want the 'clubs' table to be current for today;
-      the other tables can be for today OR yesterday because they are one day behind on Toastmasters.
+    If no date, either today or yesterday is OK.
 
     Return 0 if all four tables are current.
     Return 1 if only the clubs table is outdated.
@@ -49,11 +48,7 @@ if date:
         have[x[0]] = True
         count += 1
 else:
-    curs.execute("SELECT tablename FROM loaded WHERE (loadedfor=%s OR loadedfor=%s) AND tablename IN ('clubperf', 'distperf', 'areaperf') GROUP BY tablename", (today, yesterday))
-    for x in curs.fetchall():
-        have[x[0]] = True
-        count += 1
-    curs.execute("SELECT tablename FROM loaded WHERE loadedfor=%s AND tablename = 'clubs'", (today,))
+    curs.execute("SELECT tablename FROM loaded WHERE (loadedfor=%s OR loadedfor=%s) AND tablename IN ('clubperf', 'distperf', 'areaperf', 'clubs') GROUP BY tablename", (today, yesterday))
     for x in curs.fetchall():
         have[x[0]] = True
         count += 1
