@@ -1,2 +1,3 @@
-TM_PYTHON = "/usr/local/bin/python"
-projectDirectory = "{$CWD}"
+PATH="${PATH}:/usr/local/bin"
+PYTHONPATH="/usr/local/lib/python2.7/site-packages/:${PYTHONPATH}"
+projectDirectory = "${CWD}"
