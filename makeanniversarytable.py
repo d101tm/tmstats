@@ -26,10 +26,10 @@ if __name__ == "__main__":
     dd = globals.today.day
 
     writer = csv.writer(sys.stdout)
-    writer.writerow(['Club Name', 'Club Number', 'Charter Date', 'Next Anniversary', 'Age on Next Anniversary'])
+    writer.writerow(['Club Name', 'Club Number', 'Charter Year', 'Charter Month', 'Charter Day', 'Next Anniversary', 'Age on Next Anniversary'])
     curs.execute('SELECT MAX(lastdate) FROM clubs')
     maxdate = curs.fetchone()[0]
-    curs.execute('SELECT clubname, clubnumber, charterdate FROM clubs WHERE lastdate = %s ORDER BY charterdate', (maxdate,))
+    curs.execute('SELECT clubname, clubnumber, charterdate FROM clubs WHERE lastdate = %s ORDER BY month(charterdate), day(charterdate)', (maxdate,))
     for (clubname, clubnumber, charterdate) in curs.fetchall():
         cyy = charterdate.year
         cmm = charterdate.month
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         else:
             ayy = yy
         age = ayy - cyy
-        writer.writerow((clubname, clubnumber, charterdate, '%04d-%02d-%02d' % (ayy, cmm, cdd), age))
+        writer.writerow((clubname, clubnumber, cyy, cmm, cdd, '%04d-%02d-%02d' % (ayy, cmm, cdd), age))
     
     
 
