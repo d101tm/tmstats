@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS clubs (
     latitude DOUBLE DEFAULT 0.0,
     firstdate date, 
     lastdate date,
+    allowsonlineattendance BOOL,
     PRIMARY KEY(id),
     CONSTRAINT UNIQUE INDEX(clubnumber, firstdate)
 ) CHARACTER SET utf8;
