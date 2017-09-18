@@ -142,6 +142,7 @@ def doHistoricalClubs(conn, mapkey):
         doDailyClubs(infile, conn, cdate, firsttime)
         firsttime = False
         infile.close()
+        conn.commit()
     
     # Commit all changes    
     conn.commit()
@@ -177,6 +178,11 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         if not hline[0].startswith('{"Message"'):
             print "'clubnumber' not in '%s'" % hline
         return
+        
+    try:
+        prospectiveclubcol = headers.index('prospectiveclub')
+    except ValueError:
+        prospectiveclubcol = False
         
     # Find out what fields we have in the database itself
     dbfields = []
@@ -221,7 +227,6 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         
     Club.setfieldnames(dbheaders)
 
-    
     # We need to get clubs for the most recent update so we know whether to update an entry 
     #   or start a new one.
     #yesterday = datetime.strftime(datetime.strptime(cdate, '%Y-%m-%d') - timedelta(1),'%Y-%m-%d')
@@ -230,7 +235,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     for row in reader:
         if len(row) < expectedheaderscount:
             break     # we're finished
-            
+        if prospectiveclubcol is not None and row[prospectiveclubcol]:
+            continue   # Ignore prospective clubs
+
         for i in suppress:
             del row[i]
 
@@ -305,6 +312,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
     
         # Clean up advanced status
         club.advanced = '1' if (club.advanced != '') else '0'
+        
+        # Clean up online status
+        club.allowsonlineattendance = '1' if (club.allowsonlineattendance != '') else '0'
     
         # Now, take care of missing latitude/longitude
         if ('latitude') in dbheaders:
