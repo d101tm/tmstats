@@ -132,7 +132,12 @@ if [[ "$dorun" = "yes" ]] ; then
     else
         testdir=""
     fi
-
+	
+	if [ -d ~/www/files/reports ] ; then
+		reportdir=~/www/files/reports
+	else
+		reportdir=""
+	fi
 
     sleep 1   # Make sure that the marker file has an older timestamp
    
@@ -219,6 +224,9 @@ if [[ "$dorun" = "yes" ]] ; then
 	
         echo "Running alignment-related"
         (cd ..;./dodailyalignment.sh)
+		
+		echo "Creating anniversary table"
+		(cd ../;./makeanniversarytable.py) && cp anniversary.csv ~/www/files/reports
     fi
 
 
