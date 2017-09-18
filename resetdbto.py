@@ -17,6 +17,7 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--clubsonly', action='store_true')
     parms.add_argument('resetto', default='yesterday', help="Date to reset the database to.")
     # Add other parameters here
 
@@ -27,13 +28,16 @@ if __name__ == "__main__":
     
     # Your main program begins here.
     resetdate = tmutil.cleandate(parms.resetto)
-    print 'Resetting database to', resetdate
+    print 'Resetting %sdatabase to %s' % ('CLUBS and CLUBCHANGES tables in ' if parms.clubsonly else '', resetdate)
     
-    # Do the straightforward resets
-    curs.execute("DELETE FROM loaded WHERE loadedfor > %s", (resetdate,))
-    curs.execute("DELETE FROM areaperf WHERE asof > %s", (resetdate, ))
-    curs.execute("DELETE FROM clubperf WHERE asof > %s", (resetdate, ))
-    curs.execute("DELETE FROM distperf WHERE asof > %s", (resetdate, ))
+    # Reset the performance tables (if called for)
+    if parms.clubsonly:
+        curs.execute("DELETE FROM loaded WHERE loadedfor > %s AND tablename = 'clubs'", (resetdate,))
+    else:
+        curs.execute("DELETE FROM loaded WHERE loadedfor > %s", (resetdate,))
+        curs.execute("DELETE FROM loaded WHERE loadedfor > %s AND tablename LIKE '%%perf'", (resetdate,))
+    
+    # Reset the club changes table
     curs.execute("DELETE FROM clubchanges WHERE changedate > %s", (resetdate,))
     
     # Take care of clubs
