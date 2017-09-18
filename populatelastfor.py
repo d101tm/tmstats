@@ -68,16 +68,19 @@ def doit(curs, parms):
     lasttmyear = lastmonth.year - (1 if lastmonth.month <= 6 else 0)
  
     # If 'latestonly' is specified, only process the last year in the database
+    didit = False
     try:
         if parms.latestonly:
             firsttmyear = lasttmyear
+            curs.execute('DELETE FROM lastfor WHERE tmyear = %s', (firsttmyear,))
+            didit = True
     except AttributeError:
         pass
+    if not didit:
+        curs.execute('DELETE FROM lastfor WHERE tmyear >= %s', (firsttmyear,))
  
-    # Delete any entries in the table for these years; we regenerate from scratch.
-    curs.execute('DELETE FROM lastfor WHERE tmyear >= %s AND tmyear <= %s', (firsttmyear, lasttmyear))
 
-   # And now build.
+    # And now build.
     for y in range(firsttmyear, lasttmyear+1):
         doyear(y, curs)
     
