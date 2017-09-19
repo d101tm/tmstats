@@ -30,12 +30,16 @@ if __name__ == "__main__":
     resetdate = tmutil.cleandate(parms.resetto)
     print 'Resetting %sdatabase to %s' % ('CLUBS and CLUBCHANGES tables in ' if parms.clubsonly else '', resetdate)
     
-    # Reset the performance tables (if called for)
+    # Reset LOADED; reset the performance tables (if called for)
+    # NOTE:  Does NOT reset the entrytype in the performance tables to match the latest for each club.
     if parms.clubsonly:
         curs.execute("DELETE FROM loaded WHERE loadedfor > %s AND tablename = 'clubs'", (resetdate,))
     else:
         curs.execute("DELETE FROM loaded WHERE loadedfor > %s", (resetdate,))
         curs.execute("DELETE FROM loaded WHERE loadedfor > %s AND tablename LIKE '%%perf'", (resetdate,))
+        perftables = ("areaperf", "distperf", "clubperf")
+        for t in perftables:
+            curs.execute("DELETE FROM " + t + " WHERE asof > %s", (resetdate,))
     
     # Reset the club changes table
     curs.execute("DELETE FROM clubchanges WHERE changedate > %s", (resetdate,))
