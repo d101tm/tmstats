@@ -221,6 +221,7 @@ class Club:
         """ Finish setting up the club for later additions.  Called AFTER any club overrides. """
         self.base = None
         self.dcpitems = []
+        self.pathitems = [0, 0, 0, 0, 0, 0]
         self.goals = None
         self.dcpstat = None
         if self.suspenddate:
@@ -373,6 +374,9 @@ class Club:
             ret += th('Lead', colspan="2")
             row2 += th('5', forceclass="tabletop")
             row2 += th('6', forceclass="tabletop")
+            ret += th('Pathways', colspan="6")
+            for plabel in ('L1', 'L2', '+L2', 'L3', 'L4', 'L5'):
+              row2 += th(plabel, forceclass="tabletop")
             ret += th('Mem', colspan="2")
             row2 += th('7', forceclass="tabletop")
             row2 += th('8', forceclass="tabletop")
@@ -383,13 +387,20 @@ class Club:
             row2 += th('Ren.', forceclass="tabletop")
             row2 += th('OL', forceclass="tabletop")
         else:
-            ## CCs, ACs, Leadership, New Members
-            dcpmins = (2, 2, 1, 1, 1, 1, 4, 4)
-            for point in range(8):
-                if self.dcpitems[point] >= dcpmins[point]:
-                    color = "madeit"
-                else:
-                    color = ""
+            ## CCs, ACs, Leadership
+            for point in (0, 1, 2, 3, 4, 5):
+                color = "madeit" if self.dcpitems[point] >= (2, 2, 1, 1, 1, 1)[point] else ""
+                ret += td(self.dcpitems[point], color, "grid")
+                
+            ## Pathways
+            for point in (0, 1, 2, 3, 4, 5):
+                color = "madeit" if self.pathitems[point] >= (4, 2, 2, 2, 1, 1)[point] else ""
+                ret += td(self.pathitems[point], color, "grid")
+                
+            
+            # New Members
+            for point in (6, 7):
+                color = "madeit" if self.dcpitems[point] >= 4 else ""
                 ret += td(self.dcpitems[point], color, "grid")
 
             # Training
@@ -722,9 +733,10 @@ for (clubnumber, activemembers, month) in curs.fetchall():
     
 # Now, get the current (or end-of-year, if a past year) information for each club.
 
-fieldnames = ['clubnumber', 'clubstatus', 'membase', 'activemembers', 'goalsmet', 'ccs', 'addccs', 'acs', 'addacs', 'claldtms', 'addclaldtms', 'newmembers', 'addnewmembers', 'offtrainedround1', 'offtrainedround2', 'memduesontimeoct', 'memduesontimeapr', 'offlistontime', 'clubdistinguishedstatus']
+fieldnames = ['clubnumber', 'clubstatus', 'membase', 'activemembers', 'goalsmet', 'ccs', 'addccs', 'acs', 'addacs', 'claldtms', 'addclaldtms', 'newmembers', 'addnewmembers', 'offtrainedround1', 'offtrainedround2', 'memduesontimeoct', 'memduesontimeapr', 'offlistontime', 'clubdistinguishedstatus', 'level1s', 'level2s', 'addlevel2s', 'level3s', 'level4s', 'level5s']
 fields = ','.join(fieldnames)
 dcprange = range(fieldnames.index('ccs'), 1+fieldnames.index('offlistontime'))
+pathrange = range(fieldnames.index('level1s'), 1+fieldnames.index('level5s'))
 if thisyear:
     curs.execute("select %s from clubperf where entrytype = 'L'" % fields)
 else:
@@ -743,6 +755,7 @@ for row in curs.fetchall():
         c.goals = row[4]
         ## Continue by assigning DCP info
         c.dcpitems = [row[i] for i in dcprange]
+        c.pathitems = [row[i] for i in pathrange]
         c.dcpStatus = row[fieldnames.index('clubdistinguishedstatus')]
         c.parentarea.counters[c.dcpStatus] += 1
         c.parentdiv.counters[c.dcpStatus] += 1
