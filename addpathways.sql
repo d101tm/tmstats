@@ -1,8 +1,8 @@
 ALTER TABLE clubperf ADD COLUMN (
-	level1s INTEGER DEFAULT 0,
-	level2s INTEGER DEFAULT 0,
-	addlevel2s INTEGER DEFAULT 0,
-	level3s INTEGER DEFAULT 0,
-	level4s INTEGER DEFAULT 0,
-	level5s INTEGER DEFAULT 0
+	level1s INT DEFAULT 0,
+	level2s INT DEFAULT 0,
+	addlevel2s INT DEFAULT 0,
+	level3s INT DEFAULT 0,
+	level4s INT DEFAULT 0,
+	level5s INT DEFAULT 0
 );
