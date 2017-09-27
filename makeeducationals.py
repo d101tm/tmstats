@@ -5,6 +5,7 @@
 
 import tmutil, sys, os, datetime, subprocess, codecs
 import tmglobals, tmparms
+from awardinfo import Awardinfo 
 globals = tmglobals.tmglobals()
 
 
@@ -22,11 +23,12 @@ knownawards = {
     'DTM': 'Distinguished Toastmaster',
     'LDREXC': 'High Performance Leadership Project'
 }
+knownawards = Awardinfo.lookup
 
 commtrack = ['CC', 'ACB', 'ACS', 'ACG']
 ldrtrack = ['CL', 'ALB', 'ALS']
 dtm = ['DTM']
-awardorder = ['DTM', 'CL', 'CC', 'ALB', 'ACB', 'ALS', 'ACS', 'ACG']
+awardorder = ['DTM', 1, 'CL', 'CC', 2, 'ALB', 'ACB', 3, 'ALS', 'ACS', 4, 'ACG', 5]
 knowns = commtrack + ldrtrack + dtm
 unknowns = set()
 
@@ -34,21 +36,34 @@ class Award:
     def __init__(self, membername, award, clubname, awarddate):
         self.membername = membername
         self.award = award
+        self.level = Awardinfo.levels[award]
         self.clubname = clubname
         self.awarddate = awarddate
         self.key = self.membername + ';' + self.clubname + ';' + repr(self.awarddate)
-        if award not in awards:
-            awards[award] = []
-        awards[award].append(self)
-        if award not in knowns:
+        if self.level == 0:
+            # Old award
+            if award not in awards:
+                awards[award] = []
+            awards[award].append(self)
+        else:
+            if self.level not in awards:
+                awards[self.level] = []
+            awards[self.level].append(self)
+        if award not in knowns and self.level == 0:
             unknowns.add(award)
 
     def show(self):
-        return u'<tr class="awardline"><td class="awardmember" width="48%%">'+ unicode(self.membername) +u'</td><td class="awardclub" width="48%">' + unicode(self.clubname) + u'</td></tr>' 
+        if self.level == 0:
+            return u'<tr class="awardline"><td class="awardmember" width="48%%">'+ unicode(self.membername) +u'</td><td class="awardclub" width="48%">' + unicode(self.clubname) + u'</td></tr>' 
+        else:
+            return u'<tr class="awardline"><td class="awardmember" width="35%%">'+ unicode(self.membername) +u'</td><td class="awardclub" width="35%">' + unicode(self.clubname) + u'</td><td class="pathname" width="25%">' + Awardinfo.paths[self.award] + u'</td></tr>' 
 
 def printawards(awards, knownawards, k):
     if k in awards:
-        print '[et_pb_toggle title="%s (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (knownawards[k], len(awards[k]))
+        if isinstance(k, int):
+            print '[et_pb_toggle title="Pathways Level %d (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (k, len(awards[k]))
+        else:
+            print '[et_pb_toggle title="%s (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (knownawards[k], len(awards[k]))
         print '<table>'
         #print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
         for each in sorted(awards[k], key=lambda x:x.key):
