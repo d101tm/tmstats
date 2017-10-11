@@ -58,8 +58,6 @@ if not token:
 
 # If we get here, we are authorized.
 dbx = dropbox.Dropbox(token)
-print token
-print 'cursor', cursor
 
 # The only files we care about are in the Web Files directory in Dropbox
 path = '/D101 Web Files'
