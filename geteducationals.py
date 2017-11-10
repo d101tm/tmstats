@@ -60,7 +60,7 @@ if __name__ == "__main__":
         candidate = [s.strip() for s in line.stripped_strings]
         line = line.find_next_sibling("tr")
         
-        if candidate[3].startswith("P"):
+        if candidate[3].startswith("P") and candidate[3][-1] not in ['1', '2', '3', '4', '5']:
             continue   # Skip pending awards
             
         # Reformat the date
