@@ -104,7 +104,7 @@ if __name__ == "__main__":
     parms.add_argument('--require9a', action='store_true', help='If true, only clubs which achieved goal 9a (4 or more officers trained during first cycle) are eligible.')
     parms.add_argument('--bonus9a', action='store_true', help='If true, clubs get a bonus reward if they trained at least 4 officers in the first cycle.')
     parms.add_argument('--reward', type=str, default='$50 in District Credit')
-    parms.add_argument('--bonusreward', type=str, default='$100 in District Credit')
+    parms.add_argument('--bonusreward', type=str, default='$101 in District Credit and joining the Magnificent 7')
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
     
     # Do global setup
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     
     # If we're in the first cycle, ignore 9a, even if specified
     thismonth = datetime.today().month
-    if thismonth >= 6 and thismonth <= 11:
+    if thismonth >= 6 and thismonth <= 10:
         parms.bonus9a = False
         parms.require9a = False
     
@@ -267,14 +267,14 @@ if __name__ == "__main__":
 
     if parms.bonus9a and parms.lastmonth == 'February':
      
-        outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.bonusreward)
+        #outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.bonusreward)
         if bonus:
             luckyclubs = [localclub(club) for club in bonus]
             outfile.write('<p><b>Congratulations</b> to ')
             outfile.write(tmutil.getClubBlock(luckyclubs))
             outfile.write(' for earning %s.</p>\n' % parms.bonusreward)
 
-        outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period but trained fewer than 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
+        #outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period but trained fewer than 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
 
     elif parms.require9a and parms.lastmonth == 'February':
         outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
