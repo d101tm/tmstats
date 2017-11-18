@@ -8,7 +8,7 @@
        Call tmparser.parse() to handle common parameters.
        Interpret other parameters in self.args as needed.
     """
-
+from __future__ import print_function
 import argparse, yaml, os
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -89,4 +89,4 @@ if __name__ == '__main__':
     globals = tmglobals.tmglobals()
     parms = tmparms()
     globals.setup(parms)
-    print parms
+    print(parms)

@@ -1,4 +1,5 @@
 """ Handle database connections for the TMSTATS suite """
+from __future__ import print_function
 import MySQLdb as mysql
 
 
@@ -17,7 +18,7 @@ class dbconn(Singleton):
         self.dbuser = dbuser
         self.dbpass = dbpass
         self.dbname = dbname
-        #print "Connecting to %s %s with pw %s db %s" % (self.host, self.dbuser, self.dbpassword, self.dbname)
+        #print("Connecting to %s %s with pw %s db %s" % (self.host, self.dbuser, self.dbpassword, self.dbname))
         self.conn = mysql.connect(self.dbhost, self.dbuser, self.dbpass, self.dbname, use_unicode=True, charset='UTF8')
         
     def cursor(self):
@@ -35,10 +36,10 @@ if __name__ == '__main__':
 
     parms = tmparms.tmparms()
     globals = tmglobals.tmglobals(parms)
-    #print 'Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser)
+    #print('Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser))
     conn = globals.conn
     curs = globals.curs
 
     curs.execute('show tables')
-    print 'Tables:\n%s' % '\n'.join('  ' + p[0] for p in curs.fetchall())
+    print('Tables:\n%s' % '\n'.join('  ' + p[0] for p in curs.fetchall()))
     conn.close()
