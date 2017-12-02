@@ -38,11 +38,11 @@ if __name__ == "__main__":
     ambassadors = []
     for row in range(1, sheet.nrows):
         ambassadors.append(tuple(sheet.row_values(row)))
-    ambassadors.sort(key=lambda k:(-k[2],k[1],k[0]))
+    ambassadors.sort(key=lambda k:(-k[2],k[1].lower(),k[0].lower()))
     with open(parms.outprefix+'ambassadors.shtml', 'w') as outfile:
         outfile.write('<table class="caprec">\n')
         outfile.write('<thead>\n')
-        outfile.write('<tr><td><b>Ambassador</b><td>%s</td><td></td></tr>\n' % colnames[2])
+        outfile.write('<tr><td><b>Ambassador</b><td><b>%s</b></td><td></td></tr>\n' % colnames[2])
         outfile.write('</thead>\n<tbody>\n')
         for row in ambassadors:
             outfile.write('<tr><td>%s %s</td><td>%d</td><td>%s</td></tr>\n' % row)
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     with open(parms.outprefix+'clubs.shtml', 'w') as outfile:
         outfile.write('<table class="caprec">\n')
         outfile.write('<thead>\n')
-        outfile.write('<tr><td><b>%s</b><td>%s</td></tr>\n' % tuple(colnames))
+        outfile.write('<tr><td><b>%s</b><td><b>%s</b></td></tr>\n' % tuple(colnames))
         outfile.write('</thead>\n<tbody>\n')
         for row in clubs:
             outfile.write('<tr><td>%s</td><td>%d</td></tr>\n' % row)
@@ -68,11 +68,14 @@ if __name__ == "__main__":
     sheet = book.sheet_by_name('Insights')
     colnames = sheet.row_values(0)
 
-    
+    insights = []
+    for row in range(1, sheet.nrows):
+        val = sheet.row_values(row)
+        insights.append(('<b>NEW: </b>' if val[0] else '', val[1].encode('utf-8')))
+    insights.sort(key=lambda k:(-len(k[0]), k[1].lower()))
     with open(parms.outprefix+'insights.shtml', 'w') as outfile:
         outfile.write('<ul>\n')
-        for row in range(1, sheet.nrows):
-            val = sheet.row_values(row)
-            outfile.write('<li>%s%s</li>\n' % ('<b>NEW:  <b>' if val[0] else '', val[1].encode('utf-8')))
+        for row in insights:
+            outfile.write('<li>%s%s</li>\n' % row)
         outfile.write('</ul>\n')
        
