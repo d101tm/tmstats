@@ -30,8 +30,8 @@ if __name__ == "__main__":
     
     # Define args and parse command line
     parms = tmparms.tmparms(description=__doc__)
-    parms.add_argument('--fromdate', default='yesterday', dest='fromdate', help="Base date for club status (or status this many days ago, if an integer).")
-    parms.add_argument('--todate', default='today', dest='todate', help="Show changes through this date.")
+    parms.add_argument('--fromdate', default='', dest='fromdate', help="Base date for club status (or status this many days ago, if an integer).  Default is second-most recent date in the CLUBS table.")
+    parms.add_argument('--todate', default='', dest='todate', help="Show changes through this date.  Default is most recent date in the CLUBS table")
     parms.add_argument('--runon', default=None, dest='runon', nargs='+', 
                         help='Day of the week (Mon, Tue...) on which to run.  Runs daily if omitted.')
     parms.add_argument('--outfile', default='-', dest='outfile', type=argparse.FileType('w'), help="Output file.")
@@ -41,10 +41,7 @@ if __name__ == "__main__":
     globals.setup(parms)
     conn = globals.conn
     curs = globals.curs
-    fromdate = cleandate(parms.fromdate,usetmyear=False)
-    todate = cleandate(parms.todate,usetmyear=False)
-    cleanedtodate = todate
-    
+
     # Let's see if we're supposed to run today.
     if parms.runon:
         weekday = datetime.datetime.today().strftime('%A')
@@ -52,18 +49,30 @@ if __name__ == "__main__":
         if not run:
             #sys.stderr.write('Not running because today is %s but --runon=%s was specified\n' % (weekday, ' '.join(parms.runon)))
             sys.exit(0)  # Not running is a normal exit.
-      
-
-    # Correct the dates to fit the data in the database 
-    curs.execute("SELECT MAX(loadedfor) FROM loaded where tablename = 'clubs' AND loadedfor <= %s", (fromdate,))
-    fromdate = stringify(curs.fetchone()[0])
     
-    curs.execute("SELECT MIN(loadedfor) FROM loaded where tablename = 'clubs' AND loadedfor >= %s", (todate,))
-    todate = stringify(curs.fetchone()[0])
-    if todate is None:
-        todate = cleanedtodate
-    
+    # OK, we are running.  Figure out the dates to use.
+    if parms.todate:
+        cleanedtodate = cleandate(parms.todate, usetmyear=False)
+        # Go forward to the first date with data on or after the date specified
+        curs.execute("SELECT MIN(loadedfor) FROM loaded where tablename = 'clubs' AND loadedfor >= %s", (cleanedtodate,))
+        todate = stringify(curs.fetchone()[0])
+        if todate is None:
+            todate = cleanedtodate
+    else:
+        # We want the last date in the database
+        curs.execute("SELECT MAX(loadedfor) FROM loaded WHERE tablename = 'clubs'")
+        todate = stringify(curs.fetchone()[0])
 
+    if parms.fromdate:
+        fromdate = cleandate(parms.fromdate,usetmyear=False)
+        # Go backwards to the last date with data on or before the date specified 
+        curs.execute("SELECT MAX(loadedfor) FROM loaded where tablename = 'clubs' AND loadedfor <= %s", (fromdate,))
+        fromdate = stringify(curs.fetchone()[0])
+    else:
+        # We want the most recent date with data before the todate
+        curs.execute("SELECT MAX(loadedfor) FROM loaded WHERE tablename = 'clubs' AND loadedfor < %s", ((todate,)))
+        fromdate = stringify(curs.fetchone()[0])
+    
   
     namestocompare = ['place', 'address', 'city', 'state', 'zip', 'country', 'meetingday', 'meetingtime', 'area', 'division', 'district']
     # Get information for clubs as of the "from" date:
