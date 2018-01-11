@@ -143,36 +143,54 @@ if __name__ == "__main__":
     finder = re.compile(r'.*AREA *([0-9A]*) *DIVISION *(0?[A-Za-z] *)')
     results = []
     soup = BeautifulSoup(open(parms.report, 'r'))
-    # From what I see in the documentation, I should be able to use one select, but it fails, so I'll break it up.
-    thediv = soup.select('div[id*="DistrictTraining"]')[0]
-    mydiv = BeautifulSoup(repr(thediv))
-    tbl = mydiv.select('table tbody tr td table tbody')[-1]
-    # Now we just power through the rows.  If they have an Area/Division, use it.
-    for t in tbl:
-        if t.name == 'tr':
-            if 'class' in t.attrs:
-                cname = unicode(t['class'][0])
-                if cname in [u'even', u'odd']:
-                    parts = t.select('td')
-                    clubname = ''.join(parts[1].stripped_strings)
-                    clubstatus = ''.join(parts[2].stripped_strings)
-                    clubnumber = ''.join(parts[3].stripped_strings)
-                    # Omit suspended clubs
-                    if clubstatus == 'S':
-                        continue
-                    club = clubs[clubnumber]
-                    row = [club.division, club.area, clubname, clubnumber, clubstatus]
-                    offlist = []
-                    trained = 0
-                    for o in t.select('input[type="checkbox"]'):
-                        if 'checked' in o.attrs:
-                            trained += 1
-                            offlist.append('X')
-                        else:
-                            offlist.append(' ')
-                    row.append(trained)
-                    row.extend(offlist)
-                    results.append(row)                
+
+    # This code matches Toastmasters WHQ's site as of January 11, 2018.  They make FREQUENT
+    #    changes to the form used for training, so this code is very volatile, and you may
+    #    want to look at earlier versions of the code to see what I had to do in previous
+    #    years.  
+    # For the format used in 2016 and 2017:  https://github.com/d101tm/tmstats/blob/0db3a0b0dd9eba3e14af6ae66dbdf7dc68bf9d69/training.py
+    # For the format used in 2015: https://github.com/d101tm/tmstats/blob/8c05f299e48cd47a264931c2fd051c6c23ecf734/training.py
+
+    # For 2018, the code has one <div class="division"> tag for each Division in the District.
+    # The actual data lives in a table for each area inside those divs.
+    # Each club is in one row of the table, which is laid out as follows:
+    # Sequence, Club Name, Status, Club Number, Pres, VPE, VPM, VPPR, Sec, Treas, SAA, Total
+    # Each officer's status is represented by an <input> element of type 'checkbox'.
+    #   The item has the 'checked' attribute if the officer has been trained.
+
+    # Find all the divisions and loop through them
+    divisions = soup.select('div[class="division"]')
+
+    for thediv in divisions:
+        # Find all the areas and loop through them
+        areatables = thediv.find_all('table')
+        for table in areatables:
+            rows = table.find_all('tr')
+            for row in rows:
+                cells = row.find_all('td')
+                if not cells:
+                    continue   # Must be a header row
+                clubname = ''.join(cells[1].stripped_strings)
+                clubstatus = ''.join(cells[2].stripped_strings)
+                clubnumber = ''.join(cells[3].stripped_strings)
+                # Omit suspended clubs
+                if clubstatus.startswith('S'):
+                    continue
+                club = clubs[clubnumber]
+                res = [club.division, club.area, clubname, clubnumber, clubstatus]
+                offlist = []
+                trained = 0
+                for o in row.find_all('input', type='checkbox'):
+                    if 'checked' in o.attrs:
+                        trained += 1
+                        offlist.append('X')
+                    else:
+                        offlist.append(' ')
+                res.append(trained)
+                res.extend(offlist)
+                results.append(res)                
+
+
     # Now, create the HTML result file and the matching Excel spreadsheet
     results.sort(key=lambda x:(x[0], x[1], x[3]))
     outfile = open('trainingreport.html', 'w')
