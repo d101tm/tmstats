@@ -1,6 +1,7 @@
 from geocode import myclub
 import googlemaps
-import urllib2, csv
+import csv
+import requests
 
 
 
@@ -9,8 +10,8 @@ def overrideClubPositions(clubs, overridefile, apikey):
     from geocode import myclub
     gmaps = googlemaps.Client(key=apikey)
     myclub.setgmaps(gmaps)
-    data = urllib2.urlopen(overridefile, 'rb')
-    reader = csv.DictReader(data)
+    r = requests.get(overridefile)
+    reader = csv.DictReader(r.text.split('\n'))
     for row in reader:
         clubnumber = row['clubnumber']
         if clubnumber in clubs:
@@ -30,4 +31,3 @@ def overrideClubPositions(clubs, overridefile, apikey):
                     reloinfo.process(gres)
                     club.latitude = reloinfo.latitude
                     club.longitude = reloinfo.longitude
-    data.close()
