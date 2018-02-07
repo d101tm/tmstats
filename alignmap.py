@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
 
     # Promote information from parms.makemap if not already specified
-    parms.mapoverride = parms.mappoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
+    parms.mapoverride = parms.mapoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
     parms.pindir = parms.pindir if parms.pindir else parms.makemap.get('pindir',None)
 
 
