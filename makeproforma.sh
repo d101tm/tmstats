@@ -8,7 +8,7 @@ cd data
 ../makealignmentpage.py > d101index.html
 
 if [[ $? ]]; then 
-    if [[ "block15" == $(hostname) ]] ; then
+    if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
         echo "Copying to alignment"
         cp d101proforma.html ~/files/alignment
         cp d101borders.js ~/files/alignment

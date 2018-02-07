@@ -7,7 +7,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/d101tm/lib/lib
 ../clubchanges.py --from 3/15 --to 5/20 --outfile ~/files/dailyalignment/changes.html
 ../makealignmentpage.py > d101index.html
 
-if [[ "block15" == $(hostname) ]] ; then
+if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
         echo "Copying to dailyalignment"
         cp d101proforma.html ~/files/dailyalignment
         cp d101newmarkers.js ~/files/dailyalignment
