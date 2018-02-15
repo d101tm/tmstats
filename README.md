@@ -415,3 +415,16 @@ Contains information needed to send mail in the local environment.  Used by [sen
 
 Contains information needed to send mail in the local environment.  Used by [sendmail.py][].  Typical keys are mailserver, mailpw, mailport, from, and replyto.
 
+## Dependencies ##
+
+### Google Docs API for Python ###
+
+pip install --user --upgrade google-api-python-client
+
+Enabled Google Sheets API from the Google Console
+
+Created API token for this use (could have used the same one as we use for maps)
+
+Updated sheet to allow access by anyone who has the link; the sheetid is in the link.
+
+Voilà: curl "https://sheets.googleapis.com/v4/spreadsheets/sheetid/values/A1?key=key" works and returns the most current version of the sheet (updates don't happen until you leave a cell)
