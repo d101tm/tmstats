@@ -125,7 +125,6 @@ if __name__ == "__main__":
                 sites[point] = c.division
 
         points = [loc for loc in sites.keys() if len(sites[loc]) == 1]
-        print("we have %d points" % len(points))
 
         # Gross hack to put Gilroy in Division A
         Gilroy = (37.005782, -121.568275)
@@ -146,12 +145,10 @@ if __name__ == "__main__":
             if point in sites:
                 div = sites[point]
                 if div not in polygons:
-                    print("New division: %s" % div)
                     polygons[div] = []
                 polygons[div].append(Polygon(poly))
 
         def dopoly(outfile, outline, div, num=0):
-            print('In dopoly for %s%d' % (div, num))
             if num > 0:
                 varname = '%s%d' % (div, num)
             else:
@@ -164,21 +161,15 @@ if __name__ == "__main__":
             DrawHull(div%s, fillcolors["%s"]);
             """ % (varname,d))
 
-        print("We have %d polygon sets." % len(polygons))
         for d in polygons:
-            print("Processing %d polygons for %s" % (len(polygons[d]), d))
             outline = polygons[d][0]
             for p in polygons[d][1:]:
                 outline = outline.union(p)
-            print(outline.type, "Before intersecting")
             outline = outline.intersection(d101)
-            print(outline.type)
 
             if outline.type == 'Polygon':
                 dopoly(outfile, outline, d)
             else:
-                 from pprint import pprint
-                 pprint(list(outline))
                  num = 0
                  for poly in outline.geoms:
                      num += 1
