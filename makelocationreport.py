@@ -189,6 +189,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--infile', default='d101align.csv')
     parms.add_argument('--outfile', default='d101location.html')
+    parms.add_argument('--outdir', default=None, help='Where to put the output file')
     parms.add_argument('--color', action='store_true')
     parms.add_argument('--map', action='store_true')
     parms.add_argument('--minimal', default='d101minimal.html')
@@ -203,7 +204,7 @@ if __name__ == "__main__":
 
 
     # Write the header of the output file
-    outfile = open(parms.outfile, 'w')
+    outfile = open(os.path.join(parms.outdir, parms.outfile),'w')
     outfile.write("""
     <html>
     <head>
@@ -285,7 +286,7 @@ if __name__ == "__main__":
             club = clubs[clubnum]
             club.addvalues(info, perffields)
         except KeyError:
-            print 'Club %s (%d) not in CLUBS table, patching in.' % (info[1], info[0])
+            print 'Club %s (%d) not in current CLUBS table, patching in.' % (info[1], info[0])
             clubs[clubnum] = Club(info, perffields)
             clubs[clubnum].charterdate = ''
             
@@ -388,68 +389,9 @@ if __name__ == "__main__":
     outfile.write("</body></html>\n")
     outfile.close()
     
-    # And now, create the mimimal version of the report
-    outfile = open(parms.minimal, 'w')
-    outfile.write(minimalhead)
-    left = True
-    for div in sorted(divs.keys()):
-        if div.strip():
-            #if left:
-                #outfile.write('<div class="clearfix division">\n')
-            areas = sorted(divs[div].keys())
-            #outfile.write('<div class="%s">\n' % ('left' if left else 'right'))
-            outfile.write('<h2 align="center">Division %s</h2>' % div)
-            
-            outfile.write('<div class="division">')
-            left = not left
-            for area in areas:
-                locations = []
-                outfile.write('<div class="areadiv">\n')
-                outfile.write('<table class="areatable"><thead>\n')
-                outfile.write('<tr><th class="areaname" colspan="3">Area %s</th></tr>' % area)
-                outfile.write('<tr>\n')
-                outfile.write('<th class="from">From</th>')
-                outfile.write('<th class="cnum">Number</th><th class="cname">Name</th>')
-                outfile.write('</tr>\n')
-                outfile.write('</thead><tbody>\n')
-                for c in sorted(newareas[area], key=lambda x:int(x.clubnumber)):
-                    row = c.__dict__  
-                    outrow = []
-                    outrow.append('<tr class="myrow">')
-                    oldarea = c.division + c.area
-                    newarea = c.newdivision + c.newarea
-                    outrow.append('  <td class="from">%s</td>' % (oldarea if oldarea != newarea else ''))
-                    outrow.append('  <td class="cnum">{clubnumber}</td><td class="cname">{clubname}</td>')
-                    outrow.append('</tr>')
-                    outfile.write(('\n'.join(outrow)).format(**row))
-                # Now, process clubs which moved away or were 
-                gonelist = gonefrom.get(area,[])
-                if gonelist:
-                    for club in gonelist:
-                        outfile.write('<tr><td class="gone" colspan="3">%s' % club.clubname)
-                        if club.eligibility == 'Suspended':
-                            outfile.write(' <b>(Suspended)</b>')
-                        elif club.newarea.strip() and club.newdivision.strip():
-                            outfile.write(' (To %s%s)' % (club.newdivision, club.newarea))
-                        else:
-                            outfile.write(' (Out of Division 101)')
-                        outfile.write('</td></tr>\n')
-
-                outfile.write('</tbody></table>\n') 
-                
-                outfile.write('</div>\n')
-                
-            outfile.write('</div>\n')    
-                
-            #if left:
-                #outfile.write('</div>\n')
-    #if not left:
-        #outfile.write('</div>\n')
-    outfile.write("</body></html>\n")
-    outfile.close()
 
     # And now, create the mimimal version of the report
-    outfile = open(parms.minimal, 'w')
+    outfile = open(os.path.join(parms.outdir,parms.minimal), 'w')
     outfile.write(minimalhead)
     firstdiv = True
     for div in sorted(divs.keys()):
