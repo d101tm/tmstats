@@ -279,6 +279,20 @@ def makemap(outfile, clubs, parms):
 
     # Now, write out the markers (combining multiple clubs at the same location)
     for l in clubsByLocation.values():
+        # Omit clubs that shouldn't be on the map
+        newl = []
+        for club in l:
+            try:
+                if club.omitfrommap:
+                    inform('Omitting %s from map' % club.clubname, level=1, file=sys.stdout, verbosity=parms.verbosity)
+                else:
+                    newl.append(club)
+            except AttributeError:
+                newl.append(club)
+        l = newl
+        if not l:
+            continue       # No clubs left at this location
+            
         if len(l) > 1:
             inform('%d clubs at %s' % (len(l), l[0].coords), level=1, file=sys.stdout, verbosity=parms.verbosity)
             clubinfo = []
