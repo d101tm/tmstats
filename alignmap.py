@@ -27,8 +27,8 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--verbose', '-v', action='count', default=0)
     parms.add_argument('--outfile', dest='outfile', default=None)
+    parms.add_argument('--outdir', default='.', help='Where to put the output files')
     parms.add_argument('--divfile', dest='divfile', default=None)
-    parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
     parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     parms.add_argument('--testalign', dest='testalign', default=None)
@@ -82,15 +82,14 @@ if __name__ == "__main__":
     # Process new grouping
     if parms.testalign:
         clubs = overrideClubs(clubs, parms.testalign)
-
-    outfile = open(parms.outfile, 'w')
-
+        
+    # Make the club entries for the map
+    outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
     makemap(outfile, clubs, parms)
-
     outfile.close()
 
     if parms.makedivisions:
-        outfile = open(parms.divfile, 'w')
+        outfile = open(os.path.join(parms.outdir, parms.divfile), 'w')        
         import pytess
         from shapely.ops import cascaded_union
         from shapely.geometry import Polygon
@@ -170,6 +169,7 @@ if __name__ == "__main__":
             if outline.type == 'Polygon':
                 dopoly(outfile, outline, d)
             else:
+                 print('Division %s has %d pieces' % (d, len(outline.geoms)))
                  num = 0
                  for poly in outline.geoms:
                      num += 1

@@ -76,11 +76,6 @@ This is a wrapper to [makemap.py][] which adds additional parameters and functio
 
 By default, the program computes division boundaries for District 101, but not for District 4.  There are various hard-coded points in the program to adjust the District 101 boundaries to put Gilroy into Division A and to put Rancho San Antonio into Division E to make it contiguous.
 
-#### @@TODO@@  ####
-
-The program also honors the [--newAlignment][] parameter, which makes very little sense (--testalign should be the only thing it uses).
-
-
 
 ### allstats.py ###
 
