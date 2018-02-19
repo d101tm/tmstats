@@ -93,19 +93,14 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
 
 if __name__ == '__main__':
     #!/usr/bin/env python
-    """ Insert description of this program here """
+    """ If called as a main program, prints the current overrides """
 
     import tmutil, sys
     import tmglobals
     globals = tmglobals.tmglobals()
     from simpleclub import Club
-
-
-
-    ### Insert classes and functions here.  The main program begins in the "if" statement below.
-
-   
  
+
     import tmparms
 
     # Establish parameters
@@ -118,6 +113,5 @@ if __name__ == '__main__':
     conn = globals.conn
     
     clubs = Club.getClubsOn(curs)
-    overrideClubPositions(clubs, 'https://docs.google.com/spreadsheets/d/1A3pDwuMM03gmmgbqCX4bbe54oFjnjds0Gq4JbfP1Qhg/edit?usp=sharing', 
-    'AIzaSyA8mPtPZoFKBXtzYqY_hwZcFToGvfo_6N0', log=True)
-    print(clubs['3844625'])
+    print('Using %s as the override spreadsheet' % parms.mapoverride)
+    overrideClubPositions(clubs, parms.mapoverride, parms.googlesheetsapikey, log=True)
