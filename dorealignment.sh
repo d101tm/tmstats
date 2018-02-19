@@ -23,5 +23,5 @@ echo makealignmentpage
 
 if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
         echo "Copying to dailyalignment"
-        cp alignment/ ~/files/dailyalignment
+        cp alignment/* ~/files/dailyalignment/
 fi
