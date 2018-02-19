@@ -74,7 +74,7 @@ This is a wrapper to [makemap.py][] which adds additional parameters and functio
 | --makedivisions | if specified, the program computes division boundaries |
 | --nomakedivisions | if specified, the program does not compute division boundaries |
 
-By default, the program computes division boundaries for District 101, but not for District 4.  There are various hard-coded points in the program to adjust the District 101 boundaries to put Gilroy into Division A and to put Rancho San Antonio into Division E to make it contiguous.
+By default, the program computes division boundaries for District 101, but not for District 4.  There are various hard-coded points in the program to adjust the District 101 boundaries to put Gilroy into Division A and to put Rancho San Antonio into Division B to make it contiguous.
 
 
 ### allstats.py ###
@@ -416,10 +416,4 @@ Contains information needed to send mail in the local environment.  Used by [sen
 
 pip install --user --upgrade google-api-python-client
 
-Enabled Google Sheets API from the Google Console
-
-Created API token for this use (could have used the same one as we use for maps)
-
-Updated sheet to allow access by anyone who has the link; the sheetid is in the link.
-
-Voilà: curl "https://sheets.googleapis.com/v4/spreadsheets/sheetid/values/A1?key=key" works and returns the most current version of the sheet (updates don't happen until you leave a cell)
+You must enable Google Sheets API from the Google Console and create an API token.
