@@ -13,7 +13,7 @@ minimalhead = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
 <head>
-<title>Proposed District Alignment</title>
+<title>Summary Proposed Alignment</title>
 <style type="text/css">
 
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     outfile.write("""
     <html>
     <head>
-    <title>Proposed District Alignment</title>
+    <title>Detailed Proposed Alignment</title>
     <style type="text/css">
     
     
