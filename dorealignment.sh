@@ -8,17 +8,23 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/d101tm/lib/lib
 # Make a subdirectory for all of the products of this run
 mkdir alignment 2>/dev/null
 export workfile=alignment/d101align.csv
-echo createalignment
+echo Running createalignment
 ../createalignment.py --outfile $workfile
-echo alignmap 
+echo
+echo Running alignmap 
 ../alignmap.py --pindir pins --district 101 --testalign $workfile --makedivisions --outdir alignment
-echo allstats
-../allstats.py --outfile d101proforma.html --testalign $workfile --outdir alignment
-echo makelocationreport
+echo
+echo Running allstats
+../allstats.py --outfile d101proforma.html --testalign $workfile --outdir alignment --title "pro forma performance report"
+echo
+echo Running makelocationreport
 ../makelocationreport.py --color --infile $workfile --outdir alignment
-echo clubchanges
-../clubchanges.py --from 3/15 --to 5/20 --outfile alignment/changes.html
-echo makealignmentpage
+echo
+echo Running clubchanges
+../clubchanges.py --from $(../getfirstdaywithdata.py) --outfile alignment/changesthisyear.html
+../clubchanges.py --from 3/17 --to 5/19 --outfile alignment/changessincedecmeeting.html
+echo
+echo Running makealignmentpage
 ../makealignmentpage.py > alignment/index.html
 
 if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then

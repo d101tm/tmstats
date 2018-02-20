@@ -40,13 +40,17 @@ if __name__ == "__main__":
     <body>
       <p>This page lets you see the proposed realignment in four different ways:
       <ul>
-        <li>As a <a href="d101minimal.html">club movement report</a> (updated %s)</li>
-        <li>As a <a href="d101align.htm">map</a> (updated %s)</li>
-        <li>As a <a href="d101proforma.html"><i>pro forma</i> Green/Yellow/Red report</a> (updated %s)</li>
-        <li>As a <a href="d101location.html">list of club details</a> (updated %s)</li>
+        <li>As a <a href="d101minimal.html">Summary Proposed Alignment</a> (updated %s)</li>
+        <li>As a <a href="d101align.htm">Map of Proposed Alignment</a> (updated %s)</li>
+        <li>As a <a href="d101proforma.html"><i>pro forma</i> performance report</a> (updated %s)</li>
+        <li>As a <a href="d101location.html">Detailed Proposed Alignment</a> (updated %s)</li>
       </ul>
       %s
-    <p>In addition, there is a <a href="changes.html">report on club changes</a>.
+    <p>In addition, there is information on club changes:
+    <ul>
+    <li><a href="changesthisyear.html">All changes this Toastmasters Year</a>
+    <li><a href="changessincedecmeeting.html">Changes since the DEC meeting (empty before that date)</a>
+    </ul>
     </body>
 </html>""" % (stime, mtime, rtime, ltime, open('alignmentsource.txt').read()))
     
