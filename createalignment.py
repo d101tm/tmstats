@@ -83,7 +83,7 @@ if __name__ == "__main__":
     else:
         # Override clubs using the proposed alignment spreadsheet.  Allow new clubs to be created
         ignorefields = ['clubnumber', 'clubname', 'oldarea']  # These are just decoration for this phase
-        donotlog = ['newarxea']  # No need to comment on this
+        donotlog = ['newarea']  # No need to comment on this
         print('Processing working alignment from %s' % parms.workingalignment)
         overrideClubPositions(clubs, parms.workingalignment, parms.googlemapsapikey, log=True, 
         ignorefields=ignorefields, donotlog=donotlog, createnewclubs=True)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     
     # Now, create the output file, sorted by newarea (because that's what we need later on)
-    outfields =  'clubnumber	clubname	oldarea	newarea	likelytoclose	color	goalsmet	activemembers	meetingday	meetingtime	place	address	city	state	zip	country	latitude	longitude'.split()
+    outfields =  'clubnumber	clubname	oldarea	newarea	likelytoclose   omitfrommap	color	goalsmet	activemembers	meetingday	meetingtime	place	address	city	state	zip	country	latitude	longitude'.split()
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
     writer = csv.DictWriter(outfile, fieldnames=outfields, extrasaction='ignore')
     writer.writeheader()

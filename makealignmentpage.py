@@ -22,10 +22,11 @@ if __name__ == "__main__":
     curs = globals.curs
 
     
-    lfile = 'd101location.html'
-    mfile = 'd101newmarkers.js'
-    rfile = 'd101proforma.html'
-    sfile = 'd101minimal.html'
+    lfile = 'alignment/d101location.html'
+    mfile = 'alignment/d101newmarkers.js'
+    rfile = 'alignment/d101proforma.html'
+    sfile = 'alignment/d101minimal.html'
+    postdecfile = 'alignment/changessincedecmeeting.html'
 
     # Get the last-modified dates for the alignment files.
     ltime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(lfile)))
@@ -45,14 +46,21 @@ if __name__ == "__main__":
         <li>As a <a href="d101proforma.html"><i>pro forma</i> performance report</a> (updated %s)</li>
         <li>As a <a href="d101location.html">Detailed Proposed Alignment</a> (updated %s)</li>
       </ul>
-      %s
+      %s""" % (stime, mtime, rtime, ltime, open('alignmentsource.txt').read()))
+    sys.stdout.write("""
     <p>In addition, there is information on club changes:
     <ul>
     <li><a href="changesthisyear.html">All changes this Toastmasters Year</a>
-    <li><a href="changessincedecmeeting.html">Changes since the DEC meeting (empty before that date)</a>
+""")
+    if (open(postdecfile, 'r').readlines()):
+        sys.stdout.write("""
+    <li><a href="changessincedecmeeting.html">Changes since the DEC meeting</a> 
+""")
+    sys.stdout.write("""
     </ul>
     </body>
-</html>""" % (stime, mtime, rtime, ltime, open('alignmentsource.txt').read()))
+</html>
+""")
     
     
     

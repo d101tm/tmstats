@@ -57,15 +57,16 @@ echo $bp
 echo $ep
 echo
 if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
-        echo "Copying to dailyalignment"
-        cp alignment/* ~/files/dailyalignment/
+        echo "Copying to workingalignment"
+        mkdir ~/files/workingalignment 2>/dev/null
+        cp alignment/* ~/files/workingalignment/
 fi
 
 if [ "$1" = "html" ]
 then
 
 cat << EOF
-<p>Go to <a href="/files/dailyalignment/">http://d101tm.org/files/dailyalignment</a> to see the results.
+<p>Go to <a href="/files/workingalignment/">http://d101tm.org/files/workingalignment</a> to see the results.
 </p>
 </body>
 </html>
