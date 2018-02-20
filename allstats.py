@@ -130,7 +130,10 @@ class Outputfiles:
         outfile.write('<html>\n')
         outfile.write('<head>\n')
         outfile.write('<meta http-equiv="Content-Style-Type" content="text/css">\n')
-        outfile.write('<title>Toastmasters Statistics</title>\n')
+        if parms.title:
+            outfile.write('<title>%s</title>\n' % parms.title)
+        else:
+            outfile.write('<title>Toastmasters Division %s Statistics</title>\n' % parms.district)
         outfile.write('<style type="text/css">\n')
         outfile.write("""
 
@@ -548,6 +551,7 @@ parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help
 parms.add_argument("--testalignment", dest="testalignment", default=None, help="CSV file with alignment information to create a report with a new alignment.")
 parms.add_argument('--outdir', default='.', help='Where to put the output files')
 parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
+parms.add_argument("--title", dest="title", default=None, help="Title for the HTML page.")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
 # Do global setup
 globals.setup(parms)
