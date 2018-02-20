@@ -8,26 +8,66 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/d101tm/lib/lib
 # Make a subdirectory for all of the products of this run
 mkdir alignment 2>/dev/null
 export workfile=alignment/d101align.csv
-echo Running createalignment
+
+if [ "$1" = "html" ]
+then
+cat << EOF
+Content-Type: text/html; charset=utf-8
+
+<html>
+<head><title>Alignment</title></head>
+<body>
+EOF
+bp="<pre>"
+ep="</pre>"
+else
+bp=""
+ep=""
+fi
+
+echo 'Running createalignment'
+echo $bp
 ../createalignment.py --outfile $workfile
+echo $ep
 echo
 echo Running alignmap 
+echo $bp
 ../alignmap.py --pindir pins --district 101 --testalign $workfile --makedivisions --outdir alignment
+echo $ep
 echo
 echo Running allstats
+echo $bp
 ../allstats.py --outfile d101proforma.html --testalign $workfile --outdir alignment --title "pro forma performance report"
+echo $ep
 echo
 echo Running makelocationreport
+echo $bp
 ../makelocationreport.py --color --infile $workfile --outdir alignment
+echo $ep
 echo
 echo Running clubchanges
+echo $bp
 ../clubchanges.py --from $(../getfirstdaywithdata.py) --outfile alignment/changesthisyear.html
 ../clubchanges.py --from 3/17 --to 5/19 --outfile alignment/changessincedecmeeting.html
+echo $ep
 echo
 echo Running makealignmentpage
+echo $bp
 ../makealignmentpage.py > alignment/index.html
-
+echo $ep
+echo
 if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
         echo "Copying to dailyalignment"
         cp alignment/* ~/files/dailyalignment/
+fi
+
+if [ "$1" = "html" ]
+then
+
+cat << EOF
+<p>Go to <a href="/files/dailyalignment/">http://d101tm.org/files/dailyalignment</a> to see the results.
+</p>
+</body>
+</html>
+EOF
 fi
