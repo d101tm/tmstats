@@ -19,7 +19,7 @@ echo makelocationreport
 echo clubchanges
 ../clubchanges.py --from 3/15 --to 5/20 --outfile alignment/changes.html
 echo makealignmentpage
-../makealignmentpage.py > alignment/d101index.html
+../makealignmentpage.py > alignment/index.html
 
 if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
         echo "Copying to dailyalignment"
