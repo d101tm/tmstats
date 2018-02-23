@@ -135,7 +135,6 @@ parms.date = cleandate(parms.date)
 
 # Get the club information for the specified date
 clubs = Club.getClubsOn(curs, parms.date)
-
 # And override it if needed.
 if parms.newAlignment:
     overrideClubs(clubs, parms.newAlignment)
@@ -190,12 +189,13 @@ for city in sorted(cities.keys()):
         data['meetingday'] = club.meetingday.replace(' ','&nbsp;')
         data['meetingtime'] = club.meetingtime.replace(' ','&nbsp;')
         data['contact'] = []
+        club.fixURLsInClub()
         if club.clubwebsite: 
-            data['contact'].append('<a href="http://%s" target="_blank">Website</a>' % (club.clubwebsite))
+            data['contact'].append('<a href="%s" target="_blank">Website</a>' % (club.clubwebsite))
         if club.facebook:
-            data['contact'].append('<a href="http://%s" target="_blank">Facebook</a>' % (club.facebook))
+            data['contact'].append('<a href="%s" target="_blank">Facebook</a>' % (club.facebook))
         if club.clubemail:
-            data['contact'].append('<a href="mailto:%s" target="_blank">Email</a>' % (club.clubemail))
+            data['contact'].append('<a href="%s" target="_blank">Email</a>' % (club.clubemail))
         if club.phone:
             data['contact'].append('Phone: %s' % (club.phone))
         data['lcontact'] = '<br />'.join(data['contact'])

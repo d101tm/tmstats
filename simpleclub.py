@@ -5,6 +5,7 @@
 import datetime, re
 from copy import deepcopy
 from tmutil import getTMYearFromDB
+from urlparse import urlsplit
 
 npatt = re.compile('\W+', re.UNICODE)  # Get rid of anything that isn't a Unicode alphameric
 
@@ -19,6 +20,11 @@ class Club:
     """ Keep information about a club """
     
     namegroups = {}
+    
+    urlfixups = {'clubemail':'mailto', 
+                 'clubwebsite':'http',
+                 'facebook':'http',
+                 'twitter':'http'}
 
     
     @classmethod
@@ -203,6 +209,13 @@ class Club:
         namepart = re.sub(r'[^a-z0-9 ]','',self.clubname.lower()).replace(' ','-')
         return 'http://www.toastmasters.org/Find-a-Club/%s-%s' % (self.clubnumber.rjust(8,'0'), namepart)
         
+    def fixURLsInClub(self):
+        """ Fix nonempty URLs (clubemail, clubwebsite, facebook, twitter) to include
+            mailto: or http: if not specified """
+        for item in self.urlfixups:
+            val = self.__dict__.get(item,'').strip()
+            if val:
+                self.__dict__[item] = urlsplit(val, self.urlfixups[item]).geturl()
 
         
     addrgroup = ('address', 'city', 'state', 'zip', 'country')
