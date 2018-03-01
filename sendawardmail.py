@@ -281,8 +281,21 @@ if __name__ == "__main__":
             for award in letterinfo:
                 print '   %s (%s)' % (award.award, fullawardnames[award.award])
         
-    if len(report) > 0 and not parms.dryrun:
-        sendreport(report)
+    if len(report) > 0:
+        if parms.dryrun:
+            dump = []
+            widths = []
+            for item in report:
+                parts = repr(item).replace('<tr>','').replace('</tr>','').replace('</td>','').split('<td>')
+                if not widths:
+                    widths = [0] * len(parts)
+                widths = [max(widths[i], len(parts[i])) for i in range(len(parts))]
+                dump.append(parts)
+            fmtstr = ' | ' + ' | '.join(['%%%ds' % w for w in widths]) +  ' | '
+            for line in dump:
+                print(fmtstr % tuple(line))
+        else:
+            sendreport(report)
         
 
     
