@@ -27,15 +27,6 @@ def inform(*args, **kwargs):
         print >> file, ' '.join(args)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
-
-fullawardnames = {'CC':'Competent Communicator',
-                  'ACB': 'Advanced Communicator Bronze',
-                  'ACS': 'Advanced Communicator Silver',
-                  'ACG': 'Advanced Communicator Gold',
-                  'CL': 'Competent Leader',
-                  'ALB': 'Advanced Leader Bronze',
-                  'ALS': 'Advanced Leader Silver',
-                  'DTM': 'Distinguished Toastmaster'}
                   
 fullawardnames = info.lookup
                   
@@ -210,7 +201,7 @@ class Award:
         self.id = id
         
     def __repr__(self):
-        return '<tr><td>' + '</td><td>'.join([self.award, self.awardnicedate, self.fullname, self.email]) + '</td></tr>'
+        return '<tr><td>' + '</td><td>'.join([self.award, self.awardnicedate, self.fullname, self.email, self.clubname]) + '</td></tr>'
 
 
 if __name__ == "__main__":
