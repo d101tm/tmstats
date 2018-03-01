@@ -12,25 +12,9 @@ globals = tmglobals.tmglobals()
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
 awards = {}
-knownawards = {
-    'CC': 'Competent Communicator',
-    'ACB': 'Advanced Communicator Bronze',
-    'ACS': 'Advanced Communicator Silver',
-    'ACG': 'Advanced Communicator Gold',
-    'CL': 'Competent Leader',
-    'ALB': 'Advanced Leader Bronze',
-    'ALS': 'Advanced Leader Silver',
-    'DTM': 'Distinguished Toastmaster',
-    'LDREXC': 'High Performance Leadership Project'
-}
 knownawards = Awardinfo.lookup
-
-commtrack = ['CC', 'ACB', 'ACS', 'ACG']
-ldrtrack = ['CL', 'ALB', 'ALS']
-dtm = ['DTM']
 awardorder = ['DTM', 1, 'CL', 'CC', 2, 'ALB', 'ACB', 3, 'ALS', 'ACS', 4, 'ACG', 5]
-knowns = commtrack + ldrtrack + dtm
-unknowns = set()
+
 
 class Award:
     def __init__(self, membername, award, clubname, awarddate):
@@ -49,8 +33,7 @@ class Award:
             if self.level not in awards:
                 awards[self.level] = []
             awards[self.level].append(self)
-        if award not in knowns and self.level == 0:
-            unknowns.add(award)
+ 
 
     def show(self):
         if self.level == 0:
