@@ -3,6 +3,7 @@
     roster table every time. """
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
+from __future__ import print_function
 
 import dbconn, tmutil, sys, os, xlrd, re, csv, codecs
 from datetime import datetime
@@ -15,9 +16,19 @@ globals = tmglobals.tmglobals()
 
 
 def normalizefieldnames(fields):
-    # ('#' -> 'num', lowercase, no spaces or special chars)
-    fieldnames = [f.strip().lower().replace('#','num') for f in fields]
-    fieldnames = [re.sub(r'[^a-zA-z0-9]+','',f) for f in fieldnames]
+    # ('#' -> 'num', ' ID' -> 'num', lowercase, no spaces or special chars)
+    # ('Membership Begin' -> 'termbegindate', 'Membership End' -> 'termenddate')
+    # ('middle' -> 'middlename')
+    fieldnames = []
+    for f in fields:
+        f = f.lower().strip().replace('#', 'num')
+        f = f.replace(' id', 'num')
+        f = f.replace('membership begin', 'termbegindate')
+        f = f.replace('membership end', 'termenddate')
+        if f == 'middle':
+            f = 'middlename'
+        f = re.sub(r'[^a-zA-z0-9]+','',f)
+        fieldnames.append(f)
     return fieldnames
     
         
@@ -33,6 +44,7 @@ class UTF8Recoder:
 
     def next(self):
         return self.reader.next().encode("utf-8")
+
 
 
 class UnicodeReader:
@@ -93,13 +105,29 @@ if __name__ == "__main__":
     
     elif filetype in ['.csv']:
         csvfile = open(parms.roster, 'rbU')
-        reader = UnicodeReader(csvfile, encoding='utf-8')
+        
+        # The file might be in UTF-8 or Latin-1 - the only way to find out is to
+        #    read the whole thing as UTF-8 and see
+        
+        encoding = 'utf-8'
+        tester = UTF8Recoder(csvfile, encoding=encoding)
+        try:
+            while tester.next():
+                pass
+        except StopIteration:
+            pass
+        except UnicodeDecodeError:
+            encoding = 'latin-1'
+            
+        print('Roster encoding seems to be %s' % encoding)
+        csvfile.seek(0)  # Back to the beginning of the file
+        reader = UnicodeReader(csvfile, encoding=encoding)
 
         # Get the field names and normalize them; find the name and date columns
         fieldnames = normalizefieldnames(reader.next())
         fieldnames.append('fullname')
         ifirstname = fieldnames.index('firstname')
-        imiddle = fieldnames.index('middle')
+        imiddle = fieldnames.index('middlename')
         ilastname = fieldnames.index('lastname')
         datecols = [cname for cname in fieldnames if cname.endswith('date')]
         idates = [fieldnames.index(cname) for cname in datecols]
@@ -116,14 +144,14 @@ if __name__ == "__main__":
             for col in idates:
                 try:
                     row[col] = datetime.strptime(row[col], format)
-                except ValueError, e:
+                except ValueError as e:
                     format = '%m/%d/%y'
                     try:
                         row[col] = datetime.strptime(row[col], format)
-                    except Exception, e:
-                        print e
-                        print row[col]
-                        print row
+                    except Exception as e:
+                        print(e)
+                        print(row[col])
+                        print(row)
                         sys.exit(1)
             values.append(row)
             # And add the fullname
@@ -151,5 +179,5 @@ if __name__ == "__main__":
     # And now, populate the table
     valuepart = ','.join(['%s']*len(fieldnames))
     
-    print curs.executemany('INSERT INTO roster VALUES (' + valuepart + ')', values), 'members found.'
+    print(curs.executemany('INSERT INTO roster VALUES (' + valuepart + ')', values), 'members found.')
     conn.commit()
