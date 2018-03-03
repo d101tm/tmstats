@@ -123,8 +123,16 @@ if __name__ == "__main__":
         csvfile.seek(0)  # Back to the beginning of the file
         reader = UnicodeReader(csvfile, encoding=encoding)
 
-        # Get the field names and normalize them; find the name and date columns
-        fieldnames = normalizefieldnames(reader.next())
+        # Skip any prefatory lines in the file until we get to one
+        #   with 'District', 'Division', and 'Area' in it.  That will
+        #   be the line defining the fieldnames
+        for fieldline in reader:
+            fieldnames = normalizefieldnames(fieldline)
+            if 'district' in fieldnames and \
+               'division' in fieldnames and \
+               'area' in fieldnames:
+                break
+        # Now, we can proceed
         fieldnames.append('fullname')
         ifirstname = fieldnames.index('firstname')
         imiddle = fieldnames.index('middlename')
