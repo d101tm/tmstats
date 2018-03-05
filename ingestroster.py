@@ -142,7 +142,7 @@ if __name__ == "__main__":
         ijoin = fieldnames.index('joindate')
         itermbegin = fieldnames.index('termbegindate')
         
-        format = '%m/%d/%Y'
+        format = '%Y-%m-%d'
         # And get the values
         for row in reader:
             # Convert dates
