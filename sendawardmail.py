@@ -256,7 +256,7 @@ if __name__ == "__main__":
         theclubs = ','.join(['%d' % item[2] for item in awardinfo])
         # Get the person's information
         firstname = ''
-        curs.execute("SELECT firstname, email FROM roster WHERE clubnum IN (" + theclubs + ") AND fullname = %s", (membername.replace('"', ''),))
+        curs.execute("SELECT firstname, emailaddress FROM roster WHERE clubnum IN (" + theclubs + ") AND fullname = %s", (membername.replace('"', ''),))
         email = ''
         for (name, mail) in curs.fetchall():
             if email == '':
@@ -277,7 +277,7 @@ if __name__ == "__main__":
             conn.commit()
             time.sleep(5)
         else:
-            print 'Would send congrats to %s at %s for:' % (membername, email)
+            print 'Would send congrats to %s at %s for:' % (membername, emailaddress)
             for award in letterinfo:
                 print '   %s (%s)' % (award.award, fullawardnames[award.award])
         
