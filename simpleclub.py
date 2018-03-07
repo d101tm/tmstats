@@ -209,7 +209,7 @@ class Club:
         namepart = re.sub(r'[^a-z0-9 ]','',self.clubname.lower()).replace(' ','-')
         return 'http://www.toastmasters.org/Find-a-Club/%s-%s' % (self.clubnumber.rjust(8,'0'), namepart)
         
-    def fixURLsInClub(self):
+    def fixURLSchemes(self):
         """ Fix nonempty URLs (clubemail, clubwebsite, facebook, twitter) to include
             mailto: or http: if not specified """
         for item in self.urlfixups:

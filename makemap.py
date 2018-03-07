@@ -45,7 +45,6 @@ def makeCard(club):
     data['meetingday'] = club.meetingday.replace(' ','&nbsp;')
     data['meetingtime'] = club.meetingtime.replace(' ','&nbsp;')
     data['contact'] = []
-    club.fixURLsInClub()
     if club.clubwebsite:
         data['contact'].append('<a href="%s" target="_blank">Website</a>' % (club.clubwebsite))
     if club.facebook:

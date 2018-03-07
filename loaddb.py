@@ -315,6 +315,9 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         
         # Clean up online status
         club.allowsonlineattendance = '1' if (club.allowsonlineattendance != '') else '0'
+        
+        # Add missing schemes to any URLs
+        club.fixURLSchemes()
     
         # Now, take care of missing latitude/longitude
         if ('latitude') in dbheaders:
