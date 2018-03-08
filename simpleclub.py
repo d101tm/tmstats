@@ -23,8 +23,8 @@ class Club:
     
     urlfixups = {'clubemail':'mailto', 
                  'clubwebsite':'http',
-                 'facebook':'http',
-                 'twitter':'http'}
+                 'facebook':'https',
+                 'twitter':'https'}
 
     
     @classmethod
