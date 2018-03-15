@@ -43,7 +43,8 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
         row = {}
         for i, key in enumerate(keys):
             try:
-                row[key] = line[i].strip()
+                # Normalize whitespace, including non-breaking spaces
+                row[key] = re.sub(r'\s+',' ',line[i].strip().replace(u'\xa0',' '))
             except IndexError:
                 row[key] = ''
         
