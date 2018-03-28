@@ -42,3 +42,26 @@ class Awardinfo:
                 lookup[index] = '%s Level %d' % (pathids[p], l)
                 levels[index] = l
                 paths[index] = pathids[p]
+
+if __name__ == '__main__':
+    from pprint import pprint
+    new = {}
+    old = {}
+    newtoold = {}
+    oldtonew = {}
+    for p in Awardinfo().pathnames:
+        w = p.upper().split()[:2]
+        n = w[0][0] + w[1][0]
+        o = w[0][0:3] + w[1][0:3]
+        new[n] = p
+        old[o] = p
+        newtoold[n] = o
+        oldtonew[o] = n
+    print 'pathids = ',
+    pprint(new)
+    print 'oldpathids = ',
+    pprint(old)
+    print 'newtoold = ', 
+    pprint(newtoold)
+    print 'oldtonew = ',
+    pprint(oldtonew)
