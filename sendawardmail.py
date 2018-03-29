@@ -277,7 +277,7 @@ if __name__ == "__main__":
             conn.commit()
             time.sleep(5)
         else:
-            print 'Would send congrats to %s at %s for:' % (membername, emailaddress)
+            print 'Would send congrats to %s at %s for:' % (membername, email)
             for award in letterinfo:
                 print '   %s (%s)' % (award.award, fullawardnames[award.award])
         
