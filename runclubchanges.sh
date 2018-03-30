@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Check for club changes, and if there are any, notify the Webmaster.
 # Force python to use UTF-8 for stdin and stdout and stderr throughout:
 export PYTHONIOENCODING="utf8"

@@ -176,7 +176,7 @@ if [[ "$dorun" = "yes" ]] ; then
     if (( $haveclubs == 0 )) ; then
         
         echo "Running Club Change Report"
-        ../runclubchanges.sh 
+        (cd ..;./runclubchanges.sh) 
 	
         echo "Running alignment-related"
         (cd ..;./dodailyalignment.sh)
