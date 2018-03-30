@@ -62,8 +62,8 @@ if __name__ == "__main__":
     # Now, update old to new:
     for id in oldtonew:
         for i in range(1,6):
-            # Delete new
-            doit('DELETE FROM awards WHERE award = "%s%d"' % (oldtonew[id], i))
+            # Delete new awards which weren't acknowledged
+            doit('DELETE FROM awards WHERE award = "%s%d and acknowledged = 0"' % (oldtonew[id], i))
             doit('UPDATE awards SET award="%s" WHERE award="%s"' % ('%s%d' % (oldtonew[id], i), '%sL%d' % (id, i)))
 
             doit('UPDATE awards SET award="%s" WHERE award="%s"' % ('%s%d' % (oldtonew[id], i), '%s%d' % (id, i)))
