@@ -1,5 +1,5 @@
 #!/bin/bash
-
+. setup.sh
 
 cd data
 # rm latesttraining.html 2>/dev/null
@@ -12,14 +12,14 @@ export TARGET=$HOME/files/reports
 if [ -d $TARGET ] ; then  
     for name in trainingreport*
     do
-        cp $name $TARGET/${name/report/}
+        ifreal cp $name $TARGET/${name/report/}
     done
-    cp lucky7.html $TARGET/lucky7.html
+    ifreal cp lucky7.html $TARGET/lucky7.html
 
-    ../clearcache.py district-programs
+    ifreal ../clearcache.py district-programs
 
 
-    # Now, create the message to the Program Quality Directors
+    # Now, create the message to the Program Quality Director
     if [ -e trainingfileinfo.txt ] ; then
         filets=" based on the data in $(cat trainingfileinfo.txt)"
     else
@@ -36,6 +36,6 @@ There is an Excel version of the report at http://files.d101tm.org/reports/train
 The "Lucky 7" report is at http://files.d101tm.org/reports/lucky7.html  (it's an HTML fragment)
 EOF
 
-../sendmail.py --textfile trainingmessage.txt --to quality@d101tm.org --bcc david@d2j.us --subject "$filemsg"
+ifreal ../sendmail.py --textfile trainingmessage.txt --to quality@d101tm.org --bcc david@d2j.us --subject "$filemsg"
 
 fi
