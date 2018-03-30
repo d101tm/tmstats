@@ -1,6 +1,7 @@
 #!/bin/bash
 # DreamHost setup for statistics.
 export TZ=PST8PDT
+export I_AM_D101TM=1
 #export PYTHONPATH="$HOME/python:$PYTHONPATH"
 
 # Ensure we're in the right virtual environment
