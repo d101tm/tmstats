@@ -8,13 +8,7 @@ export PYTHONIOENCODING="utf8"
 cd "$data"
 outfile="clubchanges.$today.html"
 
-if [ -n "$*" ] ; then
-   runon="--runon $*"
-else
-   runon=""
-fi
-
-if "$SCRIPTPATH/clubchanges.py" $runon --outfile "$outfile"
+if "$SCRIPTPATH/clubchanges.py" $* --outfile "$outfile"
 then
     rm $outfile   # No changes noted
 else 
