@@ -31,7 +31,12 @@ then
     fi
     export yday
 
-    # Define helper functions
+
+    export TMSTATS_SETUP=1
+
+fi
+
+# Define helper functions
 
     ifreal()
     {
@@ -43,7 +48,3 @@ then
             echo "Not issuing $*"
         fi
     }
-
-    export TMSTATS_SETUP=1
-
-fi
