@@ -154,7 +154,7 @@ if __name__ == "__main__":
                 try:
                     row[col] = datetime.strptime(row[col], format)
                 except ValueError as e:
-                    format = '%m/%d/%y'
+                    format = '%m/%d/%Y'
                     try:
                         row[col] = datetime.strptime(row[col], format)
                     except Exception as e:
