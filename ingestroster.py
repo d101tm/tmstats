@@ -25,6 +25,7 @@ def normalizefieldnames(fields):
         f = f.replace(' id', 'num')
         f = f.replace('membership begin', 'termbegindate')
         f = f.replace('membership end', 'termenddate')
+        f = f.replace('original join date', 'joindate')
         if f == 'middle':
             f = 'middlename'
         f = re.sub(r'[^a-zA-z0-9]+','',f)
