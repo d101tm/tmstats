@@ -104,7 +104,7 @@ if [[ "$dorun" = "yes" ]] ; then
         rc=$?
         echo "allstats rc = $rc"
         if [[ "$rc" == 0 ]] ; then
-            ifreal cp performance.html ~/www/files/reports/
+            isreal && cp performance.html ~/www/files/reports/
         fi
 
     fi
@@ -117,7 +117,7 @@ if [[ "$dorun" = "yes" ]] ; then
         rc=$?
         echo "makeeducationals rc = $rc"
         if [[ "$rc" == 0 ]] ; then
-            ifreal cp recentawards.* ~/www/files/reports
+            isreal && cp recentawards.* ~/www/files/reports
         fi
         # convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
 
@@ -125,43 +125,43 @@ if [[ "$dorun" = "yes" ]] ; then
         # Stellar September starts with August data and continues through September 15
         if ../require.py --newtmyear --datafor S8 --nodatafor 9/16 ; then
             echo "Running Stellar September"
-            ../renewals.py --program "stellar" --pct 75 90 100 --earn 50 75 101 --name '' '' 'Gold Club' && ifreal cp stellar.* ~/www/files/reports
+            ../renewals.py --program "stellar" --pct 75 90 100 --earn 50 75 101 --name '' '' 'Gold Club' && isreal && cp stellar.* ~/www/files/reports
         fi
 
         # March Madness starts with February data and continues through March 15
         if ../require.py --datafor S2 --nodatafor 3/16 ; then
             echo "Running March Madness"
-            ../renewals.py --program "madness" --pct 75 90 100 --earn 50 75 101 && ifreal cp madness.* ~/www/files/reports
+            ../renewals.py --program "madness" --pct 75 90 100 --earn 50 75 101 && isreal && cp madness.* ~/www/files/reports
         fi
 
         # President's Club runs once we have March data and stops when we have April 16 data
         if ../require.py --datafor S3 --nodatafor 4/16 ; then
             echo "Running President's Club"
-            ../presidentsclub.py && ifreal cp presidentsclub.txt ~/www/files/reports/
+            ../presidentsclub.py && isreal && cp presidentsclub.txt ~/www/files/reports/
         fi
 
         # Early Achievers starts when we have data for the new year and ends when we have November data
         if ../require.py --newtmyear --nodatafor S11 ; then
             echo "Running Early Achievers"
-            ../earlyachievers.py && ifreal cp earlyachievers.* ~/www/files/reports/
+            ../earlyachievers.py && isreal && cp earlyachievers.* ~/www/files/reports/
         fi
         
         # Take a Leap runs once we have April data and stops when we have data for the next year
-        if ../require.py --datafor S4 --oldtmyear ; then
+        if false && ../require.py --datafor S4 --oldtmyear ; then
             echo "Running Take A Leap"
-            ../takealeap.py && ifreal cp takealeap.* ~/www/files/reports/
+            ../takealeap.py && isreal && cp takealeap.* ~/www/files/reports/
         fi
 
         # Spring Forward runs once we have April data and stops when we have June data
-        if ../require.py --datafor S4 --nodatafor S6; then
+        if false && ../require.py --datafor S4 --nodatafor S6; then
             echo "Running Spring Forward"
-            ../springforward.py && ifreal cp springforward.* ~/www/files/reports
+            ../springforward.py && isreal && cp springforward.* ~/www/files/reports
         fi
 
         # Five for 5 runs once we have April data and stops when we get data for 5/16.
-        if ../require.py --datafor S4 --nodatafor 5/16; then
+        if false && ../require.py --datafor S4 --nodatafor 5/16; then
             echo "Running Five for 5"
-            ../fivefor5.py && ifreal '(cp fivefor5.html ~/www/files/reports; ../sendmail.py --subject "Five for 5 Report" --to quality@d101tm.org --html fivefor5.email)'
+            ../fivefor5.py && isreal && (cp fivefor5.html ~/www/files/reports; ../sendmail.py --subject "Five for 5 Report" --to quality@d101tm.org --html fivefor5.email)
         fi
 
     fi
@@ -182,7 +182,7 @@ if [[ "$dorun" = "yes" ]] ; then
         (cd ..;./dodailyalignment.sh)
 		
 		echo "Creating anniversary table"
-		(cd ../;./makeanniversarytable.py) && ifreal cp anniversary.csv ~/www/files/reports
+		(cd ../;./makeanniversarytable.py) && isreal && cp anniversary.csv ~/www/files/reports
     fi
 
 
@@ -203,7 +203,7 @@ if [[ "$dorun" = "yes" ]] ; then
     rm marker
     rm *.success 2>/dev/null
 
-    ifreal ../clearcache.py --all
+    isreal && ../clearcache.py --all
     
     echo "Finished at $(date)" > "$success"
     cat "$success"

@@ -43,13 +43,3 @@ fi
         [[ $I_AM_D101TM == 1 ]]
     }
 
-    ifreal()
-    {
-        # Call with a command to issue only if on the real server
-        if isreal
-        then
-            $*
-        else
-            echo "Not issuing $*"
-        fi
-    }
