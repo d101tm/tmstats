@@ -6,7 +6,7 @@
 from __future__ import print_function
 
 import dbconn, tmutil, sys, os, xlrd, re, csv, codecs
-from datetime import datetime
+from datetime import datetime, date
 
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -151,17 +151,27 @@ if __name__ == "__main__":
             if not row[ijoin].strip():
                 row[ijoin] = row[itermbegin]
             for col in idates:
-                try:
-                    row[col] = datetime.strptime(row[col], format)
-                except ValueError as e:
-                    format = '%m/%d/%Y'
+                if row[col]:      # Ignore blank ones
                     try:
                         row[col] = datetime.strptime(row[col], format)
-                    except Exception as e:
-                        print(e)
-                        print(row[col])
-                        print(row)
-                        sys.exit(1)
+                    except ValueError as e:
+                        format = '%m/%d/%y'
+                        print('Trying ', format)
+                        try:
+                            row[col] = datetime.strptime(row[col], format)
+                        except ValueError as e:
+                            format = '%m/%d/%Y'
+                            print('Trying ', format)
+                            try:
+                                row[col] = datetime.strptime(row[col], format)
+                            except Exception as e:
+                                print(e)
+                                print(row[col])
+                                print(row)
+                                sys.exit(1)
+                else:
+                    # If no date, patch in today.
+                    row[col] = date.today()
             values.append(row)
             # And add the fullname
             values[-1].append(('%s, %s %s' % (row[ilastname],row[ifirstname],row[imiddle])).strip())
