@@ -149,12 +149,6 @@ if __name__ == "__main__":
     # Open the output files
     clubfile = open(parms.outfile, 'w')
 
-    clubfile.write(r"""
-    <p>Click on a division to see the clubs which have earned awards.</p>
-    """)
-    
-    clubfile.write("""[et_pb_tabs admin_label="Spring Forward Results" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
-    """)
 
     # Also make a CSV with all of the information
     columns = ['Division', 'Area', 'Club Number', 'Club Name', 'Members Added', 'Amount Earned', 'Division Leader']
@@ -164,21 +158,32 @@ if __name__ == "__main__":
     csvfile.write(','.join(columns))
     csvfile.write('\n')
 
-    for division in sorted(divisions.keys()):
+    # Only write data if at least one club has qualified
 
-        if division != '0D':
-            # Mark the leader(s)
-            for club in divisions[division]:
-                club.leader = (club.growth == divmax[division])
+    if len(divisions) > 0:
+
+        clubfile.write(r"""
+        <p>Click on a division to see the clubs which have earned awards.</p>
+        """)
+        
+        clubfile.write("""[et_pb_tabs admin_label="Spring Forward Results" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
+        """)
+        for division in sorted(divisions.keys()):
+
+            if division != '0D':
+                # Mark the leader(s)
+                for club in divisions[division]:
+                    club.leader = (club.growth == divmax[division])
+                    
+                clubfile.write('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="1.3em" body_line_height_tablet="1.3em" body_line_height_phone="1.3em"]\n' % division)
+                clubfile.write('<p>%s.</p>\n' % createResults(final, divisions[division]))
+                clubfile.write('[/et_pb_tab]\n')
                 
-            clubfile.write('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="1.3em" body_line_height_tablet="1.3em" body_line_height_phone="1.3em"]\n' % division)
-            clubfile.write('<p>%s.</p>\n' % createResults(final, divisions[division]))
-            clubfile.write('[/et_pb_tab]\n')
-            
-            for club in sorted(divisions[division], key=lambda c: '%.2s%.2s%0.8d' % (c.division, c.area, c.clubnumber)):
-                writer.writerow(club.__dict__)
+                for club in sorted(divisions[division], key=lambda c: '%.2s%.2s%0.8d' % (c.division, c.area, c.clubnumber)):
+                    writer.writerow(club.__dict__)
 
-    clubfile.write('[/et_pb_tabs]\n')
+        clubfile.write('[/et_pb_tabs]\n')
+
     clubfile.close()
     csvfile.close()
 
