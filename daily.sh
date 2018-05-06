@@ -152,8 +152,8 @@ if [[ "$dorun" = "yes" ]] ; then
             ../takealeap.py && isreal && cp takealeap.* ~/www/files/reports/
         fi
 
-        # Spring Forward runs once we have April data and stops when we have June data
-        if false && ../require.py --datafor S4 --nodatafor S6; then
+        # Spring Forward runs once we have April data and stops when we have data for the next year
+        if ../require.py --datafor S5 --oldtmyear ; then
             echo "Running Spring Forward"
             ../springforward.py && isreal && cp springforward.* ~/www/files/reports
         fi
