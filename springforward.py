@@ -16,11 +16,15 @@ def createResults(final, clubs):
     for club in sorted(clubs, key=lambda club: club.clubname.lower()):
         htmlclass = 'clubname' 
         info = []
-        club.amount = 5*club.growth
+        if club.growth >= 8:
+            club.amount = 10*club.growth
+        elif club.growth >= 6:
+            club.amount = 7*club.growth
+        elif club.growth >= 3:
+            club.amount = 5*club.growth
+        else:
+            club.amount = 0
         info.append('%d added member%s' % (club.growth, 's' if club.growth > 1 else ''))
-        if club.growth >= 5:
-            club.amount += 25
-            info.append('\\$25 bonus for at least 5 new members')
         if club.leader:
             if final:
                 club.amount += 50
@@ -59,8 +63,8 @@ if __name__ == "__main__":
 
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument("--basedate", dest='basedate', default='M3')
-    parms.add_argument("--finaldate", dest='finaldate', default='M5')
+    parms.add_argument("--basedate", dest='basedate', default='M4')
+    parms.add_argument("--finaldate", dest='finaldate', default='M6')
     parms.add_argument('--outfile', dest='outfile', default='springforward.html')
     parms.add_argument('--csvfile', dest='csvfile', default='springforward.csv')
     
@@ -114,7 +118,7 @@ if __name__ == "__main__":
     msgfinal = dateAsWords(msgdate)
 
 
-    # OK, now find clubs with 1 or more members added
+    # OK, now find clubs
     query = 'SELECT c.clubnumber, c.clubname, c.division, c.area, c.newmembers, b.newmembers FROM distperf c LEFT OUTER JOIN (SELECT clubnumber, newmembers FROM distperf WHERE %s) b ON b.clubnumber = c.clubnumber WHERE %s  ORDER BY c.division, c.area, c.clubnumber' % (basepart, finalpart)
     curs.execute(query)
 
@@ -126,7 +130,7 @@ if __name__ == "__main__":
             startnum = 0      # Handle clubs added during the period
         growth = endnum - startnum
 
-        if growth > 0:
+        if growth >= 3:
             if division not in divisions:
                 divmax[division] = 0
                 divisions[division] = []
@@ -146,16 +150,10 @@ if __name__ == "__main__":
     clubfile = open(parms.outfile, 'w')
 
     clubfile.write(r"""
-        <p>Add <strong>new/reinstated</strong> members to your Club between %s and %s to earn TI gift certificates:
-        <ul>
-        <li>\$5 for every member added</li>
-     	<li>Additional \$25 when you add 5 or more members</li>
-     	<li><b>BONUS</b>: Club(s) adding most members in each Division earn \$50</li>
-    </ul>
     <p>Click on a division to see the clubs which have earned awards.</p>
-    """ % (msgbase, msgfinal))
+    """)
     
-    clubfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
+    clubfile.write("""[et_pb_tabs admin_label="Spring Forward Results" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
     """)
 
     # Also make a CSV with all of the information
