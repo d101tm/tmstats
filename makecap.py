@@ -37,7 +37,9 @@ if __name__ == "__main__":
     colnames = sheet.row_values(0)
     ambassadors = []
     for row in range(1, sheet.nrows):
-        ambassadors.append(tuple(sheet.row_values(row)))
+        # Require first and last names
+        if sheet.row_values(row)[0] and sheet.row_values(row)[1]:
+            ambassadors.append(tuple(sheet.row_values(row)))
     ambassadors.sort(key=lambda k:(-k[2],k[1].lower(),k[0].lower()))
     with open(parms.outprefix+'ambassadors.shtml', 'w') as outfile:
         outfile.write('<table class="caprec">\n')
@@ -53,7 +55,8 @@ if __name__ == "__main__":
     colnames = sheet.row_values(0)
     clubs = []
     for row in range(1, sheet.nrows):
-        clubs.append(tuple(sheet.row_values(row)))
+        if sheet.row_values(row)[0]:
+            clubs.append(tuple(sheet.row_values(row)))
     clubs.sort(key=lambda k:(-k[1], k[0]))
     with open(parms.outprefix+'clubs.shtml', 'w') as outfile:
         outfile.write('<table class="caprec">\n')
