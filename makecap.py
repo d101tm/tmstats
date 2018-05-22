@@ -33,39 +33,84 @@ if __name__ == "__main__":
 
     # And build the inclusion files
     # First, the ambassadors
-    sheet = book.sheet_by_name('Ambassadors')
+    sheet = book.sheet_by_name('All Visits')
     colnames = sheet.row_values(0)
-    ambassadors = []
+    ambassadors = {}      # Key by number of visits in column C
     for row in range(1, sheet.nrows):
         # Require first and last names
-        if sheet.row_values(row)[0] and sheet.row_values(row)[1]:
-            ambassadors.append(tuple(sheet.row_values(row)))
-    ambassadors.sort(key=lambda k:(-k[2],k[1].lower(),k[0].lower()))
+        values = sheet.row_values(row)
+        if values[0] and values[1]:  # Names must be non-blank
+            # This code now handles new and old visit counts
+            # Convert blank counts to zero
+            values[0] = values[0].strip()
+            values[1] = values[1].strip()
+            try:
+                values[2] = int(values[2])
+            except ValueError:
+                values[2] = 0
+            try:
+                values[3] = int(values[3])
+            except ValueError:
+                values[3] = 0
+            try:
+                ambassadors[values[2]].append(values)
+            except KeyError:
+                ambassadors[values[2]] = [values,]
+                
+    # Now, sort by decreasing number of visits
+    keys = sorted(ambassadors.keys(),reverse=True)
+    
     with open(parms.outprefix+'ambassadors.shtml', 'w') as outfile:
-        outfile.write('<table class="caprec">\n')
-        outfile.write('<thead>\n')
-        outfile.write('<tr><td><b>Ambassador</b><td><b>%s</b></td><td></td></tr>\n' % colnames[2])
-        outfile.write('</thead>\n<tbody>\n')
-        for row in ambassadors:
-            outfile.write('<tr><td>%s %s</td><td>%d</td><td>%s</td></tr>\n' % row)
-        outfile.write('</tbody>\n</table>\n')
+    
+        if keys[0]:  # Then we have at least one member who's logged visits since May 20th
+            outfile.write('<p>Thanks to all Club Ambassadors this year.</p>\n')
+            for n in keys:
+                outfile.write('<p>%s visit%s since May 20:\n' % (int(n) if n > 0 else 'No', 's' if n != 1 else '' ))
+                names = []
+                ambassadors[n].sort(key=lambda k:(k[1], k[0]))
+                for item in ambassadors[n]:
+                    tvisits = item[2] + item[3]
+                    names.append('<span class="altname">%s %s</span> (%d)' % (item[0], item[1], tvisits))
+                outfile.write(',\n'.join(names))
+                outfile.write('</p>\n')
+
+        else:  # No visits since May 2th:
+            outfile.write('<p>No visits have been submitted since May 20th. Visits earlier in the year:</p>\n')
+            ambassadors[0].sort(key=lambda k:(k[1], k[0]))
+            names = []
+            for item in ambassadors[0]:
+                tvisits = item[2] + item[3]
+                names.append('<span class="altname">%s %s</span> (%d)' % (item[0], item[1], tvisits))
+            outfile.write(',\n'.join(names))
+            outfile.write('</p>\n')
         
     # Now, the clubs
     sheet = book.sheet_by_name('Clubs')
     colnames = sheet.row_values(0)
-    clubs = []
+    clubs = {}
     for row in range(1, sheet.nrows):
-        if sheet.row_values(row)[0]:
-            clubs.append(tuple(sheet.row_values(row)))
-    clubs.sort(key=lambda k:(-k[1], k[0]))
+        values = sheet.row_values(row)
+        values[0] = values[0].strip()
+        if values[0]:  # Avoid empty rows
+            try:
+                values[1] = int(values[1])
+            except ValueError:
+                continue        # Don't include clubs with no visits
+            try:
+                clubs[values[1]].append(values[0])
+            except KeyError:
+                clubs[values[1]] = [values[0],]
+                
+    # Now, sort by decreasing visits
+    keys = sorted(clubs.keys(),reverse=True)
     with open(parms.outprefix+'clubs.shtml', 'w') as outfile:
-        outfile.write('<table class="caprec">\n')
-        outfile.write('<thead>\n')
-        outfile.write('<tr><td><b>%s</b><td><b>%s</b></td></tr>\n' % tuple(colnames))
-        outfile.write('</thead>\n<tbody>\n')
-        for row in clubs:
-            outfile.write('<tr><td>%s</td><td>%d</td></tr>\n' % row)
-        outfile.write('</tbody>\n</table>\n')
+        for n in keys:
+            clubs[n].sort()
+            outfile.write('<p>%d visit%s:' % (n, 's' if n > 1 else ''))
+            names = ['<span class="altname">%s</span>' % item for item in clubs[n]]
+            outfile.write(',\n'.join(names))
+            outfile.write('</p>\n')
+
         
     # And finally, the insights
     sheet = book.sheet_by_name('Insights')
