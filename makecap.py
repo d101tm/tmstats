@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--capsheet', default='https://docs.google.com/spreadsheets/d/e/2PACX-1vRLTA6_-RLVQDblDybtbzFZIoiyNGfs4AGMaXi95ePEMMilfDbxaFjUNz3at2vGaG7hkjUT_HXlTyPJ/pub?output=xlsx')
     parms.add_argument('--outprefix', default='cap')
-    parms.add_argument('--minvisits', default=2, type=int)
+    parms.add_argument('--minvisits', default=1, type=int)
     # Add other parameters here
     # Do global setup
     globals.setup(parms)
@@ -44,14 +44,16 @@ if __name__ == "__main__":
             # Convert blank counts to zero
             values[0] = values[0].strip()
             values[1] = values[1].strip()
-            try:
-                values[2] = int(values[2])
-            except ValueError:
-                values[2] = 0
-            try:
-                values[3] = int(values[3])
-            except ValueError:
-                values[3] = 0
+            tvisits = 0
+            for cnum in [2, 3, 4]:
+                try:
+                    values[cnum] = int(values[cnum])
+                except ValueError:
+                    values[cnum] = 0
+                tvisits += values[cnum]
+            values.append(tvisits)
+                    
+            # And put the entry where it belongs
             try:
                 ambassadors[values[2]].append(values)
             except KeyError:
@@ -63,26 +65,24 @@ if __name__ == "__main__":
     with open(parms.outprefix+'ambassadors.shtml', 'w') as outfile:
     
         if keys[0]:  # Then we have at least one member who's logged visits since May 20th
-            outfile.write('<p>Thanks to all Club Ambassadors this year.</p>\n')
             for n in keys:
-                outfile.write('<p>%s visit%s since May 20:\n' % (int(n) if n > 0 else 'No', 's' if n != 1 else '' ))
+                outfile.write('<p><b>%s visit%s since May 20</b>: ' % (int(n) if n > 0 else 'No', 's' if n != 1 else '' ))
                 names = []
-                ambassadors[n].sort(key=lambda k:(k[1], k[0]))
+                ambassadors[n].sort(key=lambda k:(-k[-1],k[1], k[0]))
                 for item in ambassadors[n]:
-                    tvisits = item[2] + item[3]
-                    names.append('<span class="altname">%s %s</span> (%d)' % (item[0], item[1], tvisits))
-                outfile.write(',\n'.join(names))
-                outfile.write('</p>\n')
-
+                    names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[-1]))
+                outfile.write(', '.join(names))
+                outfile.write('</p>\n')            
         else:  # No visits since May 2th:
-            outfile.write('<p>No visits have been submitted since May 20th. Visits earlier in the year:</p>\n')
-            ambassadors[0].sort(key=lambda k:(k[1], k[0]))
+            outfile.write('<p>No visits have been made since May 20th. Visits earlier in the year:</p>\n')
+            ambassadors[0].sort(key=lambda k:(-k[-1],k[1], k[0]))
             names = []
             for item in ambassadors[0]:
-                tvisits = item[2] + item[3]
-                names.append('<span class="altname">%s %s</span> (%d)' % (item[0], item[1], tvisits))
-            outfile.write(',\n'.join(names))
+                names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[-1]))
+            outfile.write(', '.join(names))
             outfile.write('</p>\n')
+        outfile.write('<p>Thanks to all Club Ambassadors this year.</p>\n')
+        
         
     # Now, the clubs
     sheet = book.sheet_by_name('Clubs')
@@ -106,9 +106,9 @@ if __name__ == "__main__":
     with open(parms.outprefix+'clubs.shtml', 'w') as outfile:
         for n in keys:
             clubs[n].sort()
-            outfile.write('<p>%d visit%s:' % (n, 's' if n > 1 else ''))
+            outfile.write('<p><b>%d visit%s</b>: ' % (n, 's' if n > 1 else ''))
             names = ['<span class="altname">%s</span>' % item for item in clubs[n]]
-            outfile.write(',\n'.join(names))
+            outfile.write(', '.join(names))
             outfile.write('</p>\n')
 
         
