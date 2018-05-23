@@ -6,7 +6,11 @@ import tmglobals
 globals = tmglobals.tmglobals()
 import xlrd
 import requests
+import re
 
+def makesortkey(s):
+    # Strip non-alphameric characters and return all lower-case
+    return ' '.join(re.split('\W+', s.lower())).strip()
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -116,14 +120,33 @@ if __name__ == "__main__":
     sheet = book.sheet_by_name('Insights')
     colnames = sheet.row_values(0)
 
-    insights = []
+    newinsights = []
+    oldinsights = []
     for row in range(1, sheet.nrows):
         val = sheet.row_values(row)
-        insights.append(('<b>NEW: </b>' if val[0] else '', val[1].encode('utf-8')))
-    insights.sort(key=lambda k:(-len(k[0]), k[1].lower()))
+        insight = val[1].encode('utf-8')
+        if val[0]:
+            newinsights.append(insight)
+        else:
+            oldinsights.append(insight)
+            
+    newinsights.sort(key=lambda k:makesortkey(k))
+    oldinsights.sort(key=lambda k:makesortkey(k))
+        
     with open(parms.outprefix+'insights.shtml', 'w') as outfile:
-        outfile.write('<ul>\n')
-        for row in insights:
-            outfile.write('<li>%s%s</li>\n' % row)
-        outfile.write('</ul>\n')
-       
+        if newinsights:
+            outfile.write('<h3>Recent Insights</h3>')
+            outfile.write('<ul>\n')
+            for item in newinsights:
+                outfile.write('<li>%s</li>\n' % item)
+            outfile.write('</ul>\n')
+            
+        if oldinsights:
+            outfile.write('''<div class="oldheaddiv" onclick="jQuery('#oldinsightopen, #oldinsightclose, #oldinsight').toggle()">''')
+            outfile.write('<h3>Earlier Insights (Click to <span id="oldinsightopen">show</span><span id="oldinsightclose" style="display:none;">hide</span>)</h3></div>\n')
+            outfile.write('<div id="oldinsight" style="display:none;">\n')
+            outfile.write('<ul>\n')
+            for item in oldinsights:
+                outfile.write('<li>%s</li>\n' % item)
+            outfile.write('</ul>\n')
+            outfile.write('</div>\n')
