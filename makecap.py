@@ -67,24 +67,14 @@ if __name__ == "__main__":
     keys = sorted(ambassadors.keys(),reverse=True)
     
     with open(parms.outprefix+'ambassadors.shtml', 'w') as outfile:
-    
-        if keys[0]:  # Then we have at least one member who's logged visits since May 20th
-            for n in keys:
-                outfile.write('<p><b>%s qualifying visit%s since May 20</b>: ' % (int(n) if n > 0 else 'No', 's' if n != 1 else '' ))
-                names = []
-                ambassadors[n].sort(key=lambda k:(-k[-1],k[1], k[0]))
-                for item in ambassadors[n]:
-                    names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[-1]))
-                outfile.write(', '.join(names))
-                outfile.write('</p>\n')            
-        else:  # No visits since May 2th:
-            outfile.write('<p>No qualifiying visits have been made since May 20th. Visits earlier in the year:</p>\n')
-            ambassadors[0].sort(key=lambda k:(-k[-1],k[1], k[0]))
+        for n in keys:
+            outfile.write('<p><b>%s visit%s to District 101 clubs since May 20</b>: ' % (int(n) if n > 0 else 'No', 's' if n != 1 else '' ))
             names = []
-            for item in ambassadors[0]:
+            ambassadors[n].sort(key=lambda k:(-k[-1],k[1], k[0]))
+            for item in ambassadors[n]:
                 names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[-1]))
             outfile.write(', '.join(names))
-            outfile.write('</p>\n')
+            outfile.write('</p>\n')            
         
         
     # Now, the clubs
