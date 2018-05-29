@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # First, the ambassadors
     sheet = book.sheet_by_name('All Visits')
     colnames = sheet.row_values(0)
-    ambassadors = {}      # Key by number of visits in column C
+    ambassadors = []
     for row in range(1, sheet.nrows):
         # Require first and last names
         values = sheet.row_values(row)
@@ -56,26 +56,29 @@ if __name__ == "__main__":
                     values[cnum] = 0
                 tvisits += values[cnum]
             values.append(tvisits)
-                    
-            # And put the entry where it belongs
-            try:
-                ambassadors[values[2]].append(values)
-            except KeyError:
-                ambassadors[values[2]] = [values,]
+            ambassadors.append(values)
                 
-    # Now, sort by decreasing number of visits
-    keys = sorted(ambassadors.keys(),reverse=True)
     
     with open(parms.outprefix+'ambassadors.shtml', 'w') as outfile:
-        for n in keys:
-            outfile.write('<p><b>%s visit%s to District 101 clubs since May 20</b>: ' % (int(n) if n > 0 else 'No', 's' if n != 1 else '' ))
-            names = []
-            ambassadors[n].sort(key=lambda k:(-k[-1],k[1], k[0]))
-            for item in ambassadors[n]:
-                names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[-1]))
-            outfile.write(', '.join(names))
-            outfile.write('</p>\n')            
+        # Sort by recent visits
+        ambassadors.sort(key=lambda k:(-k[2], k[1], k[0]))
+        names = []
+        outfile.write('<p><b>Visits to District 101 clubs since May 20</b>:<br />\n')
+        for item in ambassadors:
+            if item[2] > 0:
+                names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[2]))
+        outfile.write(', '.join(names))
+        outfile.write('</p>\n')            
         
+        # Sort by total visits
+        ambassadors.sort(key=lambda k:(-k[-1], k[1], k[0]))
+        names = []
+        outfile.write('<p><b>Total visits to all clubs since July 1, 2017</b>:<br />\n')
+        for item in ambassadors:
+            if item[-1] > 0:
+                names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[-1]))
+        outfile.write(', '.join(names))
+        outfile.write('</p>\n')            
         
     # Now, the clubs
     sheet = book.sheet_by_name('Clubs')
