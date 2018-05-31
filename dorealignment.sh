@@ -27,22 +27,22 @@ fi
 
 echo 'Running createalignment'
 echo $bp
-../createalignment.py --outfile $workfile
+../createalignment.py --outfile $workfile || exit 1
 echo $ep
 echo
 echo Running alignmap 
 echo $bp
-../alignmap.py --pindir pins --district 101 --testalign $workfile --makedivisions --outdir alignment
+../alignmap.py --pindir pins --district 101 --testalign $workfile --makedivisions --outdir alignment || exit 2
 echo $ep
 echo
 echo Running allstats
 echo $bp
-../allstats.py --outfile d101proforma.html --testalign $workfile --outdir alignment --title "pro forma performance report"
+../allstats.py --outfile d101proforma.html --testalign $workfile --outdir alignment --title "pro forma performance report" || exit 3
 echo $ep
 echo
 echo Running makelocationreport
 echo $bp
-../makelocationreport.py --color --infile $workfile --outdir alignment
+../makelocationreport.py --color --infile $workfile --outdir alignment || exit 4
 echo $ep
 echo
 echo Running clubchanges
