@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # If there are overrides to club positioning, handle them now
     if parms.mapoverride:
         print('Processing general overrides from %s' % parms.mapoverride)
-        overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey,log=True)
+        overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey,log=True, createnewclubs=True)
     
     # Now, add info from clubperf (and create club.oldarea for each club)
     curs.execute('SELECT clubnumber, color, goalsmet, activemembers, clubstatus FROM clubperf WHERE entrytype = "L"')
@@ -67,7 +67,10 @@ if __name__ == "__main__":
         c.color = color
         c.goalsmet = goalsmet
         c.activemembers = activemembers
-        c.oldarea = c.division + c.area
+        try:
+            c.oldarea = c.division + c.area
+        except AttributeError:
+            c.oldarea = '0D0A'
         c.clubstatus = clubstatus
     
     if parms.trust:
@@ -117,6 +120,7 @@ if __name__ == "__main__":
             if c.clubstatus != 'Suspended':
                 writer.writerow(c.__dict__)
         except:
+            print(c.__dict__)
             writer.writerow(c.__dict__)
     outfile.close()
         
