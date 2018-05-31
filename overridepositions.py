@@ -3,8 +3,11 @@ import googlemaps
 import re
 from googleapiclient import discovery
 from pprint import pprint
+from simpleclub import Club
 
-
+def normalizespaces(s):
+    # Removes extra spaces; turns non-breaking spaces into spaces
+    return re.sub(r'\s+',' ',s.strip().replace(u'\xa0',' '))
 
 def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[], donotlog=[], createnewclubs=False):
     """ Updates 'clubs' with information from the override spreadsheet
@@ -44,14 +47,14 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
         for i, key in enumerate(keys):
             try:
                 # Normalize whitespace, including non-breaking spaces
-                row[key] = re.sub(r'\s+',' ',line[i].strip().replace(u'\xa0',' '))
+                row[key] = normalizespaces(line[i])
             except IndexError:
                 row[key] = ''
         
         # Now, process the data.
         clubnumber = row['clubnumber']
         if clubnumber not in clubs and createnewclubs:            
-            club = Club(line, fieldnames=keys)  
+            club = Club([normalizespaces(f) for f in line], fieldnames=keys)  
             clubs[clubnumber] = club
                 
             if log:
@@ -99,7 +102,6 @@ if __name__ == '__main__':
     import tmutil, sys
     import tmglobals
     globals = tmglobals.tmglobals()
-    from simpleclub import Club
  
 
     import tmparms
