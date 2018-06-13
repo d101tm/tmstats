@@ -20,10 +20,15 @@ class Award:
     def __init__(self, membername, award, clubname, awarddate):
         self.membername = membername
         self.award = award
-        self.level = Awardinfo.levels[award]
         self.clubname = clubname
         self.awarddate = awarddate
-        self.key = self.membername + ';' + self.clubname + ';' + repr(self.awarddate)
+        self.key = self.membername.lower() + ';' + self.clubname + ';' + repr(self.awarddate)
+        try:
+            self.level = Awardinfo.levels[award]
+        except KeyError:
+            sys.stderr.write('Ignoring unknown "%s" award for %s\n' % (award, self.key))
+            return
+
         if self.level == 0:
             # Old award
             if award not in awards:
@@ -148,6 +153,9 @@ if __name__ == "__main__":
 
     if parms.district:
         clauses.append('district = %s' % parms.district)
+
+    ### Bypass 'name unavailable'
+    clauses.append('membername NOT LIKE "%unavailable%"')
 
     curs.execute("SELECT COUNT(DISTINCT membername) FROM awards WHERE " + ' AND '.join(clauses))
     count = curs.fetchone()[0]
