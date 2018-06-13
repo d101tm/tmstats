@@ -15,6 +15,7 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--fordec', action='store_true')
     
     # Do global setup
     globals.setup(parms)
@@ -33,31 +34,43 @@ if __name__ == "__main__":
     mtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(mfile)))
     rtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(rfile)))
     stime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(sfile)))
-    
+
+    details = []
+    details.append('<li><a href="d101minimal.html">summary</a> (updated %s)</li>' % stime)
+    details.append('<li><a href="d101align.htm">map</a> (updated %s)</li>' % mtime)
+    details.append('<li><a href="d101location.html">detailed list with club meeting times and places</a> (updated %s)</li>' % ltime)
+
+    if parms.fordec:
+        details.append('<li><a href="d101proforma.html"><i>pro forma</i>performance report<a> (updated %s)</li>' % rtime)
+
+
     sys.stdout.write("""<html>
     <head>
       <title>D101 Proposed Realignment</title>
     </head>
     <body>
-      <p>This page lets you see the proposed realignment in four different ways:
+      <p>This page lets you see the proposed realignment as follows:
       <ul>
-        <li>As a <a href="d101minimal.html">Summary Proposed Alignment</a> (updated %s)</li>
-        <li>As a <a href="d101align.htm">Map of Proposed Alignment</a> (updated %s)</li>
-        <li>As a <a href="d101proforma.html"><i>pro forma</i> performance report</a> (updated %s)</li>
-        <li>As a <a href="d101location.html">Detailed Proposed Alignment</a> (updated %s)</li>
+      %s
       </ul>
-      %s""" % (stime, mtime, rtime, ltime, open('alignmentsource.txt').read()))
-    sys.stdout.write("""
-    <p>In addition, there is information on club changes:
-    <ul>
-    <li><a href="changesthisyear.html">All changes this Toastmasters Year</a>
-""")
-    if (open(postdecfile, 'r').readlines()):
+""" % ('\n'.join(details)))
+    sys.stdout.write(open('alignmentsource.txt').read())
+
+
+    if parms.fordec:
         sys.stdout.write("""
-    <li><a href="changessincedecmeeting.html">Changes since the DEC meeting</a> 
-""")
+        <p>In addition, there is information on club changes:
+        <ul>
+        <li><a href="changesthisyear.html">All changes this Toastmasters Year</a>
+    """)
+        if (open(postdecfile, 'r').readlines()):
+            sys.stdout.write("""
+        <li><a href="changessincedecmeeting.html">Changes since the DEC meeting</a> 
+    """)
+        sys.stdout.write("""
+        </ul>
+    """)
     sys.stdout.write("""
-    </ul>
     </body>
 </html>
 """)

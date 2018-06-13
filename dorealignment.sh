@@ -15,7 +15,7 @@ cat << EOF
 Content-Type: text/html; charset=utf-8
 
 <html>
-<head><title>Alignment</title></head>
+<head><title>Running Alignment Programs</title></head>
 <body>
 EOF
 bp="<pre>"
@@ -40,9 +40,14 @@ echo $bp
 ../allstats.py --outfile d101proforma.html --testalign $workfile --outdir alignment --title "pro forma performance report" || exit 3
 echo $ep
 echo
-echo Running makelocationreport
+echo Running makelocationreport with color
 echo $bp
-../makelocationreport.py --color --infile $workfile --outdir alignment || exit 4
+../makelocationreport.py --color --outfile d101details.html --infile $workfile --outdir alignment || exit 4
+echo $ep
+echo
+echo Running makelocationreport without color
+echo $bp
+../makelocationreport.py --infile $workfile --outdir alignment || exit 5
 echo $ep
 echo
 echo Running clubchanges
