@@ -34,12 +34,17 @@ if __name__ == "__main__":
         book = xlrd.open_workbook(file_contents=requests.get(parms.capsheet, stream=True).raw.read())
     else:
         book = xlrd.open_workbook(parms.capsheet)
+        
+    
 
     # And build the inclusion files
     # First, the ambassadors
     sheet = book.sheet_by_name('All Visits')
     colnames = sheet.row_values(0)
+    asof = colnames[6]    
     ambassadors = []
+    grandtotalvisits = 0
+    recent101visits = 0
     for row in range(1, sheet.nrows):
         # Require first and last names
         values = sheet.row_values(row)
@@ -55,6 +60,8 @@ if __name__ == "__main__":
                 except ValueError:
                     values[cnum] = 0
                 tvisits += values[cnum]
+                grandtotalvisits += values[cnum]
+            recent101visits += values[2]
             values.append(tvisits)
             ambassadors.append(values)
                 
@@ -63,7 +70,7 @@ if __name__ == "__main__":
         # Sort by recent visits
         ambassadors.sort(key=lambda k:(-k[2], k[1], k[0]))
         names = []
-        outfile.write('<p><b>Visits to District 101 clubs since May 20</b>:<br />\n')
+        outfile.write('<p><b>%d total visits to District 101 clubs since May 20</b>:<br />\n' % recent101visits)
         for item in ambassadors:
             if item[2] > 0:
                 names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[2]))
@@ -73,12 +80,13 @@ if __name__ == "__main__":
         # Sort by total visits
         ambassadors.sort(key=lambda k:(-k[-1], k[1], k[0]))
         names = []
-        outfile.write('<p><b>Total visits to all clubs since July 1, 2017</b>:<br />\n')
+        outfile.write('<p><b>%d total visits to all clubs since July 1, 2017</b>:<br />\n' % grandtotalvisits) 
         for item in ambassadors:
             if item[-1] > 0:
                 names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[-1]))
         outfile.write(', '.join(names))
         outfile.write('</p>\n')            
+        outfile.write('<p>Information current %s.' % asof)
         
     # Now, the clubs
     sheet = book.sheet_by_name('Clubs')
