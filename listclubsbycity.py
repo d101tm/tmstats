@@ -7,6 +7,7 @@ import sys, re, os
 from simpleclub import Club
 import tmparms, tmglobals
 from tmutil import cleandate, overrideClubs, removeSuspendedClubs
+from overridepositions import overrideClubPositions
 
 globals = tmglobals.tmglobals()
 
@@ -124,6 +125,7 @@ reload(sys).setdefaultencoding('utf8')
 parms = tmparms.tmparms()
 parms.parser.add_argument("--date", dest='date', default='today')
 parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
+parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
 
 # Do global setup
 globals.setup(parms)
@@ -132,15 +134,25 @@ curs = globals.curs
 
 parms.date = cleandate(parms.date)
 
+# Promote information from parms.makemap if not already specified
+parms.mapoverride = parms.mapoverride if parms.mapoverride else parms.makemap.get('mapoverride',None)
+
+
 
 # Get the club information for the specified date
 clubs = Club.getClubsOn(curs, parms.date)
-# And override it if needed.
-if parms.newAlignment:
-    overrideClubs(clubs, parms.newAlignment)
-    
+
 # And remove suspended clubs.
 clubs = removeSuspendedClubs(clubs, curs)
+
+# And override it if needed.
+if parms.newAlignment:
+    overrideClubs(clubs, parms.newAlignment, exclusive=False)
+    
+
+# If there are overrides to club positioning, handle them now
+if parms.mapoverride:
+    overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
     
 cities = {}
 
