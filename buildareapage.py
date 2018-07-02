@@ -153,28 +153,31 @@ curs = globals.curs
 # Get all clubs
 clubs = Club.getClubsOn(curs)
 
-
 if parms.newAlignment:
-    overrideClubs(clubs, parms.newAlignment)
+    overrideClubs(clubs, parms.newAlignment, exclusive=False)
+
     
 # Remove suspended clubs
 clubs = removeSuspendedClubs(clubs, curs)
 
+
 # Remove clubs from outside our District
 for c in clubs.keys():
-    if int(clubs[c].district) != parms.district:
-        del clubs[c]
+    try:
+        if int(clubs[c].district) != parms.district:
+            del clubs[c]
+    except ValueError:
+        print(clubs[c])
         
-# Add current coordinates and remove clubs without coordinates
-setClubCoordinatesFromGEO(clubs, curs)
+# Add current coordinates and remove clubs without coordinates (unless there's a new alignment)
+setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=not parms.newAlignment)
 
 # If there are overrides to club positioning, handle them now
 if parms.mapoverride:
     overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
 
 # Now, assign clubs to Areas and Divisions
-
-        
+    
         
 for c in sorted(clubs):
     club = clubs[c]
