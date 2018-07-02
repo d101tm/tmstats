@@ -208,6 +208,8 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
         except KeyError:
             from simpleclub import Club
             club = Club(row.values(), fieldnames=row.keys(), fillall=True)
+            if 'district' not in row.keys():
+                club.district = globals.parms.district
             clubs[clubnum] = club
         keepers.add(clubnum)
         if row['newarea'] and row['newarea'] != '0D0A':
