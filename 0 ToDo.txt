@@ -1,47 +1,49 @@
-TODO:
+# Things to do for District 101's TMSTATS
 
+Convert all code to Python 3:
+    - Install Python 3.7 on DreamHost
+    - Find all the Unicode hacks and get rid of them
 
+Clean up the shell scripts:
+    - In particular, refactor so that each major step is in its own script
+    - Refactor environment setup for consistency 
 
-Add "district" to the YML file and make it a required parameter (no default in the code).  Affects madness, distclubs, nothinbutnet.
+Make program and script names consistent:
+    - Right now, there's a mix of 'build', 'do', 'make' as the first part of the name, and it's hard to figure out what's what.
 
+Make the process of loading club info consistent:
+    - Right now, handling the spreadsheets which contain overriding information is done by several separate calls; instead, have getClubsOn take parameters to control the overriding.  
+    - Even better, create a Clubs class which, when instantiated, gets all of the club info and returns it as an array of Club instances.
 
-Rewrite madness.py to use the database.
-Rewrite distclubs.py to use the database.
-Rewrite nothinbutnet.py to use the database.
+Use Requests throughout:
+    - Get rid of the old calls to urllib2 and urllib3
 
-Refactor snapshot.py to use OverrideClubs (or at least get the column definitions from it)  [part of a bigger rewrite]
+Make intentional decisions on the use of Google spreadsheets vs. Excel:
+    - When using a Google spreadsheet, use the API so that changes are immediately reflected.
 
-Consider allowing allstats to OverrideClubs.
+Clean up the realignment process:
+    - Distinguish between 'pre-DEC', 'post-DEC', and 'post-Business Meeting' phases
+    - Create output files suitable for the DEC (with colors, awards, likely-to-close) and the world (without those) every time
 
+Add all officers to the 'officers' file and encapsulate it:
+    - This would allow, for example, sendawardmail.py to always have the current PQD's name.
 
-Get the geocoding done.
+Clean up getperformancefiles.py:
+    - Go forward from last available data, not backwards
+    - When we have data for a date, don't look for it in a previous month
 
-###
+Merge the performance tables:
+    - They are three different files at Toastmasters, but they are logically one table.
+    - This will require quite a bit of work on the SQL statements embedded in the code.
 
-Consider setting up one- and two-column tables for What's Trending for phone users.
+Use GetTMYearFromDB consistently:
+    - This is based on a todo from 10 Mar 2016 in commit d9952f5e831a658a8d3e3444c0e4ac71a54b8a9d
 
-###
+Use distance_on_unit_sphere consistently:
+    - This is based on a todo from 12 Apr 2016 in commit 7848212425ec58c9903cc90f336eb8729d3dff3e
 
-Fix dbconn.dbconn to retry on 
-
-\_mysql\_exceptions.OperationalError: (1040, 'Too many connections') 
-
-###
-
-
-Look at the month-end handling in getperformance.  This doesn't look right:
-
-     Updated clubperf for 2015-11-04 (month: 10/31/2015, year: 2015-2016) 
-     Updated areaperf for 2015-11-04 (month: 10/31/2015, year: 2015-2016) 
-     Updated distperf for 2015-11-04 (month: 10/31/2015, year: 2015-2016) 
-     Updated clubperf for 2015-11-04 (month: 11/30/2015, year: 2015-2016) 
-     Updated areaperf for 2015-11-04 (month: 11/30/2015, year: 2015-2016) 
-     Updated distperf for 2015-11-04 (month: 11/30/2015, year: 2015-2016) 
-
-###
-
-Clean up 'gator.sh' to allow doing more discrete operations.
-
-###
-
-Triple Crown
+Merge the map-making routine with buildclubsbycity:
+    - Should all be done together
+    - The output from buildclubsbycity should be sortable and filterable using [jQuery datatables](https://datatables.net)
+    - the findclubsbycity page should have the proper decorations for the site instead of being a naked page.
+    - It would be nice to make the map page look like the rest of the site, too.
