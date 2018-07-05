@@ -42,8 +42,10 @@ Use GetTMYearFromDB consistently:
 Use distance_on_unit_sphere consistently:
     - This is based on a todo from 12 Apr 2016 in commit 7848212425ec58c9903cc90f336eb8729d3dff3e
 
-Merge the map-making routine with buildclubsbycity:
+Merge the map-making routine with buildclubsbycity and buildareapage:
     - Should all be done together
     - The output from buildclubsbycity should be sortable and filterable using [jQuery datatables](https://datatables.net)
     - the findclubsbycity page should have the proper decorations for the site instead of being a naked page.
     - It would be nice to make the map page look like the rest of the site, too.
+    - Also, generate two maps:  the existing map with area and division markers and a new map with standard Google markers, possibly color-coded to distinguish open and closed clubs (this latter map would be used on the find-a-club page).
+    - The output from buildareapage should include club meeting time and place.
