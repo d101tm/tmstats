@@ -34,7 +34,7 @@ paras = ['The communication and leadership skills you have gained will be of lif
          'Please email us if you have questions about the educational program.  We are here to help.  If you prefer a phone call, please send us your phone number and indicate the best time to call you.',
          'Good luck as you journey forward on the educational award path!',
          'Sincerely,',
-         'Francoise Muller\nProgram Quality Director\nDistrict 101 Toastmasters']
+         'Pavan Datla\nProgram Quality Director\nDistrict 101 Toastmasters']
 
 
 def flatten(l):
