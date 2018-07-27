@@ -50,7 +50,7 @@ class Event:
 
             
     def __repr__(self):
-        self.date = self.start.strftime('%B %d').replace(' 0',' ')
+        self.date = self.start.strftime('%A, %B %d').replace(' 0',' ')
         self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
         self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
