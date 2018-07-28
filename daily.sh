@@ -113,7 +113,12 @@ if [[ "$dorun" = "yes" ]] ; then
         echo "Running award tallies"
         ../awardtallies.py
         echo "Creating award files"
-        ../makeeducationals.py --since 7/1/2017
+        month=$(date '+%m')
+        year=$(date '+%Y')
+        if [[ "$month" < "08" ]] ; then
+            year=$(( $year - 1 ))
+        fi
+        ../makeeducationals.py --since "$year-07-01"
         rc=$?
         echo "makeeducationals rc = $rc"
         if [[ "$rc" == 0 ]] ; then
