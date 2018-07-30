@@ -12,5 +12,5 @@ if "$SCRIPTPATH/clubchanges.py" $* --outfile "$outfile"
 then
     rm $outfile   # No changes noted
 else 
-    isreal && "$SCRIPTPATH/sendmail.py" --htmlfile "$outfile" --to bina.toastmasters@gmail.com webmaster@d101tm.org growth@d101tm.org quality@d101tm.org dd@d101tm.org katherine.toastmaster@gmail.com pr@d101tm.org --subject "Club Change Report for $today"
+    isreal && "$SCRIPTPATH/sendmail.py" --htmlfile "$outfile" --to  webmaster@d101tm.org growth@d101tm.org quality@d101tm.org dd@d101tm.org katherine.toastmaster@gmail.com pr@d101tm.org --subject "Club Change Report for $today"
 fi
