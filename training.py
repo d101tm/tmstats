@@ -104,6 +104,8 @@ if __name__ == "__main__":
     parms.add_argument('--require9a', action='store_true', help='If true, only clubs which achieved goal 9a (4 or more officers trained during first cycle) are eligible.')
     parms.add_argument('--bonus9a', action='store_true', help='If true, clubs get a bonus reward if they trained at least 4 officers in the first cycle.')
     parms.add_argument('--reward', type=str, default='$50 in District Credit')
+    parms.add_argument('--phase1name', type=str, default='Lucky 7')
+    parms.add_argument('--phase2name', type=str, default='Magnificent 7')
     parms.add_argument('--bonusreward', type=str, default='$101 in District Credit and joining the Magnificent 7')
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
     
@@ -285,20 +287,20 @@ if __name__ == "__main__":
 
     if parms.bonus9a and parms.lastmonth == 'February':
      
-        #outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.bonusreward)
+        #outfile.write('<p>Clubs which have all 7 Officers attend <a href="/training">Club Officer Training</a> during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b> and join the <b>%s</b>.</p>\n' % (parms.bonusreward, parms.phase2name))
         if bonus:
             luckyclubs = [localclub(club) for club in bonus]
             outfile.write('<p><b>Congratulations</b> to ')
             outfile.write(tmutil.getClubBlock(luckyclubs))
-            outfile.write(' for earning %s.</p>\n' % parms.bonusreward)
+            outfile.write(' for earning %s and joining the %s.</p>\n' % (parms.bonusreward, parms.phase2name))
 
-        #outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period but trained fewer than 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
+        #outfile.write('<p>Clubs which have all 7 Officers attend <a href="/training">Club Officer Training</a> during the December-February training period but trained fewer than 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
 
     elif parms.require9a and parms.lastmonth == 'February':
-        outfile.write('<p>Clubs which have all 7 Officers trained during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
+        outfile.write('<p>Clubs which have all 7 Officers attend <a href="/training">Club Officer Training</a> during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b>.</p>\n' % parms.reward)
 
     else:
-        outfile.write('<p>Earn <b>%s</b> by having all seven Club Officers trained in the %s period.</p>\n' % (parms.reward, parms.period))
+        outfile.write('<p>Join the <b>%s</b> and earn <b>%s</b> by having all seven Club Officers attend <a href="/training">Club Officer Training</a> in the %s period.</p>\n' % (parms.phase1name, parms.reward, parms.period))
  
 
 
@@ -306,7 +308,7 @@ if __name__ == "__main__":
         luckyclubs = [localclub(club) for club in lucky]
         outfile.write('<p><b>Congratulations</b> to ')
         outfile.write(tmutil.getClubBlock(luckyclubs))
-        outfile.write(' for earning %s.</p>\n' % parms.reward)
+        outfile.write(' for earning %s and joining the %s.</p>\n' % (parms.reward, parms.phase1name))
 
     if (lucky or bonus):
         outfile.write("""<p>Training data was last updated on %s.</p>
