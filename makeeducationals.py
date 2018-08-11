@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Make the 'Congratulations!' slide and the list of award-winners."""
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
@@ -42,22 +42,22 @@ class Award:
 
     def show(self):
         if self.level == 0:
-            return u'<tr class="awardline"><td class="awardmember" width="48%%">'+ unicode(self.membername) +u'</td><td class="awardclub" width="48%">' + unicode(self.clubname) + u'</td></tr>' 
+            return '<tr class="awardline"><td class="awardmember" width="48%%">'+ str(self.membername) +'</td><td class="awardclub" width="48%">' + str(self.clubname) + '</td></tr>' 
         else:
-            return u'<tr class="awardline"><td class="awardmember" width="35%%">'+ unicode(self.membername) +u'</td><td class="awardclub" width="35%">' + unicode(self.clubname) + u'</td><td class="pathname" width="25%">' + Awardinfo.paths[self.award] + u'</td></tr>' 
+            return '<tr class="awardline"><td class="awardmember" width="35%%">'+ str(self.membername) +'</td><td class="awardclub" width="35%">' + str(self.clubname) + '</td><td class="pathname" width="25%">' + Awardinfo.paths[self.award] + '</td></tr>' 
 
 def printawards(awards, knownawards, k):
     if k in awards:
         if isinstance(k, int):
-            print '[et_pb_toggle title="Pathways Level %d (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (k, len(awards[k]))
+            print('[et_pb_toggle title="Pathways Level %d (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (k, len(awards[k])))
         else:
-            print '[et_pb_toggle title="%s (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (knownawards[k], len(awards[k]))
-        print '<table>'
+            print('[et_pb_toggle title="%s (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (knownawards[k], len(awards[k])))
+        print('<table>')
         #print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
         for each in sorted(awards[k], key=lambda x:x.key):
-            print each.show()
-        print '</table>'
-        print '[/et_pb_toggle]'
+            print(each.show())
+        print('</table>')
+        print('[/et_pb_toggle]')
 
 
 def makeCongratulations(count, district, timing, parms):
@@ -166,17 +166,17 @@ if __name__ == "__main__":
 
 
 
-    print '<h3>Member Educationals %s</h3>' % timestamp
-    print '<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals %s.  Will we see YOUR name here next?</p>' % timestamp
-    print '<p>Achievements not shown here can be found on the Toastmasters International <a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district)
-    print '<p>Click on an award title to show the names of Toastmasters who have earned that award.</p>'
+    print('<h3>Member Educationals %s</h3>' % timestamp)
+    print('<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals %s.  Will we see YOUR name here next?</p>' % timestamp)
+    print('<p>Achievements not shown here can be found on the Toastmasters International <a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district))
+    print('<p>Click on an award title to show the names of Toastmasters who have earned that award.</p>')
 
     # And now print the awards themselves.
 
-    print '<div class="awardstable">'
+    print('<div class="awardstable">')
     for k in awardorder:
         printawards(awards, knownawards, k)
-    print '</div>'
+    print('</div>')
 
 
     cmd = makeCongratulations(count, parms.district, timestamp, parms)

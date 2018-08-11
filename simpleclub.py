@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Simple class to maintain information about a club.
 """
 
 import datetime, re
 from copy import deepcopy
 from tmutil import getTMYearFromDB
-from urlparse import urlsplit
+from urllib.parse import urlsplit
 
 npatt = re.compile('\W+', re.UNICODE)  # Get rid of anything that isn't a Unicode alphameric
 
@@ -76,7 +76,7 @@ class Club:
         """ Convert values coming out of the database to strings """
 
         # Let's normalize everything to strings/unicode strings
-        if isinstance(value, (int, long, float, bool)):
+        if isinstance(value, (int, float, bool)):
             value = '%s' % value
         if isinstance(value, bool):
             value = '1' if value else '0'

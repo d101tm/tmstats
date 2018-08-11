@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Clear the WordPress supercache """
 
 import tmutil, sys, os

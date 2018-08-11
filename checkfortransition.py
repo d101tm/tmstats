@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Returns the parameters to pass to the Bash 'export' builtin to set
     or nullify a shell variable to correspond to information for a 
     specific Toastmasters year that's not the one corresponding to the
@@ -54,5 +54,5 @@ if __name__ == "__main__":
                 ans = "%s=\"--%s %s\"" % (f, f, parms.__dict__[desiredyear][f])
             except KeyError:
                 pass
-    print ans
+    print(ans)
 

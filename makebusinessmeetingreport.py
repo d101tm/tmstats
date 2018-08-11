@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Insert description of this program here """
 
 import tmutil, sys
@@ -103,7 +103,7 @@ if __name__ == "__main__":
             for club in thisarea:
                 sheet.write(rownum, 0, club.clubnumber, numformat)
                 if club.newarea != club.decarea:
-                    print club.clubname, 'moved to', club.newarea, '- was', club.decarea
+                    print(club.clubname, 'moved to', club.newarea, '- was', club.decarea)
                     sheet.write(rownum, 1, club.clubname, changedformat)
                 else:
                     sheet.write(rownum, 1, club.clubname, nameformat)

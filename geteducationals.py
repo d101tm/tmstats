@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 # Get Educational Awards
 
-import dbconn, tmutil, sys, os, urllib
+import dbconn, tmutil, sys, os, urllib.request, urllib.parse, urllib.error
 from bs4 import BeautifulSoup
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -16,7 +16,7 @@ def inform(*args, **kwargs):
     file = kwargs.get('file', sys.stderr)
     
     if parms.quiet < suppress:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     
     # Get the data from Toastmasters
     url = "http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%d&s=Club&sortOrder=0" % parms.district
-    data = ''.join(urllib.urlopen(url).readlines())
+    data = ''.join(urllib.request.urlopen(url).readlines())
     # Parse it
     soup = BeautifulSoup(data, 'html.parser')
 

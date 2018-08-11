@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Fix up awards in the database to use new IDs from WHQ
 
 In particular, remove any awards with the new short pathids,
 then update all awards with the old long pathids to use the 
 new short pathid.  """
 
-from __future__ import print_function
+
 
 import tmutil, sys
 import tmglobals

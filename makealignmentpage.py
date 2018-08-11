@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Create the index.html page for the alignment directory on d101tm """
 
 import dbconn, tmutil, sys, os

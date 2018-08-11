@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Check currency of all four tables for the date specified.
     If no date, either today or yesterday is OK.
 
@@ -55,7 +55,7 @@ else:
 if count == len(want):
     sys.exit(0)   # Success!
 if count == 3 and not have['clubs']:
-    print 'Only clubs table is not current'
+    print('Only clubs table is not current')
     sys.exit(1)
-print 'Tables not current: %s' % ('; '.join([k for k in have if not have[k]]))
+print('Tables not current: %s' % ('; '.join([k for k in have if not have[k]])))
 sys.exit(2)

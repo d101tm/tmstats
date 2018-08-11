@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """ Send mail congratulating award recipients. """
 
@@ -24,7 +24,7 @@ def inform(*args, **kwargs):
     file = kwargs.get('file', sys.stderr)
     
     if parms.quiet < suppress:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
                   
@@ -40,7 +40,7 @@ paras = ['The communication and leadership skills you have gained will be of lif
 def flatten(l):
     ### From http://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists-in-python
     for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
+        if isinstance(el, collections.Iterable) and not isinstance(el, str):
             for sub in flatten(el):
                 yield sub
         else:
@@ -105,7 +105,7 @@ def sendreport(report):
 
 def sendletter(email, firstname, letterinfo, parms):
     if not email:
-        print 'No email for', letterinfo[0].fullname
+        print('No email for', letterinfo[0].fullname)
         return
 
     # Create message container (multipart/alternative)
@@ -277,9 +277,9 @@ if __name__ == "__main__":
             conn.commit()
             time.sleep(5)
         else:
-            print 'Would send congrats to %s at %s for:' % (membername, email)
+            print('Would send congrats to %s at %s for:' % (membername, email))
             for award in letterinfo:
-                print '   %s (%s)' % (award.award, fullawardnames[award.award])
+                print('   %s (%s)' % (award.award, fullawardnames[award.award]))
         
     if len(report) > 0:
         if parms.dryrun:
@@ -293,7 +293,7 @@ if __name__ == "__main__":
                 dump.append(parts)
             fmtstr = ' | ' + ' | '.join(['%%%ds' % w for w in widths]) +  ' | '
             for line in dump:
-                print(fmtstr % tuple(line))
+                print((fmtstr % tuple(line)))
         else:
             sendreport(report)
         

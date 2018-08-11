@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Handle parameters for the TMSTATS family of programs.
     Parameters can come on the command line or from the tmstats.yml file.
 
@@ -8,7 +8,7 @@
        Call tmparser.parse() to handle common parameters.
        Interpret other parameters in self.args as needed.
     """
-from __future__ import print_function
+
 import argparse, yaml, os
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -75,7 +75,7 @@ class tmparms(Singleton):
         # Override with non-false values from the command line (or the default).
         # If no value is in the YMLfile, use the command line or default whether it's true or false.
         args = vars(self.args)
-        for name in args.keys():
+        for name in list(args.keys()):
             if args[name] or name not in self.__dict__:
                 self.__dict__[name] = args[name]
 

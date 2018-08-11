@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Build map for tentative alignment """
 
 import dbconn, tmutil, sys, os
@@ -16,7 +16,7 @@ def inform(*args, **kwargs):
     file = kwargs.get('file', sys.stderr)
 
     if parms.verbosity >= level:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
 
 if __name__ == "__main__":
 
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         d101 = Polygon(d101)
 
         sites = {}         # (lat,lng) ==> Division
-        for c in clubs.values():
+        for c in list(clubs.values()):
             point = (c.latitude, c.longitude)
             if point in sites:
                 if c.division != sites[point]:
@@ -123,7 +123,7 @@ if __name__ == "__main__":
             else:
                 sites[point] = c.division
 
-        points = [loc for loc in sites.keys() if len(sites[loc]) == 1]
+        points = [loc for loc in list(sites.keys()) if len(sites[loc]) == 1]
 
         # Gross hack to put Gilroy in Division A
         Gilroy = (37.005782, -121.568275)
@@ -169,7 +169,7 @@ if __name__ == "__main__":
             if outline.type == 'Polygon':
                 dopoly(outfile, outline, d)
             else:
-                 print('Division %s has %d pieces' % (d, len(outline.geoms)))
+                 print(('Division %s has %d pieces' % (d, len(outline.geoms))))
                  num = 0
                  for poly in outline.geoms:
                      num += 1

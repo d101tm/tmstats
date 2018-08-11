@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Populate the 'lastfor' table in the database. """
 import tmutil, sys, os, datetime
 import tmglobals
@@ -54,7 +54,7 @@ def doyear(y, curs):
     updateclause = ','.join([cn + '=VALUES(' + cn + ')' for cn in colnames])
     stmt = "INSERT INTO lastfor (" + colholders + ") VALUES (" + valueholders + ") ON DUPLICATE KEY UPDATE " + updateclause
     
-    allclubs = [(c.clubnumber, c.clubperfid, c.areaperfid, c.distperfid, c.asof, c.monthstart, y) for c in clubinfo.values()]
+    allclubs = [(c.clubnumber, c.clubperfid, c.areaperfid, c.distperfid, c.asof, c.monthstart, y) for c in list(clubinfo.values())]
     curs.executemany(stmt, allclubs)
 
     

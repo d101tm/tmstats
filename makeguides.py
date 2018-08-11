@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ MakeGuides - Create the Pathways Guides list based on the
     Excel spreadsheet """
 
@@ -17,7 +17,7 @@ class Guide:
         self.guides[normalize('%s %s' % (first, last))] = self
         
     def ref(self):
-        return u'<a href="mailto:%s">%s %s</a>' % (self.email, self.first, self.last)
+        return '<a href="mailto:%s">%s %s</a>' % (self.email, self.first, self.last)
 
 def normalize(s):
     s = s.strip().lower().replace('#','num')
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     sheet = book.sheet_by_name('GuidesContact')
     colnames = normalizefieldnames(sheet.row_values(0))
     (firstcol, lastcol, emailcol) = getfieldcols(colnames, ('first', 'last', 'email'))
-    for i in xrange(1, sheet.nrows):
+    for i in range(1, sheet.nrows):
         row = sheet.row_values(i)
         if len(row) >= 3 and row[2].strip():
             Guide(row[firstcol], row[lastcol], row[emailcol])
@@ -80,14 +80,14 @@ if __name__ == "__main__":
             ('division', 'area', 'clubnumber', 'clubname', 'pathwaysguide'))
 
     # Write a row for every club
-    for i in xrange(1, sheet.nrows):
+    for i in range(1, sheet.nrows):
         row = sheet.row_values(i)
-        parts = [u'<tr>\n']
-        parts.append(u'  <td>%s%d</td>\n' % (row[divcol], row[areacol]))
-        parts.append(u'  <td>%d</td>\n' % (row[numcol]))
-        parts.append(u'  <td>%s</td>\n' % (row[namecol]))
-        parts.append(u'  <td>%s</td>\n' % (Guide.guides[normalize(row[guidecol])].ref()))
-        parts.append(u'</tr>\n')
+        parts = ['<tr>\n']
+        parts.append('  <td>%s%d</td>\n' % (row[divcol], row[areacol]))
+        parts.append('  <td>%d</td>\n' % (row[numcol]))
+        parts.append('  <td>%s</td>\n' % (row[namecol]))
+        parts.append('  <td>%s</td>\n' % (Guide.guides[normalize(row[guidecol])].ref()))
+        parts.append('</tr>\n')
         outfile.write(''.join(parts))
 
     # Finish the table

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Find club changes. 
 
     Create an HTML file with changes in club information between two dates, based on Toastmasters' Find-a-Club data.
@@ -21,7 +21,7 @@ globals = tmglobals.tmglobals()
 
         
 def sortclubs(what):
-    return sorted(what.keys(), key=lambda x:'%s%s%s' % (what[x].division, what[x].area, what[x].clubnumber.zfill(8)))
+    return sorted(list(what.keys()), key=lambda x:'%s%s%s' % (what[x].division, what[x].area, what[x].clubnumber.zfill(8)))
 
 
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     allclubs = Club.getClubsOn(curs, date=todate)
     allclubs = removeSuspendedClubs(allclubs, curs, date=todate)
     
-    for club in allclubs.values():
+    for club in list(allclubs.values()):
         if club.clubnumber not in oldclubs:
             club.info = 'New Club'
             newclubs[club.clubnumber] = club
@@ -111,14 +111,14 @@ if __name__ == "__main__":
             outfile.write("Club Changes from %s to %s\n\n" % (fromdate, todate))
             if newclubs:
                 outfile.write('New Clubs\n')
-                for c in newclubs.values():
+                for c in list(newclubs.values()):
                     outfile.write('  %s (%s)\n' % (c.clubname, c.clubnumber))
                 outfile.write('=' * 72)
                 outfile.write('\n')
 
             if oldclubs:
                 outfile.write('Removed Clubs\n')
-                for c in oldclubs.values():
+                for c in list(oldclubs.values()):
                     outfile.write('  %s (%s)\n' % (c.clubname, c.clubnumber))
                 outfile.write('=' * 72)
                 outfile.write('\n')
@@ -127,7 +127,7 @@ if __name__ == "__main__":
                 
             if changedclubs:
                 outfile.write('Changed Clubs\n')
-                for c in changedclubs.values():
+                for c in list(changedclubs.values()):
                     outfile.write('  %s\n' % c[0])
                     for each in c[1]:
                         outfile.write('    %s\n' % each[0])
@@ -191,7 +191,7 @@ if __name__ == "__main__":
                     outfile.write("<tr><td>Link</td><td><a href='%s'>%s</a></td></tr>" % (club.getLink(), club.getLink()))
             
                     omit = ['clubname', 'clubnumber', 'division', 'area', 'cmp', 'place', 'address', 'city', 'state', 'zip', 'country', 'meetingtime', 'meetingday']
-                    keys = [key for key in club.__dict__.keys() if key not in omit]
+                    keys = [key for key in list(club.__dict__.keys()) if key not in omit]
                     outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % ('place', club.place))
                     outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % ('address', club.makeaddress()))
                     outfile.write("<tr><td class='item'>%s</td><td>%s</td></tr>\n" % ('meeting', club.makemeeting()))
@@ -215,7 +215,7 @@ if __name__ == "__main__":
                     outfile.write("<th class='item'>Item</th><th class='old'>Old</th><th class='new'>New</th></tr></thead>\n")
                     outfile.write("<tbody>\n")
                     outfile.write("<tr><td>Link</td><td colspan='2'><a href='%s'>%s</a></td></tr>" % (club.getLink(), club.getLink()))
-                    keys = [key for key in club.__dict__.keys() if key not in ['cmp']]
+                    keys = [key for key in list(club.__dict__.keys()) if key not in ['cmp']]
                     changedclubs[k][1].sort()
                     for (item, old, new) in changedclubs[k][1]:
                         if item in keys:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Create the "Club Listing By City" as an includable HTML file. 
     Also create the CSS/JS and actual HTML as separate pieces for Joomla.
     And create narrow versions to be phone-friendly. """
@@ -8,6 +8,7 @@ from simpleclub import Club
 import tmparms, tmglobals
 from tmutil import cleandate, overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
+import imp
 
 globals = tmglobals.tmglobals()
 
@@ -119,7 +120,6 @@ def normalize(s):
 if 'TM_DIRECTORY' in os.environ:
     os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
         
-reload(sys).setdefaultencoding('utf8')
 
 # Handle parameters
 parms = tmparms.tmparms()
@@ -164,11 +164,11 @@ for c in clubs:
     cities[club.city].append(club)
 
 
-outfile = open('clublist.html', 'wb')
-headfile = open('clublist.css', 'wb')
-bodyfile = open('clublist.body', 'wb')
-narrowfile = open('narrowclublist.html', 'wb')
-narrowbodyfile = open('narrowclublist.body', 'wb')
+outfile = open('clublist.html', 'w')
+headfile = open('clublist.css', 'w')
+bodyfile = open('clublist.body', 'w')
+narrowfile = open('narrowclublist.html', 'w')
+narrowbodyfile = open('narrowclublist.body', 'w')
 
 headfile.write(headinfo['style'])
 outfile.write(header)

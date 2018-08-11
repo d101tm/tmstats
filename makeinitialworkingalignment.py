@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Copy current club information to working alignment CSV file 
 
 Creates a CSV with the proper headers and information based on current
@@ -49,8 +49,8 @@ if __name__ == "__main__":
             "longitude"
             ]
 
-    print ','.join(headers)
+    print(','.join(headers))
     clubs = Club.getClubsOn(curs)
-    for c in sorted(clubs.values(),key=lambda c:c.division+c.area):
-        print('%s,"%s",%s%s' % (c.clubnumber, c.clubname, c.division, c.area))
+    for c in sorted(list(clubs.values()),key=lambda c:c.division+c.area):
+        print(('%s,"%s",%s%s' % (c.clubnumber, c.clubname, c.division, c.area)))
     

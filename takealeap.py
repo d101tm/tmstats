@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Create reports for the Take a Leap promotion:
 
 Clubs earn $40 for every DCP level they increase from the previous year.
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     columnsforcsv.append('delta')
     columnsforcsv.append('needed')
     for row in curs.fetchall():
-        club = myclub(zip(columns, row))
+        club = myclub(list(zip(columns, row)))
         clubs[club.clubnumber] = club
         
     # Now, update to include last year's status
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             
     # Now, compute results
     leapers = [[],[],[],[]]    # For 0-3 levels
-    for club in clubs.values():
+    for club in list(clubs.values()):
         club.delta = max(0,club.thisyear - club.lastyear)
         if club.delta > 0:
             leapers[club.delta].append(club)
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     csvfile = open(parms.csvfile, 'wb')
     csvwriter = csv.DictWriter(csvfile, fieldnames=columnsforcsv, extrasaction="ignore")
     csvwriter.writeheader()
-    for club in sorted(clubs.values(), key=lambda c:'%s%s%.8d' % (c.division, c.area, c.clubnumber)):
+    for club in sorted(list(clubs.values()), key=lambda c:'%s%s%.8d' % (c.division, c.area, c.clubnumber)):
         csvwriter.writerow(club.__dict__)
     csvfile.close()
     

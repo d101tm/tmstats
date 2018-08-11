@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import tmparms, os, sys
 from datetime import date, datetime
 from tmutil import showclubswithoutvalues, cleandate, stringify, getClubBlock
@@ -56,7 +56,7 @@ if __name__ == "__main__":
             winners.append(myclub(*c))
 
         if not winners:
-            print >> sys.stderr, 'No President\'s Distinguished Clubs from WHQ.'
+            print('No President\'s Distinguished Clubs from WHQ.', file=sys.stderr)
             # Either WHQ hasn't posted or no one qualifies.  Use our calculation.
             curs.execute("SELECT c.clubnumber, c.clubname FROM clubperf c INNER JOIN distperf d ON c.clubnumber = d.clubnumber AND c.entrytype = 'L' AND d.entrytype = 'L' AND ((d.aprrenewals > 20) OR (d.aprrenewals - c.membase) >= 5) WHERE c.goalsmet >= 9")
             for c in curs.fetchall():
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     if len(winners) > 0:
         outfile.write('<p><b>Congratulations</b> to %s for earning %s!</p>' % (getClubBlock(winners), parms.earning))
-        print >> sys.stderr, "%d clubs have qualified" % len(winners)
+        print("%d clubs have qualified" % len(winners), file=sys.stderr)
     outfile.close()
 
 

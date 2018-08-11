@@ -1,5 +1,5 @@
-#!/usr/bin/env python2.7
-from __future__ import print_function
+#!/usr/bin/env python3
+
 import googlemaps
 import urllib3
 import logging
@@ -50,7 +50,7 @@ class myclub():
                 ([self.__dict__[k] for k in self.fields]))
         
     def update(self, results, curs):
-        if isinstance(results, basestring):
+        if isinstance(results, str):
             results = eval(results)  # Yes, it's unsafe.  
         if len(results) != 1:
             print(len(results), 'results found for', self.clubnumber, self.clubname, '\n', self.address, self.city, self.state, self.zip, file=sys.stderr)

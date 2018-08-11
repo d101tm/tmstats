@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
+
 import googlemaps
 import dbconn, tmparms
 import os, sys
@@ -76,7 +76,7 @@ class myclub():
         
     def process(self, results):
         
-        if isinstance(results, basestring):
+        if isinstance(results, str):
             results = eval(results)  # Yes, it's unsafe.  
         if len(results) != 1:
             print(len(results), 'results found for', self.clubnumber, self.clubname, '\n', self.address, self.city, self.state, self.zip, file=sys.stderr)
@@ -156,7 +156,7 @@ class myclub():
                     rev = self.gmaps.reverse_geocode((self.whqlatitude, self.whqlongitude))[0]
                     self.whqreverse = rev['formatted_address']
                     self.whqreversetype = rev['geometry']['location_type']
-                except Exception, e:
+                except Exception as e:
                     print(e)
                 
                 
@@ -165,7 +165,7 @@ class myclub():
                 rev = self.gmaps.reverse_geocode((self.latitude, self.longitude))[0]
                 self.reverse = rev['formatted_address']
                 self.reversetype = rev['geometry']['location_type']
-            except Exception, e:
+            except Exception as e:
                 print(e)
             
                 

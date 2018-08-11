@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import tmparms, os, sys
 from datetime import date, datetime
 from tmutil import showclubswithvalues, showclubswithoutvalues
@@ -15,7 +15,7 @@ def inform(*args, **kwargs):
     file = kwargs.get('file', sys.stderr)
     
     if parms.quiet < suppress:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
         
 class myclub:
     """ Just enough club info to sort the list nicely """

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Print the latest date and the month that goes with it, based on
     the 'loaded' table.  
 
@@ -21,7 +21,7 @@ def getlatest(table, conn):
             ans = [tmutil.stringify(x) for x in ans]
         else:
             ans = ('', '')
-    except (MySQLdb.Error, TypeError), e:
+    except (MySQLdb.Error, TypeError) as e:
         sys.stderr.write(repr(e))
         ans = ('', '')
     return ans
@@ -36,4 +36,4 @@ if __name__ == '__main__':
     parms.parse()
     
     ans = getlatest(parms.table, globals.conn)
-    print ' '.join(ans)
+    print(' '.join(ans))

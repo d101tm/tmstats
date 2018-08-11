@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Open House Challenge - build the HTML fragment for the Open House Challenge """
 
 import dbconn, tmutil, sys, os
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     
     # And index them by name as well as number; set memdiff = 0 for each club.
     clubsByName = {}
-    for c in clubs.keys():
+    for c in list(clubs.keys()):
         clubs[c].memdiff = 0
         clubname = simplify(clubs[c].clubname)
         clubsByName[clubname] = clubs[c]
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     
     # And build "IN" clause.  We know all the items are numbers, so we don't have to worry about SQL injection.
-    eligibilityclause = ' clubnum IN (' + ','.join(eligible.keys()) + ') '
+    eligibilityclause = ' clubnum IN (' + ','.join(list(eligible.keys())) + ') '
     
     # Now, get the count for each club of new members who have renewed for the following term
     curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE joindate >= %s AND termenddate >= %s AND" + eligibilityclause + "GROUP BY clubnum, clubname", (basedate, renewtodate))
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     
     
     
-    for c in eligible.values():
+    for c in list(eligible.values()):
         if c.memdiff >= 3:
             level2clubs.append(c)
         elif c.memdiff > 0:

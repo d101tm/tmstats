@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Return the first date of the TM year with data """
 
 import tmutil, sys
@@ -31,5 +31,5 @@ if __name__ == "__main__":
     
     # Get the first day with data
     curs.execute('SELECT MIN(loadedfor) FROM loaded WHERE monthstart >= %s', (yearstart,))
-    print(curs.fetchone()[0])
+    print((curs.fetchone()[0]))
     

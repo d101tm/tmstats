@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Creates the "Five for 5" report and mail it to the Program Quality Director """
 
 import sys, csv

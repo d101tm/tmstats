@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
 
@@ -18,7 +18,7 @@ def inform(*args, **kwargs):
     verbosity = kwargs.get('verbosity', 0)
 
     if verbosity >= level:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
 
 def makeCard(club):
     cardtemplate = """
@@ -114,7 +114,7 @@ def setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=True):
             club.latitude = latitude
             club.longitude = longitude
     if removeNotInGeo:
-        allclubs = clubs.keys()
+        allclubs = list(clubs.keys())
         for c in allclubs:
             if c not in geoclubs:
                 del clubs[c]
@@ -130,7 +130,7 @@ def makemap(outfile, clubs, parms):
         club.latitude = float(club.latitude)
         club.longitude = float(club.longitude)  # In case the values in the database are funky
         if club.latitude == 0.0 or club.longitude == 0.0:
-            print 'no position for', club.clubnumber, club.clubname
+            print('no position for', club.clubnumber, club.clubname)
         club.coords = '(%f,%f)' % (club.latitude, club.longitude)
         club.card = makeCard(club)
         if club.coords not in clubsByLocation:
@@ -182,7 +182,7 @@ def makemap(outfile, clubs, parms):
 
     def outputprops(props, left, top):
         out = []
-        for k, v in props.iteritems():
+        for k, v in props.items():
             out.append("'%s':'%s'" % (k, v))
         out.append("'left':'%dpx'" % left)
         out.append("'top':'%dpx'" % top)
@@ -278,7 +278,7 @@ def makemap(outfile, clubs, parms):
         showdetails = False
 
     # Now, write out the markers (combining multiple clubs at the same location)
-    for l in clubsByLocation.values():
+    for l in list(clubsByLocation.values()):
         # Omit clubs that shouldn't be on the map
         newl = []
         for club in l:
@@ -312,8 +312,8 @@ def makemap(outfile, clubs, parms):
             if parms.pindir:
                 try:
                     open('%s/%s.png' % (parms.pindir, icon), 'r')
-                except Exception, e:
-                    print e
+                except Exception as e:
+                    print(e)
                     icon = 'missing'
                     for club in l:
                         inform('%s%s %s' % (club.division, club.area, club.clubname), file=sys.stdout, level=0, verbosity=parms.verbosity)
@@ -334,8 +334,8 @@ def makemap(outfile, clubs, parms):
                 icon = (club.division + club.area).upper()
                 try:
                     open('%s/%s.png' % (parms.pindir, icon), 'r')
-                except Exception, e:
-                    print e
+                except Exception as e:
+                    print(e)
                     icon = 'missing'
             else:
                 icon = ''

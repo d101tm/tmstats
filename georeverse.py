@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 """ Reverse-Geocode coordinates from WHQ and from our encoding and add them to the GEO table. """
 import googlemaps
 import urllib3
@@ -20,7 +20,7 @@ def inform(*args, **kwargs):
     file = kwargs.get('file', sys.stderr)
     
     if parms.quiet < suppress:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
         
 import math
  
@@ -74,32 +74,32 @@ if __name__ == "__main__":
     c.execute("SELECT clubnumber, clubname, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs) ORDER BY clubnumber;")
     for (clubnumber, clubname, whqlatitude, whqlongitude) in c.fetchall():
         # Now, reverse-geocode the address and add it to the table
-        print clubnumber, clubname, whqlatitude, whqlongitude
+        print(clubnumber, clubname, whqlatitude, whqlongitude)
         try:        
             rev = gmaps.reverse_geocode((whqlatitude, whqlongitude))[0]
             fa = rev['formatted_address']
             revloctype = rev['geometry']['location_type']
-            print '        ', revloctype, fa
+            print('        ', revloctype, fa)
             c.execute('UPDATE geo SET whqreverse=%s, whqreversetype=%s WHERE clubnumber=%s',
                     (fa, revloctype, clubnumber))
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
     conn.commit()
     
     # Do the same for the locally-geocoded data
     c.execute("SELECT clubnumber, clubname, latitude, longitude FROM geo")
     for (clubnumber, clubname, latitude, longitude) in c.fetchall():
         # Now, reverse-geocode the address and add it to the table
-        print clubnumber, clubname, latitude, longitude
+        print(clubnumber, clubname, latitude, longitude)
         try:        
             rev = gmaps.reverse_geocode((latitude, longitude))[0]
             fa = rev['formatted_address']
             revloctype = rev['geometry']['location_type']
-            print '        ', revloctype, fa
+            print('        ', revloctype, fa)
             c.execute('UPDATE geo SET reverse=%s, reversetype=%s WHERE clubnumber=%s',
                     (fa, revloctype, clubnumber))
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
     conn.commit()
 
         

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 """ Try to convert the Toastmasters training page into something tolerable """
 from bs4 import BeautifulSoup
 import sys, re, xlsxwriter
@@ -31,16 +31,16 @@ class mysheet:
         self.align = 3*['left'] + ['right'] + ['left'] + ['right'] + 7*['center']
 
         self.formats = {}
-        self.formats[''] = [outbook.add_format({'border':1, 'align': self.align[i]}) for i in xrange(len(self.align))]
-        self.formats['lucky'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bg_color': colors['lucky']}) for i in xrange(len(self.align))]
-        self.formats['dcp'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bg_color': colors['dcp']}) for i in xrange(len(self.align))]
-        self.formats['untrained'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bg_color': colors['untrained']}) for i in xrange(len(self.align))]
-        self.formats['bold'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bold': True}) for i in xrange(len(self.align))]
+        self.formats[''] = [outbook.add_format({'border':1, 'align': self.align[i]}) for i in range(len(self.align))]
+        self.formats['lucky'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bg_color': colors['lucky']}) for i in range(len(self.align))]
+        self.formats['dcp'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bg_color': colors['dcp']}) for i in range(len(self.align))]
+        self.formats['untrained'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bg_color': colors['untrained']}) for i in range(len(self.align))]
+        self.formats['bold'] = [outbook.add_format({'border':1, 'align': self.align[i], 'bold': True}) for i in range(len(self.align))]
 
     def __init__(self, outbook, divname):
         self.sheet = outbook.add_worksheet('Division ' + divname)
         elements = headers.split(',')
-        for i in xrange(len(elements)):
+        for i in range(len(elements)):
             self.sheet.write(0, i, elements[i], self.formats['bold'][i])
         self.sheet.set_column('A:A', 3)
         self.sheet.set_column('B:B', 4)
@@ -59,7 +59,7 @@ class mysheet:
             format = self.formats['untrained']
         else:
             format = self.formats['']
-        for i in xrange(len(row)):
+        for i in range(len(row)):
             self.sheet.write(self.row, i, row[i], format[i])
         self.row += 1
     
@@ -144,7 +144,16 @@ if __name__ == "__main__":
 
     finder = re.compile(r'.*AREA *([0-9A]*) *DIVISION *(0?[A-Za-z] *)')
     results = []
-    soup = BeautifulSoup(open(parms.report, 'r'))
+
+    # The input file might be in UTF-8 or Windows encoding.  Let's tolerate both
+    try:
+        report = open(parms.report, 'r').read()
+    except UnicodeDecodeError:
+        print('Using iso8859-1')
+        report = open(parms.report, 'r', encoding='iso8859-1').read()
+    
+ 
+    soup = BeautifulSoup(report,features="html.parser")
 
     # This code matches Toastmasters WHQ's site as of January 11, 2018.  They make FREQUENT
     #    changes to the form used for training, so this code is very volatile, and you may
@@ -245,7 +254,7 @@ if __name__ == "__main__":
         if classes:
             outfile.write(' class="%s"' % ' '.join(classes))
         outfile.write('>\n')
-        for partnum in xrange(len(row)):
+        for partnum in range(len(row)):
             outfile.write('<td')
             if partnum == 2:
                 outfile.write(' class="clubname"')

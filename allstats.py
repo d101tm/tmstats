@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ This program combines info about a Toastmasters District's clubs into one easy-to-read report.  """
 
 import  datetime,  os, sys,  math, time
@@ -79,7 +79,7 @@ def wrap(tag, what, *classes, **kwds):
         classattr = ''
         
     
-    keyattrs = ['%s="%s"' % (k, kwds[k]) for k in kwds.keys()]
+    keyattrs = ['%s="%s"' % (k, kwds[k]) for k in list(kwds.keys())]
     if keyattrs:
         keyattrs = ' ' + ' '.join(keyattrs)
     else:
@@ -584,17 +584,17 @@ else:
 
 if tmyear < latestyear:
     # We assume all months are in the database.  If not, we'll find out what's missing the hard way.
-    interestingmonths = range(1,13)
+    interestingmonths = list(range(1,13))
     thisyear = False
     lateststamp = " from final Toastmasters data for the year %d-%d." % (tmyear, tmyear-1999)
 else:
     if latestmonth <= 6:
         # We have the previous July-December, plus months up to now.
-        interestingmonths = range(7,13)
-        interestingmonths.extend(range(1,latestmonth+1))
+        interestingmonths = list(range(7,13))
+        interestingmonths.extend(list(range(1,latestmonth+1)))
         tmyear = latestyear - 1 
     else:
-        interestingmonths = range(7, latestmonth+1)
+        interestingmonths = list(range(7, latestmonth+1))
         tmyear = latestyear
     thisyear = True
 # Now, get the months to ask for from the database
@@ -624,11 +624,11 @@ for (clubnumber, distperf_id, areaperf_id, clubperf_id) in curs.fetchall():
     lastareaperf[clubnumber] = '%d' % areaperf_id
     lastclubperf[clubnumber] = '%d' % clubperf_id
     
-alldistperf = ','.join(lastdistperf.values())
-allareaperf = ','.join(lastareaperf.values())
+alldistperf = ','.join(list(lastdistperf.values()))
+allareaperf = ','.join(list(lastareaperf.values()))
 
 # Now, get basic club information from the DISTPERF table.
-curs.execute("""select clubnumber, clubname, area, division, district, suspenddate from distperf where id in (%s)""" % alldistperf)
+curs.execute("""select clubnumber, clubname, area, division, district, suspenddate from distperf where id in (%s)""" % (alldistperf))
 
 # And create the master dictionary of clubs from those last entries
 clubs = {}
@@ -643,7 +643,7 @@ for (clubnumber, charterdate, clubname) in curs.fetchall():
     try:
         clubs[clubnumber].charterdate = charterdate.strftime('%m/%d/%y')
     except KeyError:
-        print 'Club %s (%d) not in performance reports, ignored.' % (clubname, clubnumber)
+        print('Club %s (%d) not in performance reports, ignored.' % (clubname, clubnumber))
         
     
 # Test alignment processing
@@ -656,7 +656,7 @@ if parms.testalignment:
     from tmutil import overrideClubs
     oldkeys = set(clubs.keys())
     clubs = overrideClubs(clubs, parms.testalignment)
-    for c in clubs.keys():
+    for c in list(clubs.keys()):
         if c not in oldkeys:
             nclub = clubs[c]
             # We must replace this with a club of the local type
@@ -665,7 +665,7 @@ if parms.testalignment:
     
 
 # And now, finish setting up the structure (creating Areas and Divisions, for example)
-for club in clubs.values():
+for club in list(clubs.values()):
     club.finishSettingUp()
 
 # Now, get information from the Area/Division performance table.  We only need the latest one.
@@ -740,8 +740,8 @@ for (clubnumber, activemembers, month) in curs.fetchall():
 
 fieldnames = ['clubnumber', 'clubstatus', 'membase', 'activemembers', 'goalsmet', 'ccs', 'addccs', 'acs', 'addacs', 'claldtms', 'addclaldtms', 'newmembers', 'addnewmembers', 'offtrainedround1', 'offtrainedround2', 'memduesontimeoct', 'memduesontimeapr', 'offlistontime', 'clubdistinguishedstatus', 'level1s', 'level2s', 'addlevel2s', 'level3s', 'level4s', 'level5s']
 fields = ','.join(fieldnames)
-dcprange = range(fieldnames.index('ccs'), 1+fieldnames.index('offlistontime'))
-pathrange = range(fieldnames.index('level1s'), 1+fieldnames.index('level5s'))
+dcprange = list(range(fieldnames.index('ccs'), 1+fieldnames.index('offlistontime')))
+pathrange = list(range(fieldnames.index('level1s'), 1+fieldnames.index('level5s')))
 if thisyear:
     curs.execute("select %s from clubperf where entrytype = 'L'" % fields)
 else:
@@ -752,7 +752,7 @@ for row in curs.fetchall():
     if row[0] in clubs:
         c = clubs[row[0]]
         if row[0] in fetched:
-            print "club %s (%s) is already here" % (c.name, c.clubnumber)
+            print("club %s (%s) is already here" % (c.name, c.clubnumber))
         fetched[row[0]] = True
         c.status = row[1]
         c.base = row[2]
@@ -803,7 +803,7 @@ for d in alldivs:
         thisarea = thisdiv.areas[a]
         outfiles.write('<table class="areatable">\n')
         outfiles.write('<thead>\n')
-        outfiles.write(clubs.values()[0].tr(True))  # We need to pass an instance, even though it gets ignored
+        outfiles.write(list(clubs.values())[0].tr(True))  # We need to pass an instance, even though it gets ignored
         outfiles.write('</thead>\n')
         outfiles.write('<tbody>\n')
         suslist = []

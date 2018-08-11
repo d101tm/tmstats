@@ -1,5 +1,5 @@
 """ Handle database connections for the TMSTATS suite """
-from __future__ import print_function
+
 import MySQLdb as mysql
 
 

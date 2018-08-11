@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Reset database to specified date """
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     
     # Your main program begins here.
     resetdate = tmutil.cleandate(parms.resetto)
-    print 'Resetting %sdatabase to %s' % ('CLUBS and CLUBCHANGES tables in ' if parms.clubsonly else '', resetdate)
+    print('Resetting %sdatabase to %s' % ('CLUBS and CLUBCHANGES tables in ' if parms.clubsonly else '', resetdate))
     
     # Reset LOADED; reset the performance tables (if called for)
     # NOTE:  Does NOT reset the entrytype in the performance tables to match the latest for each club.

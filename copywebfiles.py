@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 """ Copy new files from a Dropbox directory (and subdirectories) to a target folder. """
 
 import dropbox
@@ -28,10 +28,10 @@ def authorize():
     flow = dropbox.client.DropboxOAuth2FlowNoRedirect(appkey, appsecret)
     # Have the user sign in and authorize this token
     authorize_url = flow.start()
-    print '1. Go to: ' + authorize_url
-    print '2. Click "Allow" (you might have to log in first)'
-    print '3. Copy the authorization code.'
-    code = raw_input("Enter the authorization code here: ").strip()
+    print('1. Go to: ' + authorize_url)
+    print('2. Click "Allow" (you might have to log in first)')
+    print('3. Copy the authorization code.')
+    code = input("Enter the authorization code here: ").strip()
     token, user_id = flow.finish(code)
     out = open(state_file, 'w')
     out.write('oauth2:%s\n' % token)
@@ -95,10 +95,10 @@ while has_more:
             localfn = normalizedfilename[1+len(path):]
             outfn = os.path.join(localpath,localfn)
             outpath = os.path.split(outfn)[0]
-            print 'copying', filename, 'to', outfn
-            print 'find it at %s%s' % (linkpath, localfn)
+            print('copying', filename, 'to', outfn)
+            print('find it at %s%s' % (linkpath, localfn))
             if not os.path.isdir(outpath):
-                print 'creating', outpath
+                print('creating', outpath)
                 os.makedirs(outpath)
             
                 

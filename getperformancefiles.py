@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ This program gets all available performance reports from Toastmasters 
     for the current Toastmasters year.  Use it to catch up when starting
     to track district statistics. """
 
-import urllib, tmparms, os, sys
+import urllib.request, urllib.parse, urllib.error, tmparms, os, sys
 from tmutil import cleandate
 from datetime import datetime, timedelta, date
 
@@ -28,16 +28,16 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
-    flo = urllib.urlopen(url)
+    flo = urllib.request.urlopen(url)
     clubinfo = flo.readlines()
     # clubinfo = urllib.urlopen(url).read().split('\n')
     if len(clubinfo) < 10:
         # We didn't get anything of value
-        print "Nothing fetched for", url
+        print("Nothing fetched for", url)
         clubinfo = False
     elif clubinfo[0][0] in ['{', '<']:
         # This isn't a naked CSV
-        print "Not a CSV at", url
+        print("Not a CSV at", url)
         clubinfo = False
     return clubinfo
         
@@ -48,10 +48,10 @@ def getreportfromWHQ(report, district, altdistrict, tmyearpiece, month, thedate)
     if not resp:
         if altdistrict:
             url = makeurl(report, altdistrict, tmyearpiece, monthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
-            print 'Trying', url
+            print('Trying', url)
             resp = getresponse(url)
     if not resp:
-        print "No valid response received"
+        print("No valid response received")
     return resp
     
 
@@ -60,7 +60,7 @@ def makefilename(reportname, thedate):
     return '%s.%s.csv' % (reportname, thedate.strftime('%Y-%m-%d'))
     
 def writedailyreports(data, district, altdistrict, tmyearpiece, month, thedate):
-    print 'writing Month of %s reports for %s' % ('/'.join(['%02d' % m for m in month]), thedate.strftime('%Y-%m-%d'))
+    print('writing Month of %s reports for %s' % ('/'.join(['%02d' % m for m in month]), thedate.strftime('%Y-%m-%d')))
     with open(makefilename('clubperf', thedate), 'w') as f:
         f.write(''.join(data).replace('\r',''))
     data = getreportfromWHQ('divisionperformance', district, altdistrict, tmyearpiece, month, thedate)
@@ -84,7 +84,7 @@ def dolatest(district, altdistrict, finals, tmyearpiece):
                 thedate = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d').date()  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
                 with open(makefilename(filepart, thedate), 'w') as f:
                     f.write(''.join(data).replace('\r',''))
-                print 'Fetched %s for %s (month: %s, year: %s)' % (filepart, thedate, monthend, tmyearpiece)
+                print('Fetched %s for %s (month: %s, year: %s)' % (filepart, thedate, monthend, tmyearpiece))
 
 if __name__ == "__main__":            
     parms = tmparms.tmparms()
@@ -182,7 +182,7 @@ if __name__ == "__main__":
 
     
     # Get today's data
-    print "Getting the latest performance info"
+    print("Getting the latest performance info")
     dolatest(district, altdistrict, finals, tmyearpiece)
         
         
@@ -194,9 +194,9 @@ if __name__ == "__main__":
         if clubdata:
             with open(makefilename('clubs', yesterday), 'w') as f:
                         f.write(''.join(clubdata).replace('\r',''))
-            print "Fetched clubs"
+            print("Fetched clubs")
         else:
-            print 'No data received from %s' % url
+            print('No data received from %s' % url)
 
     
     

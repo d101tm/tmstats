@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Utility functions for the TMSTATS suite """
 from datetime import date, timedelta, datetime
 from six import StringIO
@@ -128,7 +128,7 @@ def numToString(x):
 def stringify(value):
     """ Convert values to strings """
     # Let's normalize everything to strings/unicode strings
-    if isinstance(value, (int, long, float, bool)):
+    if isinstance(value, (int, float, bool)):
         value = '%s' % value
     if isinstance(value, bool):
         value = '1' if value else '0'
@@ -190,14 +190,14 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
     """
     
     
-    pfile = open(newAlignment, 'rbU')
+    pfile = open(newAlignment, 'r')
     reader = csv.DictReader(pfile)
     keepers = set()
     # Sadly, the callers of this routine have different types of key.
     # We have to be resilient against this.
-    if isinstance(clubs.keys()[0], int):
+    if isinstance(list(clubs.keys())[0], int):
         fixup = lambda x:int(x)
-    elif isinstance(clubs.keys()[0], (long, float)):
+    elif isinstance(list(clubs.keys())[0], (int, float)):
         fixup = lambda x:float(x)
     else:
         fixup = lambda x:x
@@ -207,8 +207,8 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
             club = clubs[clubnum]
         except KeyError:
             from simpleclub import Club
-            club = Club(row.values(), fieldnames=row.keys(), fillall=True)
-            if 'district' not in row.keys():
+            club = Club(list(row.values()), fieldnames=list(row.keys()), fillall=True)
+            if 'district' not in list(row.keys()):
                 club.district = globals.parms.district
             clubs[clubnum] = club
         keepers.add(clubnum)
@@ -224,14 +224,14 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
                     elif isinstance(club.__dict__[item], float):
                         club.__dict__[item] = float(row[item])
                     else:
-                        club.__dict__[item] = long(row[item])
+                        club.__dict__[item] = int(row[item])
                 else:
                     club.__dict__[item] = row[item]
 
     pfile.close()
     # Remove clubs not in the file:
     if exclusive:
-        clubnumbers = clubs.keys()
+        clubnumbers = list(clubs.keys())
         for c in clubnumbers:
             if c not in keepers:
                 del clubs[c]

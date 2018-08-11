@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Make the CAP page inclusions from the Google spreadsheet """
-from __future__ import print_function
+
 import tmutil, sys
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -106,7 +106,7 @@ if __name__ == "__main__":
                 clubs[values[1]] = [values[0],]
                 
     # Now, sort by decreasing visits
-    keys = sorted(clubs.keys(),reverse=True)
+    keys = sorted(list(clubs.keys()),reverse=True)
     with open(parms.outprefix+'clubs.shtml', 'w') as outfile:
         for n in keys:
             clubs[n].sort()

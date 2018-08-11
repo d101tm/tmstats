@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Single-use program to set the 'clubs' table and .CSV files back by one day """
 
 import tmutil, sys, os

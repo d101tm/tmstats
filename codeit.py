@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 """ Brute Force program to geocode all clubs into the GEO table """
 import googlemaps
 import urllib3
@@ -23,11 +23,11 @@ gmaps = googlemaps.Client(key=parms.googlemapsapikey)
 
 curs.execute("SELECT clubnumber, clubname, place, address, city, state, zip, latitude, longitude FROM clubs WHERE lastdate IN (SELECT MAX(lastdate) FROM clubs) ORDER BY CLUBNUMBER;")
 for (clubnumber, clubname, place, address, city, state, zip, whqlatitude, whqlongitude)  in curs.fetchall()[0:1]:
-    print clubnumber, clubname
-    print address, city, state, zip
+    print(clubnumber, clubname)
+    print(address, city, state, zip)
     gres = gmaps.geocode("%s, %s, %s %s" % (address, city, state, zip))
     pprint.pprint(gres)
-    print "================="
+    print("=================")
     club = myclub(clubnumber, clubname, place, address, city, state, zip, whqlatitude, whqlongitude).update(gres, c)
 conn.commit()
 

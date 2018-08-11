@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Require certain conditions
 
     Sets the return code to 0 if all required conditions are true, else sets to 1

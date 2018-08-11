@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import dbconn, tmparms, os, sys
 from datetime import date, datetime
 from tmutil import showclubswithvalues, gotodatadir, getClubBlock, getTMYearFromDB

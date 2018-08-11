@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """ Create the Triple Crown report """
 
@@ -66,14 +66,14 @@ if __name__ == "__main__":
     
     if parms.short:
         for name in sorted(winners.keys()):
-            print '%s: %s' % (name, winners[name])
+            print('%s: %s' % (name, winners[name]))
     else:
-        print "<table>"
-        print "  <thead>"
-        print "    <tr><th align='left'>Name</th><th align='left'>Awards</th></tr>"
-        print "  </thead>"
-        print "  <tbody>"
+        print("<table>")
+        print("  <thead>")
+        print("    <tr><th align='left'>Name</th><th align='left'>Awards</th></tr>")
+        print("  </thead>")
+        print("  <tbody>")
         for name in sorted(winners.keys()):
-            print "    <tr><td style='padding-right: 20px;'>%s</td><td>%s</td></tr>" % (name, winners[name])
-        print "  </tbody>"
-        print "</table>"
+            print("    <tr><td style='padding-right: 20px;'>%s</td><td>%s</td></tr>" % (name, winners[name]))
+        print("  </tbody>")
+        print("</table>")

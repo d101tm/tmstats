@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 """ Create alignment work file based on:
 
     * Information from the tmstats database
@@ -29,7 +29,7 @@ def inform(*args, **kwargs):
     file = kwargs.get('file', sys.stderr)
     
     if parms.quiet < suppress:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=False)
     # If there are overrides to club positioning, handle them now
     if parms.mapoverride:
-        print('Processing general overrides from %s' % parms.mapoverride)
+        print(('Processing general overrides from %s' % parms.mapoverride))
         overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey,log=True, createnewclubs=True)
     
     # Now, add info from clubperf (and create club.oldarea for each club)
@@ -87,13 +87,13 @@ if __name__ == "__main__":
         # Override clubs using the proposed alignment spreadsheet.  Allow new clubs to be created
         ignorefields = ['clubnumber', 'clubname', 'oldarea']  # These are just decoration for this phase
         donotlog = ['newarea']  # No need to comment on this
-        print('Processing working alignment from %s' % parms.workingalignment)
+        print(('Processing working alignment from %s' % parms.workingalignment))
         overrideClubPositions(clubs, parms.workingalignment, parms.googlemapsapikey, log=True, 
         ignorefields=ignorefields, donotlog=donotlog, createnewclubs=True)
         
         # Now, remove any clubs which weren't included in the proposed alignment; also, remove precharter clubs if appropriate
         # And for any clubs without a new area specified, set it to their current area
-        for cnum in clubs.keys():
+        for cnum in list(clubs.keys()):
             c = clubs[cnum]
             if not c.touchedby or c.touchedby not in parms.workingalignment:
                 del clubs[cnum]
@@ -113,14 +113,14 @@ if __name__ == "__main__":
     writer = csv.DictWriter(outfile, fieldnames=outfields, extrasaction='ignore')
     writer.writeheader()
     
-    outclubs = sorted(clubs.values(),key=lambda club:club.newarea+club.clubnumber.rjust(8))
+    outclubs = sorted(list(clubs.values()),key=lambda club:club.newarea+club.clubnumber.rjust(8))
     # Omit suspended clubs
     for c in outclubs:
         try:
             if c.clubstatus != 'Suspended':
                 writer.writerow(c.__dict__)
         except:
-            print(c.__dict__)
+            print((c.__dict__))
             writer.writerow(c.__dict__)
     outfile.close()
         

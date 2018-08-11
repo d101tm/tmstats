@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # @@TODO:  Combine "export" into this program.
 # @@TODO:  Create areas from Divisions.
@@ -7,6 +7,7 @@ import dbconn, tmutil, sys, os
 import math
 from overridepositions import overrideClubPositions
 import csv
+import imp
 
 
 def distance_on_unit_sphere(lat1, long1, lat2, long2):
@@ -35,7 +36,7 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
            math.cos(phi1)*math.cos(phi2))
     try:
         arc = math.acos( cos )
-    except Exception, e:
+    except Exception as e:
         arc = 0
  
     # Remember to multiply arc by the radius of the earth 
@@ -50,7 +51,7 @@ def allocate(total, pieces):
     res = pieces * [total // pieces]  # Allocate evenly
     rem = total % pieces              # What's left?
     if rem > 0:
-        for k in random.sample(xrange(pieces), rem):
+        for k in random.sample(range(pieces), rem):
             res[k] += 1
     return res
 
@@ -62,13 +63,13 @@ def inform(*args, **kwargs):
     file = kwargs.get('file', sys.stderr)
     
     if parms.quiet < suppress:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
         
 def computeDistances(clubs):
     """ For a group of clubs, compute the distance of each club from their center and from each other. """
     # Now, compute bounds and center
     bounds = Bounds()
-    for c in clubs.values():
+    for c in list(clubs.values()):
         bounds.extend(c.latitude, c.longitude)
         
     bounds.clat = (bounds.north + bounds.south) / 2.0
@@ -93,7 +94,7 @@ class Color:
     @classmethod
     def touse(self):
         ret = 0
-        for c in self.pool.values():
+        for c in list(self.pool.values()):
             if c.togo > 0:
                 ret += 1
         return ret
@@ -116,7 +117,7 @@ class Area:
         self.number = number
         self.division = division
         self.clubs = {}
-        print self
+        print(self)
         
     def add(self, club):
         club.newarea = '%s%d' % (self.division, self.number + 1)
@@ -146,7 +147,7 @@ class myclub:
         self.oldarea = self.division + self.area
         clubs[self.clubnumber] = self
         if self.latitude == 0.0 or self.longitude == 0.0:
-            print self.clubname, self.clubnumber, 'has no location assigned.'
+            print(self.clubname, self.clubnumber, 'has no location assigned.')
             
     def out(self):
         return ['%s' % self.__dict__[f] for f in self.outfields]
@@ -161,7 +162,7 @@ if __name__ == "__main__":
     # Make it easy to run under TextMate
     gotodatadir()
         
-    reload(sys).setdefaultencoding('utf8')
+    imp.reload(sys).setdefaultencoding('utf8')
     
     # Handle parameters
     parms = tmparms.tmparms()
@@ -202,7 +203,7 @@ if __name__ == "__main__":
         overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
         
     # Now, remove A1-A4 until later
-    all = clubs.keys()
+    all = list(clubs.keys())
     diva = {}
     for c in all:
         if clubs[c].division == 'A' and clubs[c].area in ('1', '2', '3', '4'):
@@ -224,7 +225,7 @@ if __name__ == "__main__":
     while away:
         divnum += 1
         c = clubs[away.pop(0)]
-        print c.clubname
+        print(c.clubname)
         c.distances.sort(key=lambda l:l[1])
         div = {c.clubnumber:c}   # Start with THIS club
         while len(div) < divsizes[divnum] and len(c.distances) > 0:
@@ -232,7 +233,7 @@ if __name__ == "__main__":
             if cnum in away:
                 #print "club %s is %s away from %s" % (clubs[cnum].clubname, dist, c.clubname)
                 if (dist > 50):
-                    print "too far!"
+                    print("too far!")
                     break  # and we're done with this one
                 div[cnum] = clubs[cnum]
                 del away[away.index(cnum)]
@@ -249,11 +250,11 @@ if __name__ == "__main__":
     numdivs += 1    
     
     # Now, do clustering for each division.  We want to evenly divide Green, Yellow, and Red clubs.
-    for divnum in xrange(numdivs):
+    for divnum in range(numdivs):
         thisdiv = divs[divnum]
         divname = divletters[divnum+1]
         if divname == 'A':
-            print 'doing A'
+            print('doing A')
             numareas = 4
         else:
             numareas = 5
@@ -266,7 +267,7 @@ if __name__ == "__main__":
         colors = {}
         for color in colornames:
             colors[color] = 0
-        for c in thisdiv.values():
+        for c in list(thisdiv.values()):
             colors[c.color] += 1
         
         # Compute area sizes as evenly as possible
@@ -281,7 +282,7 @@ if __name__ == "__main__":
         
         # Figure out what each area can take
         areas = []
-        for i in xrange(numareas):
+        for i in range(numareas):
             areas.append(Area(divname, i, areasizes[i], green.par, yellow.par, red.par))
             
         # Now, work through the colors and allocate them
@@ -304,14 +305,14 @@ if __name__ == "__main__":
 
         
         
-        print len(away)
+        print(len(away))
         
         # Now, we start clustering.  
         while away:
             areanum += 1
             area = areas[areanum]
             c = clubs[away.pop(0)]
-            print c.clubname
+            print(c.clubname)
             c.distances.sort(key=lambda l:l[1])
             distances = {}
             for name in colornames:
@@ -327,25 +328,25 @@ if __name__ == "__main__":
                         del away[away.index(cnum)]  # And remove it from the candidate list
                      
                 
-            print '%d clubs assigned to area %d; %d left to look at.' % (len(area.clubs), areanum, len(away))
+            print('%d clubs assigned to area %d; %d left to look at.' % (len(area.clubs), areanum, len(away)))
             
         # Now, renumber the areas from South to North.
         southmost = {}
-        for i in xrange(len(areas)):
+        for i in range(len(areas)):
             area = areas[i]
             southmost[i] = min(clubs[club].latitude for club in area.clubs)
-        print southmost
+        print(southmost)
         southmost = sorted(southmost, key=southmost.__getitem__)
-        print southmost
-        for i in xrange(len(southmost)):
-            print 'Processing area %d, which becomes %d' % (southmost[i], i)
+        print(southmost)
+        for i in range(len(southmost)):
+            print('Processing area %d, which becomes %d' % (southmost[i], i))
             area = areas[southmost[i]]
             area.number = i
             for club in area.clubs:
                 c = clubs[club]
-                print c.clubname, 'was in', c.newarea, 'moving to %s%d' % (c.newarea[0], i+1)
+                print(c.clubname, 'was in', c.newarea, 'moving to %s%d' % (c.newarea[0], i+1))
                 clubs[club].newarea = '%s%d' % (clubs[club].newarea[0], i+1)
-                print c.clubname, 'moved to', c.newarea
+                print(c.clubname, 'moved to', c.newarea)
         
         
     
@@ -353,7 +354,7 @@ if __name__ == "__main__":
     outfile = open('grouped.csv', 'wb')
     writer = csv.writer(outfile)
     writer.writerow(myclub.outfields)
-    for i in xrange(len(divs)):
+    for i in range(len(divs)):
         divnum = i+1
         for cnum in divs[i]:
             c = clubs[cnum]

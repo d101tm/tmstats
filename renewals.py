@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """ Generate reports for renewal programs (March Madness, Stellar September) """
     
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     else:
         parms.name = len(parms.pct) * ('',)
 
-    levels = [level(parms.pct[i], parms.earns[i], parms.name[i]) for i in xrange(len(parms.pct))]
+    levels = [level(parms.pct[i], parms.earns[i], parms.name[i]) for i in range(len(parms.pct))]
     levels.sort(key=lambda l:l.pct, reverse=True)
 
     # Conditionally resolve unspecified parameters

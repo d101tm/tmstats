@@ -7,7 +7,7 @@ from simpleclub import Club
 
 def normalizespaces(s):
     # Removes extra spaces; turns non-breaking spaces into spaces
-    return re.sub(r'\s+',' ',s.strip().replace(u'\xa0',' '))
+    return re.sub(r'\s+',' ',s.strip().replace('\xa0',' '))
 
 def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[], donotlog=[], createnewclubs=False):
     """ Updates 'clubs' with information from the override spreadsheet
@@ -58,7 +58,7 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
             clubs[clubnumber] = club
                 
             if log:
-                print("%8s/%s *** New Club ***" % (club.clubnumber, club.clubname))
+                print(("%8s/%s *** New Club ***" % (club.clubnumber, club.clubname)))
 
         if clubnumber in clubs:
             club = clubs[clubnumber]
@@ -70,7 +70,7 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
             for key in keys:
                 if key not in ignorefields and row[key]:
                     if log and key not in donotlog and club.__dict__[key] != row[key]:
-                        print("%8s/%s: Updating '%s' from '%s' to '%s'" % (club.clubnumber, club.clubname, key, club.__dict__[key], row[key]))
+                        print(("%8s/%s: Updating '%s' from '%s' to '%s'" % (club.clubnumber, club.clubname, key, club.__dict__[key], row[key])))
                     club.__dict__[key] = row[key]
                     
                     
@@ -96,7 +96,7 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
                     
 
 if __name__ == '__main__':
-    #!/usr/bin/env python
+    #!/usr/bin/env python3
     """ If called as a main program, prints the current overrides """
 
     import tmutil, sys
@@ -116,5 +116,5 @@ if __name__ == '__main__':
     conn = globals.conn
     
     clubs = Club.getClubsOn(curs)
-    print('Using %s as the override spreadsheet' % parms.mapoverride)
+    print(('Using %s as the override spreadsheet' % parms.mapoverride))
     overrideClubPositions(clubs, parms.mapoverride, parms.googlesheetsapikey, log=True)

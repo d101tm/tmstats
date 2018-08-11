@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Set up for TMSTATS programs:
 
     1)  Parse arguments (via tmparse)
@@ -11,6 +11,7 @@
 """
 import dbconn, sys, os
 from datetime import date
+import imp
 
 class Singleton(object):
     def __new__(type, *args, **kwargs):
@@ -35,7 +36,7 @@ class tmglobals(Singleton):
             if lastpart.lower() != 'data':
                 os.chdir('data')   # Fails if there is no data directory; that is intentional.
         if kwargs.get('defaultencoding', ''):
-            reload(sys).setdefaultencoding(defaultencoding)
+            imp.reload(sys).setdefaultencoding(defaultencoding)
         if kwargs.get('parse', True):
             self.parms.parse()
         if kwargs.get('connect', True):

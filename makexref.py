@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from __future__ import print_function
+
 import xlrd
 import os,sys
 
@@ -71,7 +71,7 @@ colnames = sheet.row_values(0)
 # Create paths
 namecol = colnames.index('Name')
 ordercol = colnames.index('Order')
-pathcols = range(namecol+1,sheet.ncols)
+pathcols = list(range(namecol+1,sheet.ncols))
 
 
 # Create projects and assign to paths

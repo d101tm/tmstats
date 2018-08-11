@@ -1,14 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Build the Areas and Divisions page for the website """
 
 
 
 import dbconn, tmparms, xlrd, csv
-import os, sys, urllib2
+import os, sys, urllib.request, urllib.error, urllib.parse
 from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs, gotodatadir
 from overridepositions import overrideClubPositions
 from makemap import Bounds, setClubCoordinatesFromGEO
+from gsheet import GSheet
 
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -45,14 +46,14 @@ class Division():
         res.append('<table class="divisiontable">')
 
         if self.director:
-            res.append(u'%s' % self.director.html())
+            res.append('%s' % self.director.html())
         else:
             res.append('<tr><td align="left" colspan="2">Division %s Director Position is Vacant</td></tr>' % self.name.upper())
         for a in sorted(self.areas):
             res.append('  %s' % self.areas[a].html())
         res.append('</table>')
         res.append('[/et_pb_tab]')
-        return u'\n'.join(res)
+        return '\n'.join(res)
 
 class Area():
     areas = {}
@@ -101,13 +102,13 @@ class Area():
         for c in sorted(self.clubs, key=lambda x:x.clubnumber.zfill(8)):
             res.append('<tr><td align="right">%s</td><td><a href="%s" target="_blank">%s</a></td></tr>' % (c.clubnumber, c.getLink(), c.clubname.replace('&','&amp;')))
 
-        return u'\n'.join(res)
+        return '\n'.join(res)
 
         
 class Director():
     def __init__(self, row):
-        for f in row:
-            self.__dict__[f.lower().split()[0]] = row[f]
+        for f in row.dict:
+            self.__dict__[f.lower().split()[0]] = row.dict[f]
         part = self.title.split()
         if part[0] == 'Division':
             division = part[1]
@@ -139,7 +140,7 @@ class Director():
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument('--outfile', dest='outfile', default='areasanddivisions.html')
 parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
-parms.add_argument('--officers', dest='officers', help='URL of the CSV export form of a Google Spreadsheet with Area/Division Directors')
+parms.add_argument('--officers', dest='officers', help='URL of a Google Spreadsheet with Area/Division Directors')
 parms.add_argument('--mapdir', default=None, help='Directory to use for the area map files.')
 parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
 parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
@@ -149,6 +150,7 @@ globals.setup(parms)
 conn = globals.conn
 curs = globals.curs
 
+print(parms.officers)
     
 # Get all clubs
 clubs = Club.getClubsOn(curs)
@@ -162,12 +164,12 @@ clubs = removeSuspendedClubs(clubs, curs)
 
 
 # Remove clubs from outside our District
-for c in clubs.keys():
+for c in list(clubs.keys()):
     try:
         if int(clubs[c].district) != parms.district:
             del clubs[c]
     except ValueError:
-        print(clubs[c])
+        print((clubs[c]))
         
 # Add current coordinates and remove clubs without coordinates (unless there's a new alignment)
 setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=not parms.newAlignment)
@@ -187,26 +189,24 @@ for c in sorted(clubs):
 
 
 # OK, now we have the club info.  Let's get the Area Director/Division Director information.
-officers = urllib2.urlopen(parms.officers)
-reader = csv.DictReader(officers)
-for row in reader:
-    for k in row:
-        row[k] = ' '.join(unicode(row[k],'utf-8').split()).strip()
-    if row['Title'] and row['First']:
+for row in GSheet(parms.officers, apikey=parms.googlesheetsapikey):
+    for k in row.fieldnames:
+        setattr(row, k,' '.join(str(getattr(row,k))).split())
+    if row.title and row.first:
         Director(row)
         
 
 
 
 # And now we go through the Divisions and Areas and build the output.
-outfile = open(parms.outfile, 'wb')
+outfile = open(parms.outfile, 'w')
 outfile.write("<p><b>Click on a Division to see the clubs and Areas it contains.</b></p>")
 outfile.write("""[et_pb_tabs admin_label="Tabs" use_border_color="off" border_color="#ffffff" border_style="solid" tab_font_size="18"]
 """)
 for d in sorted(Division.divisions):
     if d.lower() != 'new':
         div = Division.divisions[d]
-        outfile.write(div.html().encode('ascii','xmlcharrefreplace'))
+        outfile.write(div.html())
         outfile.write('\n')
 
 outfile.write("""[/et_pb_tabs]

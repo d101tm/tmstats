@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Create the proposed relocation report"""
 
 import tmutil, sys, os, csv, re
@@ -88,7 +88,7 @@ def inform(*args, **kwargs):
     file = kwargs.get('file', sys.stderr)
     
     if parms.quiet < suppress:
-        print >> file, ' '.join(args)
+        print(' '.join(args), file=file)
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
@@ -286,7 +286,7 @@ if __name__ == "__main__":
             club = clubs[clubnum]
             club.addvalues(info, perffields)
         except KeyError:
-            print 'Club %s (%d) not in current CLUBS table, patching in.' % (info[1], info[0])
+            print('Club %s (%d) not in current CLUBS table, patching in.' % (info[1], info[0]))
             clubs[clubnum] = Club(info, perffields)
             clubs[clubnum].charterdate = ''
             
@@ -309,7 +309,7 @@ if __name__ == "__main__":
         try:
             club = clubs[club.stringify(row['clubnumber'])]
         except KeyError:
-            print 'club %s (%s) is new.' % (row['clubname'], row['clubnumber'])
+            print('club %s (%s) is new.' % (row['clubname'], row['clubnumber']))
             clubvalues = [row['clubnumber'], row['clubname'], ' ', ' ', parms.district, 0, 0, 'Prospective', '']
             clubfields = ['clubnumber', 'clubname', 'area', 'division', 'district', 
                     'activemembers', 'goalsmet', 'eligibility', 'color']
@@ -325,7 +325,7 @@ if __name__ == "__main__":
     newareas = {}
     divs = {}
 
-    for c in clubs.values():
+    for c in list(clubs.values()):
         old = c.division + c.area
         try:
             new = c.newdivision + c.newarea
@@ -352,7 +352,7 @@ if __name__ == "__main__":
             else:
                 gonefrom[old].append(c)
         except AttributeError:
-            print 'no eligibility for', c.clubname
+            print('no eligibility for', c.clubname)
 
 
     for div in sorted(divs.keys()):

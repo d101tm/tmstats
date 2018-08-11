@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Make Contest Page:
 
     Use the information from The Events Calendar to create a page with
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     
     
     events = {}
-    for p in posts.values():
+    for p in list(posts.values()):
         id = p['post_id']
         m = re.match(title_pattern, post_titles[id])
         if m:
@@ -187,10 +187,10 @@ if __name__ == "__main__":
                 if this.include:
                     events[area] = this
                     if not events[area].EventURL:
-                        print 'Area %s does not have a URL' % area
+                        print('Area %s does not have a URL' % area)
             
         else:
-            print p['post_id'], 'does not have an Area'
+            print(p['post_id'], 'does not have an Area')
             continue
             
 

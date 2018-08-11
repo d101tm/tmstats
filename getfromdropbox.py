@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 """ Get the latest file with specified extensions from a Dropbox directory """
 
 
@@ -96,8 +96,8 @@ def getDropboxFile(token, directory, extensions, cursor=None):
                         latesttime = f.server_modified
                         latestfile = f.path_lower
                         fileid = f.id
-                except AttributeError, e:
-                    print e
+                except AttributeError as e:
+                    print(e)
                     pass
 
     output.cursor = cursor

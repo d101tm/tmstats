@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Make Training Page:
 
     Use the information from The Events Calendar to create a page with
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     
     
     events = []
-    for p in posts.values():
+    for p in list(posts.values()):
         id = p['post_id']
         this = Event(post_titles[id], post_names[id], p, venues, parms)
         if this.include:

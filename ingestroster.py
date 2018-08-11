@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Ingest the roster into the database.  Completely replaces the
     roster table every time. """
 
 # This is a standard skeleton to use in creating a new program in the TMSTATS suite.
-from __future__ import print_function
+
 
 import dbconn, tmutil, sys, os, xlrd, re, csv, codecs
 from datetime import datetime, date
@@ -43,7 +43,7 @@ class UTF8Recoder:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         return self.reader.next().encode("utf-8")
 
 
@@ -58,9 +58,9 @@ class UnicodeReader:
         f = UTF8Recoder(f, encoding)
         self.reader = csv.reader(f, dialect=dialect, **kwds)
 
-    def next(self):
-        row = self.reader.next()
-        return [unicode(s, "utf-8") for s in row]
+    def __next__(self):
+        row = next(self.reader)
+        return [str(s, "utf-8") for s in row]
 
     def __iter__(self):
         return self
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         ilastname = fieldnames.index('lastname')
     
         # And get the values
-        for row in xrange(1, sheet.nrows):
+        for row in range(1, sheet.nrows):
             values.append(sheet.row_values(row))
             # And add the fullname
             values[-1].append(('%s, %s %s' % (row[ilastname],row[ifirstname],row[imiddle])).strip())
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         encoding = 'utf-8'
         tester = UTF8Recoder(csvfile, encoding=encoding)
         try:
-            while tester.next():
+            while next(tester):
                 pass
         except StopIteration:
             pass
