@@ -54,13 +54,13 @@ if __name__ == "__main__":
     conn = globals.conn
 
     # Start by getting alignment from the DEC file
-    reader = csv.DictReader(open(parms.decfile, 'rbu'))
+    reader = csv.DictReader(open(parms.decfile, 'r'))
     dec = {}
     for row in reader:
         dec[row['clubnumber']] = row['newarea']
     
     # The only information we need is in the alignment file
-    reader = csv.DictReader(open(parms.infile, 'rbu'))
+    reader = csv.DictReader(open(parms.infile, 'r'))
     for row in reader:
         myclub(row, dec)
 
