@@ -6,6 +6,7 @@
 import urllib.request, urllib.parse, urllib.error, tmparms, os, sys
 from tmutil import cleandate
 from datetime import datetime, timedelta, date
+import requests
 
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -28,9 +29,7 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
-    flo = urllib.request.urlopen(url)
-    clubinfo = flo.readlines()
-    # clubinfo = urllib.urlopen(url).read().split('\n')
+    clubinfo = requests.get(url).text
     if len(clubinfo) < 10:
         # We didn't get anything of value
         print("Nothing fetched for", url)
@@ -81,6 +80,8 @@ def dolatest(district, altdistrict, finals, tmyearpiece):
                 url = makeurl(urlpart, altdistrict, monthend=monthend, tmyearpiece=tmyearpiece)
                 data = getresponse(url)
             if data:
+                while not data[-1].strip():
+                    data = data[:-1]
                 thedate = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d').date()  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
                 with open(makefilename(filepart, thedate), 'w') as f:
                     f.write(''.join(data).replace('\r',''))
