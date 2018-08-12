@@ -254,11 +254,6 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
         for i in suppress:
             del row[i]
 
-        # Convert to unicode.  Toastmasters usually uses UTF-8 but occasionally uses Windows CP1252 on the wire.
-        try:
-            row = [str(t.strip(), "utf8") for t in row]
-        except UnicodeDecodeError:
-            row = [str(t.strip(), "CP1252") for t in row]
 
         if len(row) > expectedheaderscount:
             # Special case...Millbrae somehow snuck two club websites in!
@@ -669,7 +664,7 @@ def doDailyClubPerformance(infile, conn, cdate, monthstart):
             row.append("Green")
 
         # Compute Goal 9 (training):
-        if int(row[otr1col]) >= 4 and int(row[otr2col] >= 4):
+        if int(row[otr1col]) >= 4 and int(row[otr2col]) >= 4:
             row.append(1)
         else:
             row.append(0)
