@@ -299,7 +299,7 @@ if __name__ == "__main__":
           
 
     # And read in the alignment.  
-    reader = csv.DictReader(open(parms.infile, 'rbu'))
+    reader = csv.DictReader(open(parms.infile, 'r'))
     alignfields = ['newarea', 'newdivision', 'likelytoclose', 'meetingday', 'meetingtime', 'place', 'address', 'city',
             'state', 'zip', 'latitude', 'longitude']
     for row in reader:
