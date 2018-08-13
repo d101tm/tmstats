@@ -2,7 +2,7 @@
 
 # Get Educational Awards
 
-import dbconn, tmutil, sys, os, urllib.request, urllib.parse, urllib.error
+import dbconn, tmutil, sys, os, requests
 from bs4 import BeautifulSoup
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Handle parameters
     import tmparms
     parms = tmparms.tmparms()
-    parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--district', type=int)
     
     # Do global setup
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     
     # Get the data from Toastmasters
     url = "http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%d&s=Club&sortOrder=0" % parms.district
-    data = ''.join(urllib.request.urlopen(url).readlines())
+    data = requests.get(url).text
     # Parse it
     soup = BeautifulSoup(data, 'html.parser')
 
