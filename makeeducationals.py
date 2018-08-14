@@ -42,22 +42,22 @@ class Award:
 
     def show(self):
         if self.level == 0:
-            return '<tr class="awardline"><td class="awardmember" width="48%%">'+ str(self.membername) +'</td><td class="awardclub" width="48%">' + str(self.clubname) + '</td></tr>' 
+            return '<tr class="awardline"><td class="awardmember" width="48%%">'+ str(self.membername) +'</td><td class="awardclub" width="48%">' + str(self.clubname) + '</td></tr>\n' 
         else:
-            return '<tr class="awardline"><td class="awardmember" width="35%%">'+ str(self.membername) +'</td><td class="awardclub" width="35%">' + str(self.clubname) + '</td><td class="pathname" width="25%">' + Awardinfo.paths[self.award] + '</td></tr>' 
+            return '<tr class="awardline"><td class="awardmember" width="35%%">'+ str(self.membername) +'</td><td class="awardclub" width="35%">' + str(self.clubname) + '</td><td class="pathname" width="25%">' + Awardinfo.paths[self.award] + '</td></tr>\n' 
 
 def printawards(awards, knownawards, k):
     if k in awards:
         if isinstance(k, int):
-            print('[et_pb_toggle title="Pathways Level %d (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (k, len(awards[k])))
+            outfile.write('[et_pb_toggle title="Pathways Level %d (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]\n' % (k, len(awards[k])))
         else:
-            print('[et_pb_toggle title="%s (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]' % (knownawards[k], len(awards[k])))
-        print('<table>')
-        #print '<tr><td class="awardname" colspan="2">%s</td></tr>' % knownawards[k]
+            outfile.write('[et_pb_toggle title="%s (%d)" open="off" use_border_color="off" border_color="#ffffff" border_style="solid" open_toggle_text_color="#000000" closed_toggle_text_color="#000001"]\n' % (knownawards[k], len(awards[k])))
+        outfile.write('<table>\n')
+        #print '<tr><td class="awardname" colspan="2">%s</td></tr>\n' % knownawards[k]
         for each in sorted(awards[k], key=lambda x:x.key):
-            print(each.show())
-        print('</table>')
-        print('[/et_pb_toggle]')
+            outfile.write(each.show())
+        outfile.write('</table>\n')
+        outfile.write('[/et_pb_toggle]\n')
 
 
 def makeCongratulations(count, district, timing, parms):
@@ -125,9 +125,7 @@ if __name__ == "__main__":
     
 
     # Your main program begins here.
-    # Close stdout and reassign it to the output file
-    sys.stdout.close()
-    sys.stdout = codecs.open(parms.prefix + '.shtml', 'w', 'utf-8')
+    outfile = open(parms.prefix + '.shtml', 'w')
 
     clauses = []
     # Figure out the timeframe for the queries.
@@ -166,17 +164,17 @@ if __name__ == "__main__":
 
 
 
-    print('<h3>Member Educationals %s</h3>' % timestamp)
-    print('<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals %s.  Will we see YOUR name here next?</p>' % timestamp)
-    print('<p>Achievements not shown here can be found on the Toastmasters International <a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>' % (parms.district))
-    print('<p>Click on an award title to show the names of Toastmasters who have earned that award.</p>')
+    outfile.write('<h3>Member Educationals %s</h3>\n' % timestamp)
+    outfile.write('<p>Congratulations to the following Toastmasters for reaching one or more of their educational goals %s.  Will we see YOUR name here next?</p>\n' % timestamp)
+    outfile.write('<p>Achievements not shown here can be found on the Toastmasters International <a href="http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Date&sortOrder=1" target="_new">Educational Achievements Report</a>.</p>\n' % (parms.district))
+    outfile.write('<p>Click on an award title to show the names of Toastmasters who have earned that award.</p>\n')
 
     # And now print the awards themselves.
 
-    print('<div class="awardstable">')
+    outfile.write('<div class="awardstable">\n')
     for k in awardorder:
         printawards(awards, knownawards, k)
-    print('</div>')
+    outfile.write('</div>\n')
 
 
     cmd = makeCongratulations(count, parms.district, timestamp, parms)
