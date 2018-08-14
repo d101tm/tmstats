@@ -209,7 +209,7 @@ if __name__ == "__main__":
     
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.parser.add_argument("--mailYML", dest='mailyml', default="awardmail.yml")
     parms.parser.add_argument("--mailserver", dest='mailserver')
     parms.parser.add_argument("--mailpw", dest='mailpw')

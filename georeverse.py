@@ -60,7 +60,7 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 if __name__ == "__main__":
 
     parms = tmparms.tmparms()
-    parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--quiet', '-q', action='count', default=0)
     
     # Do global setup
     globals = globals.setup(parms)

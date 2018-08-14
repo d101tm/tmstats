@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.parser.add_argument("--fromend", dest='fromend', type=int, default=12)
     parms.parser.add_argument("--toend", dest='toend', type=int, default=2)
     parms.parser.add_argument("--outfile", dest='outfile', type=argparse.FileType('w'), default='punch.html')

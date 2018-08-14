@@ -37,7 +37,7 @@ if __name__ == "__main__":
     
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--quiet', '-q', action='count')
+    parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--outfile', default='d101align.csv')
     parms.add_argument('--outdir', default='.', help='Directory to put the output file in')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
