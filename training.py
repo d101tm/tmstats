@@ -149,7 +149,6 @@ if __name__ == "__main__":
     try:
         report = open(parms.report, 'r').read()
     except UnicodeDecodeError:
-        print('Using iso8859-1')
         report = open(parms.report, 'r', encoding='iso8859-1').read()
     
  
