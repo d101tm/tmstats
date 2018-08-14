@@ -118,7 +118,10 @@ if [[ "$dorun" = "yes" ]] ; then
         if [[ "$month" < "08" ]] ; then
             year=$(( $year - 1 ))
         fi
-        ../makeeducationals.py --since "$year-07-01"
+        # Python 3.7 passes a default locale to subprocesses that the
+        # 'convert' command doesn't like, so override it with
+        # LC_ALL=C in the invocation of makeeducationals.
+        LC_ALL=C ../makeeducationals.py --since "$year-07-01"
         rc=$?
         echo "makeeducationals rc = $rc"
         if [[ "$rc" == 0 ]] ; then

@@ -6,14 +6,14 @@ then
     export TZ=PST8PDT
     #export PYTHONPATH="$HOME/python:$PYTHONPATH"
 
-    # Ensure we're in the right virtual environment
-    export VIRTUAL_ENV_DISABLE_PROMPT=1
+    # Ensure we're in the right environment
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/lib
-    [[ -e ~/python2.7.11/bin ]] && . ~/python2.7.11/bin/activate
+    # Put Python 3.7 in the front
+    export PATH="$HOME/opt/python-3.7.0/bin:$PATH"
 
 
     # Even if we're running in a weird shell, let's use THIS directory as the current directory
-    export SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+    export SCRIPTPATH="$( cd "$(dirname -- "$0")" ; pwd -P )"
     export data="$SCRIPTPATH/data"
 
     export STATS_HOME="$SCRIPTPATH"
