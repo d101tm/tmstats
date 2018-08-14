@@ -13,7 +13,7 @@ from awardinfo import Awardinfo as info
 import tmglobals
 globals = tmglobals.tmglobals()
 
-import collections
+from collections.abc import Iterable
 
 
 def inform(*args, **kwargs):
@@ -40,7 +40,7 @@ paras = ['The communication and leadership skills you have gained will be of lif
 def flatten(l):
     ### From http://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists-in-python
     for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el, str):
+        if isinstance(el, Iterable) and not isinstance(el, str):
             for sub in flatten(el):
                 yield sub
         else:
