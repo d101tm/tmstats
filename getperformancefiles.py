@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
-""" This program gets all available performance reports from Toastmasters 
-    for the current Toastmasters year.  Use it to catch up when starting
-    to track district statistics. """
+""" Get performance information from Toastmasters and write them to files.
 
-import urllib.request, urllib.parse, urllib.error, tmparms, os, sys
+    Unless invoked with --startdate, only gets the latest available information,
+    including club information (unles --skip-clubs is specified).
+
+    If invoked with --startdate, gets information and writes files for that date 
+    (and, if --enddate is specified, for all available dates through --enddate).
+    Does not get club information because it's not available for past dates.
+
+"""
+
+import tmparms, os, sys
 from tmutil import cleandate
 from datetime import datetime, timedelta, date
 import requests
@@ -11,8 +18,12 @@ import requests
 import tmglobals
 globals = tmglobals.tmglobals()
     
+# Map filenames to report names from Toastmasters
+reportnames = {'clubperf':'clubperformance',
+               'areaperf':'divisionperformance',
+               'distperf':'districtperformance'}
         
-def monthend(m, y):
+def getmonthend(m, y):
     lasts = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
     if (m == 2) and (0 == y % 4):
@@ -24,12 +35,19 @@ def monthend(m, y):
     
 
 def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
-    baseurl = "http://dashboards.toastmasters.org/export.aspx?type=CSV&report=" + report + "~" + district
-    return baseurl + "~" + monthend + "~" + asof + "~" + tmyearpiece
+    url = "http://dashboards.toastmasters.org/"
+    if tmyearpiece:
+        url += tmyearpiece 
+    url += "/export.aspx?type=CSV&report=" + reportnames[report] + "~" + district
+    try:
+        asof = asof.strftime('%m/%d/%Y')
+    except AttributeError:
+        pass
+    return url + "~" + monthend + "~" + asof + "~" + tmyearpiece
 
         
 def getresponse(url):
-    clubinfo = requests.get(url).text.split('\n')
+    clubinfo = requests.get(url).text.replace('\r','').split('\n')
     if len(clubinfo) < 10:
         # We didn't get anything of value
         print("Nothing fetched for", url)
@@ -41,163 +59,143 @@ def getresponse(url):
     return clubinfo
         
         
-def getreportfromWHQ(report, district, altdistrict, tmyearpiece, month, thedate):
-    url = makeurl(report, district, tmyearpiece, monthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
+def getreportfromWHQ(report, district, tmyearpiece, month, thedate):
+    url = makeurl(report, district, tmyearpiece, getmonthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
     resp = getresponse(url)
-    if not resp:
-        if altdistrict:
-            url = makeurl(report, altdistrict, tmyearpiece, monthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
-            print('Trying', url)
-            resp = getresponse(url)
     if not resp:
         print("No valid response received")
     return resp
     
-
+def gettmyearfordate(d):
+    if d.month >= 7:
+        tmyearpiece = "%d-%d" % (d.year, d.year+1)
+    else:
+        tmyearpiece = "%d-%d" % (d.year-1, d.year)
+    return tmyearpiece
+        
+        
+def writereportfile(data, report, reportdate, monthend, tmyearpiece):
+    if data:
+        with open(makefilename(report, reportdate), 'w') as f:
+            f.write('\n'.join(data))
+            print('Wrote %s for %s (month: %s, year: %s)' % (report, reportdate, monthend, tmyearpiece))
+    else:
+        print('No data for %s for %s (month %s, year: %s)' % (report, reportdate, monthend, tmyearpiece))
 
 def makefilename(reportname, thedate):
     return '%s.%s.csv' % (reportname, thedate.strftime('%Y-%m-%d'))
     
-def writedailyreports(data, district, altdistrict, tmyearpiece, month, thedate):
-    print('writing Month of %s reports for %s' % ('/'.join(['%02d' % m for m in month]), thedate.strftime('%Y-%m-%d')))
-    with open(makefilename('clubperf', thedate), 'w') as f:
-        f.write(''.join(data).replace('\r',''))
-    data = getreportfromWHQ('divisionperformance', district, altdistrict, tmyearpiece, month, thedate)
-    with open(makefilename('areaperf', thedate), 'w') as f:
-        f.write(''.join(data).replace('\r',''))
-    data = getreportfromWHQ('districtperformance', district, altdistrict, tmyearpiece, month, thedate)
-    with open(makefilename('distperf', thedate), 'w') as f:
-        f.write(''.join(data).replace('\r',''))
+
+def getreport(report, district, monthend, tmyearpiece, asof=""):
+    """ Returns (data, reportdate, reportmonthend) tuple from report """
+    reportdate = None
+    reportmonthend = None
+    url = makeurl(report, district, monthend=monthend, tmyearpiece=tmyearpiece, asof=asof)
+    data = getresponse(url)
+
+    if data:
+        while not data[-1].strip():
+            data = data[:-1]
+        dateline = data[-1].replace(',','')
+        reportdate = datetime.strptime(cleandate(dateline.split()[-1]), '%Y-%m-%d').date()  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
+
+        # Figure out the last day of the month for which the report applies
+        reportmonth = datetime.strptime(dateline.split()[2], "%b").month  # Extract the month of the report
+        
+        if reportmonth == reportdate.month:
+            reportmonthend = getmonthend(reportmonth, reportdate.year) 
+        else:
+            reportmonthend = getmonthend(reportmonth, reportdate.year if reportmonth != 12 else reportdate.year-1)
+            
+    return (data, reportdate, reportmonthend)
     
-def dolatest(district, altdistrict, finals, tmyearpiece):
-    for monthend in finals:
-        for (urlpart, filepart) in (('clubperformance', 'clubperf'), 
-                                    ('divisionperformance', 'areaperf'),
-                                    ('districtperformance', 'distperf')):
-            url = makeurl(urlpart, district, monthend=monthend, tmyearpiece=tmyearpiece)
-            data = getresponse(url)
-            if not data and altdistrict:
-                url = makeurl(urlpart, altdistrict, monthend=monthend, tmyearpiece=tmyearpiece)
-                data = getresponse(url)
-            if data:
-                while not data[-1].strip():
-                    data = data[:-1]
-                thedate = datetime.strptime(cleandate(data[-1].split()[-1]), '%Y-%m-%d').date()  # "Month of Jun, as of 07/02/2015" => '2015-07-02'
-                with open(makefilename(filepart, thedate), 'w') as f:
-                    f.write(''.join(data).replace('\r',''))
-                print('Fetched %s for %s (month: %s, year: %s)' % (filepart, thedate, monthend, tmyearpiece))
+def doreportsfor(district, asof):
+    """ Get and write files for the specified date (if available) """
+    # Try for the month in question
+    tmyearpiece = gettmyearfordate(asof)
+    monthend = getmonthend(asof.month, asof.year)
+    (data, reportdate, reportmonthend) = getreport('clubperf', district, monthend=monthend, tmyearpiece=tmyearpiece, asof=asof)
+    if not data:
+        # Need to try the previous month
+        if asof.month == 1:
+            monthend = getmonthend(12, asof.year - 1)
+        else:
+            monthend = getmonthend(asof.month -1, asof.year)
+        (data, reportdate, reportmonthend) = getreport('clubperf', district, monthend=monthend, tmyearpiece=tmyearpiece, asof=asof)
+        
+        if not data:
+            # Need to try for June data from the previous TM year (can't be any farther back)
+            monthend = getmonthend(6, asof.year)
+            tmyearpiece = gettmyearfordate(date(asof.year, 6, 30))
+            (data, reportdate, reportmonthend) = getreport('clubperf', district, monthend=monthend, tmyearpiece=tmyearpiece, asof=asof)
+            
+    if not data:
+        print("Data not available for ", asof.strftime("%Y-%m-%d"))
+    else:
+        writereportfile(data, 'clubperf', reportdate, monthend, tmyearpiece)
+        # and now do the other two reports
+        (data, reportdate, monthend) = getreport('areaperf', district, monthend, tmyearpiece, asof)
+        writereportfile(data, 'areaperf', reportdate, monthend, tmyearpiece)
+        (data, reportdate, monthend) = getreport('distperf', district, monthend, tmyearpiece, asof)
+        writereportfile(data, 'distperf', reportdate, monthend, tmyearpiece)
+    
+    
+def dolatest(district):
+    """ Get and write files for the latest available from WHQ """
+    monthend = ''
+    tmyearpiece = ''
+    # Note:  We can't fetch areaperf first because we need to give WHQ a valid 'monthend' to get
+    #        back club suspend/charter dates in that report.  
+    for report in ('clubperf', 'areaperf', 'distperf'):
+            (data, reportdate, monthend) = getreport(report, district, monthend, tmyearpiece)
+            if monthend and not tmyearpiece:
+                repmonth = datetime.strptime(monthend, "%m/%d/%Y")
+                tmyearpiece = gettmyearfordate(repmonth)
+            writereportfile(data, report, reportdate, monthend, tmyearpiece)
+
 
 if __name__ == "__main__":            
-    parms = tmparms.tmparms()
+    parms = tmparms.tmparms(description=__doc__)
     parms.add_argument('--district', type=int)
-    parms.add_argument('--altdistrict', type=int)
     parms.add_argument('--startdate', default=None)
-    parms.add_argument('--enddate', default='today')
+    parms.add_argument('--enddate', default=None)
     parms.add_argument('--skipclubs', action='store_true',
      help='Do not get latest club information.')
     
     globals.setup(parms, connect=False)
 
     district = "%0.2d" % parms.district
-    clubdistrict = district   # Unless we have a problem
-    try:
-        os.remove('altdistrict.txt')
-    except OSError:
-        pass
-    # Handle the case of a district being reformed
-    if parms.altdistrict:
-        altdistrict = "%0.2d" % parms.altdistrict
-        url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % district
-        if not getresponse(url):
-            sys.stderr.write('No clubs found for District %s; using %s instead.' % (district, altdistrict))
-            clubdistrict = altdistrict
-            with open('altdistrict.txt', 'w') as f:
-                f.write(altdistrict + '\n')
+
+   
+    if not parms.startdate:
+        # Get today's data
+        print("Getting the latest performance info")
+        dolatest(district)
+        
+        
+        # And get and write current club data unless told not to
+        # WHQ doesn't supply date information, but it's always as of yesterday
+        if not parms.skipclubs:
+            url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % district
+            clubdata = getresponse(url)
+            if clubdata:
+                with open(makefilename('clubs', date.today() - timedelta(1)), 'w') as f:
+                            f.write(''.join(clubdata).replace('\r',''))
+                print("Fetched clubs")
+            else:
+                print('No data received from %s' % url)
+
     else:
-        altdistrict = ''
-            
-    # Compute dates
-    enddate = datetime.strptime(cleandate(parms.enddate), '%Y-%m-%d').date()
-    if parms.startdate:
+        # We are getting historical data
         startdate = datetime.strptime(cleandate(parms.startdate), '%Y-%m-%d').date()
-        (lastmonth, last) = (False, False)
-    else:
-        # If nothing was specified, start with the latest date in the database.
-        import dbconn, latest
-        conn = dbconn.dbconn(parms.dbhost, parms.dbuser, parms.dbpass, parms.dbname)
-        (lastmonth, last) = latest.getlatest('clubperf', conn)
-        if last:
-            startdate = datetime.strptime(last, '%Y-%m-%d').date() + timedelta(1)
+        if parms.enddate:
+            enddate = datetime.strptime(cleandate(parms.enddate), '%Y-%m-%d').date()
         else:
-            startdate = False
-        conn.close()
-
-    # To avoid needless chatter, figure out today and yesterday:
-    today = date.today()
-    yesterday = today - timedelta(1)
-
-
-    # Figure out what months we need info for:
-    tmmonths = (7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6)
-    # If it's January-July, we care about the TM year which started the previous July 1; otherwise, it's this year.
-    if startdate:
-        if (startdate.month <= 7):
-            tmyear = startdate.year - 1 
-        else:
-            tmyear = startdate.year
-    else:
-        if (today.month <= 7):
-            startdate = datetime(today.year-1, 7, 1)
-        else:
-            startdate = datetime(today.year, 7, 1)
-        startdate = datetime.date(startdate)
-        tmyear = startdate.year
-
-    tmyearpiece = '%d-%d' % (tmyear, tmyear+1)  # For the URLs
-
-    # Now, compute the months we're going to look for
-
-    if (startdate.month == 7):
-        months = tmmonths
-    else:
-        months = []
-        for m in tmmonths:
-            months.append(m)
-            if m == startdate.month:
-                break
-    
-    # Don't look for data for months earlier than the most recent data in the database
-    if lastmonth:
-        monthnum = int(lastmonth[5:7])
-        try:
-            months = months[months.index(monthnum):]
-        except ValueError:
-            pass   # Cope with a missed month from WHQ
-    months = [(m, tmyear + (1 if m <= 6 else 0)) for m in months]
-    
-    # Save the final and next-to-final months for "dolatest" to cope with Toastmasters'
-    #  most recent change (not including Charter/Suspend info unless a month is given)
-    finals = [monthend(m[0],m[1]) for m in months[-2:]]
-    
-    
-
-    
-    # Get today's data
-    print("Getting the latest performance info")
-    dolatest(district, altdistrict, finals, tmyearpiece)
-        
-        
-    # And get and write current club data unless told not to
-    # WHQ doesn't supply date information, but it's always as of yesterday
-    if not parms.skipclubs:
-        url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % clubdistrict
-        clubdata = getresponse(url)
-        if clubdata:
-            with open(makefilename('clubs', yesterday), 'w') as f:
-                        f.write(''.join(clubdata).replace('\r',''))
-            print("Fetched clubs")
-        else:
-            print('No data received from %s' % url)
-
-    
+            enddate = startdate
+     
+        d = startdate
+        while d <= enddate:
+            
+            doreportsfor(district, d)
+            d += timedelta(1)
     
