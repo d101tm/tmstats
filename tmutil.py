@@ -279,7 +279,7 @@ def showclubswithvalues(clubs, valuename, outfile):
   <tbody>
 """)
 
-    incol1 = (1 + len(clubs)) / 2 # Number of items in the first column.
+    incol1 = (1 + len(clubs)) // 2 # Number of items in the first column.
     left = 0  # Start with the zero'th item
     for i in range(incol1):
         club = clubs[i]

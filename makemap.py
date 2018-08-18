@@ -220,7 +220,7 @@ def makemap(outfile, clubs, parms):
     i = 1
 
     # The positioning depends very much on the width of the map, so we have to write dynamic code.
-    half = (1 + len(boundsByDivision)) / 2
+    half = (1 + len(boundsByDivision)) // 2
 
     # If there are fewer than 6 divisions, try to stay on one line.
     if oneline:
