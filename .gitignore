@@ -1,4 +1,5 @@
 0 ToDo.txt
+*.swp
 *.csv
 *.yml
 *.pyc
