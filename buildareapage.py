@@ -150,7 +150,6 @@ globals.setup(parms)
 conn = globals.conn
 curs = globals.curs
 
-print(parms.officers)
     
 # Get all clubs
 clubs = Club.getClubsOn(curs)
