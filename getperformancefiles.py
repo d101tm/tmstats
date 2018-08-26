@@ -48,6 +48,9 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
         
 def getresponse(url):
     clubinfo = requests.get(url).text.replace('\r','').split('\n')
+    # Suppress any leading empty lines
+    while not clubinfo[0]:
+        del clubinfo[0]
     if len(clubinfo) < 10:
         # We didn't get anything of value
         print("Nothing fetched for", url)
