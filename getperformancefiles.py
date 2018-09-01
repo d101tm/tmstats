@@ -47,7 +47,11 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
-    clubinfo = requests.get(url).text.replace('\r','').split('\n')
+    try:
+        clubinfo = requests.get(url).text.replace('\r','').split('\n')
+    except requests.exceptions.SSLError:
+        clubinfo = requests.get(url,verify=False).text.replace('\r','').split('\n')
+
     # Suppress any leading empty lines
     while not clubinfo[0]:
         del clubinfo[0]
