@@ -47,6 +47,7 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
+    print(url)
     try:
         clubinfo = requests.get(url).text.replace('\r','').split('\n')
     except requests.exceptions.SSLError:
@@ -187,7 +188,7 @@ if __name__ == "__main__":
             clubdata = getresponse(url)
             if clubdata:
                 with open(makefilename('clubs', date.today() - timedelta(1)), 'w') as f:
-                            f.write(''.join(clubdata).replace('\r',''))
+                            f.write('\n'.join(clubdata).replace('\r',''))
                 print("Fetched clubs")
             else:
                 print('No data received from %s' % url)
