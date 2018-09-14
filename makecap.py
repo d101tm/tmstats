@@ -121,7 +121,7 @@ if __name__ == "__main__":
                 info.append('including')
             info.append('%s to non-District 101 clubs: ' % nicely(nond101total, 'visit'))
             
-        outfile.write('<p>%s</p>\n' % ' '.join(info))
+        outfile.write('%s\n' % ' '.join(info))
     
         names = []
         for a in ambassadors:
@@ -134,7 +134,7 @@ if __name__ == "__main__":
             names.append('<span class="altname"><b>%s</b></span>&nbsp;(%s)' % (a.name.replace(' ','&nbsp;'), ',&nbsp;'.join(info)))
 
         outfile.write(makenamelist(names))
-        outfile.write('.</p>\n')
+        outfile.write('.\n')
                  
     # Now, the clubs
     sheet = book.worksheet('Clubs')
@@ -156,24 +156,22 @@ if __name__ == "__main__":
             else:
                 if club.visits != vcount:
                     if clublist:
-                        outfile.write('<p>')
                         outfile.write(makenamelist(clublist))
                         outfile.write('</p>\n')
-                    outfile.write('<p><b>%s</b>:</p>\n' % nicely(club.visits, 'visit'))
+                    outfile.write('<p><b>%s</b>:<br />\n' % nicely(club.visits, 'visit'))
                     clublist = []
                     vcount = club.visits
                 clublist.append('<span class="altname">%s</span>' % club.clubname.replace(' ', '&nbsp;'))
                 
         if clublist:
-            outfile.write('<p>')
             outfile.write(makenamelist(clublist))
             outfile.write('</p>\n')
         
         # Now, if there are any external clubs, list tnem:
         if nond101list:
-            outfile.write('<h3>Clubs Visited Beyond District 101:</h3>\n')
+            outfile.write('<h3 class="beyond">Clubs Visited Beyond District 101:</h3>\n')
             outfile.write(makenamelist(nond101list))
-            outfile.write('</p>\n')        
+            outfile.write('\n')        
         
 
         
