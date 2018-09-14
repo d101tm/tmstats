@@ -6,6 +6,7 @@ import csv, codecs
 import os
 import numbers
 import tmglobals
+import re
 globals = tmglobals.tmglobals()
 
 def gotodatadir():
@@ -136,6 +137,10 @@ def stringify(value):
         value = ('%s' % value)[0:10]
 
     return value
+    
+def normalize(s):
+    # Strip non-alphameric characters and return all lower-case
+    return ''.join(re.split('\W+', s.lower())).strip()
 
 
 def daybefore(indate):
@@ -366,3 +371,11 @@ def parseWPConfig(f):
             php_vars[match.group(2)]=match.group(4)
     return php_vars
 
+def getGoogleCredentials(scope=None):
+    from oauth2client.service_account import ServiceAccountCredentials
+    if not scope:
+        scope = ['https://spreadsheets.google.com/feeds',
+                 'https://www.googleapis.com/auth/drive']
+
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(globals.parms.googleoauthfile, scope)
+    return credentials

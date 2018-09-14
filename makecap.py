@@ -4,15 +4,61 @@
 import tmutil, sys
 import tmglobals
 globals = tmglobals.tmglobals()
-import xlrd
-import requests
 import re
+import gspread
+from simpleclub import Club
 
 def makesortkey(s):
     # Strip non-alphameric characters and return all lower-case
     return ' '.join(re.split('\W+', s.lower())).strip()
 
-### Insert classes and functions here.  The main program begins in the "if" statement below.
+    
+def nicely(num, label):
+    return '%d&nbsp;%s%s' % (num, label, 's' if num != 1 else '')
+    
+def makenamelist(names):
+    if len(names) > 1:
+        names[-1] = 'and ' + names[-1]
+    if len(names) > 2:
+        return(',\n'.join(names))
+    else:
+        return('\n'.join(names))
+    
+class Ambassador:
+    def __init__(self, row):
+        for key in row:
+            nkey = tmutil.normalize(key)
+            setattr(self, nkey, row[key])
+        self.name = self.firstname.strip() + ' ' + self.lastname.strip()
+    
+    def sortkey(self):
+        if self.points > 0:
+            return (0-self.points, 0, self.name)
+        else:
+            return (0, 0-self.nond101visits, self.name.lower())
+    
+class VisitedClub:
+    
+    def __init__(self, row):
+        for key in row:
+            nkey = tmutil.normalize(key)
+            setattr(self, nkey, row[key])
+
+        if self.clubnumber:
+            self.clubnumber = '%d' % self.clubnumber
+            try:
+                self.clubname = allclubs[self.clubnumber].clubname
+            except KeyError:
+                pass
+            
+        if self.clubname.endswith('*'):
+            self.clubname = self.clubname[:-1]
+                
+    def sortkey(self):
+        return (0-self.visits, self.clubname)
+        
+
+    
 
 if __name__ == "__main__":
  
@@ -20,112 +66,125 @@ if __name__ == "__main__":
     
     # Establish parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--capsheet', default='https://docs.google.com/spreadsheets/d/e/2PACX-1vRLTA6_-RLVQDblDybtbzFZIoiyNGfs4AGMaXi95ePEMMilfDbxaFjUNz3at2vGaG7hkjUT_HXlTyPJ/pub?output=xlsx')
+    parms.add_argument('--capsheet', default='https://docs.google.com/spreadsheets/d/1dBc6CvqXuE77dGSj4F5cXcDbVjRR0Y_oabFnPcFAyrA')
     parms.add_argument('--outprefix', default='cap')
     parms.add_argument('--minvisits', default=1, type=int)
     # Add other parameters here
     # Do global setup
     globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    allclubs = Club.getClubsOn(globals.curs)
     
-    # Get the CAP sheet
-    if parms.capsheet.lower().startswith('http'):
-        book = xlrd.open_workbook(file_contents=requests.get(parms.capsheet, stream=True).raw.read())
-    else:
-        book = xlrd.open_workbook(parms.capsheet)
-        
+    # Open the spreadsheet
+    gc = gspread.authorize(tmutil.getGoogleCredentials())
+    book = gc.open_by_url(parms.capsheet)
     
+    # Get totals
+    sheet = book.worksheet('Totals')
+    d101total = int(sheet.cell(1, 2).value)
+    nond101total = int(sheet.cell(2, 2).value)
+    totalvisits = int(sheet.cell(3, 2).value)
+    featuredtotal = int(sheet.cell(4, 2).value)
+    
+    # Start with the Ambassadors sheet
+    sheet = book.worksheet('Ambassadors')
+    
+    # Get the 'as of' date
+    asof = sheet.cell(1, 2).value
+    with open(parms.outprefix+'asof.shtml', 'w') as outfile:
+        outfile.write('<p>Information current as of %s.</p>\n' % asof)
+    
+    
+    # Work through the ambassadors list
 
-    # And build the inclusion files
-    # First, the ambassadors
-    sheet = book.sheet_by_name('All Visits')
-    colnames = sheet.row_values(0)
-    asof = colnames[6]    
-    ambassadors = []
-    grandtotalvisits = 0
-    recent101visits = 0
-    for row in range(1, sheet.nrows):
-        # Require first and last names
-        values = sheet.row_values(row)
-        if values[0] and values[1]:  # Names must be non-blank
-            # This code now handles new and old visit counts
-            # Convert blank counts to zero
-            values[0] = values[0].strip()
-            values[1] = values[1].strip()
-            tvisits = 0
-            for cnum in [2, 3, 4]:
-                try:
-                    values[cnum] = int(values[cnum])
-                except ValueError:
-                    values[cnum] = 0
-                tvisits += values[cnum]
-                grandtotalvisits += values[cnum]
-            recent101visits += values[2]
-            values.append(tvisits)
-            ambassadors.append(values)
-                
+            
+        
+    ambassadors = []        
+    for row in sheet.get_all_records(head=2, empty2zero=True):
+        if (row['First Name'] + row['Last Name']) == 0:
+            break
+        ambassadors.append(Ambassador(row))
+        
+    # Sort by points, then name:
+    ambassadors.sort(key=lambda r:r.sortkey())
     
+    # Generate the output
     with open(parms.outprefix+'ambassadors.shtml', 'w') as outfile:
-        # Sort by recent visits
-        ambassadors.sort(key=lambda k:(-k[2], k[1], k[0]))
+        info = []
+        if totalvisits > 0:
+            info.append('Our Club Ambassadors have made %s' % nicely(totalvisits, 'visit'))
+        if featuredtotal > 0:
+            info.append('including %s to featured clubs' % nicely(featuredtotal, 'visit'))
+        if nond101total > 0:
+            if featuredtotal > 0:
+                info.append('and')
+            else:
+                info.append('including')
+            info.append('%s to non-District 101 clubs: ' % nicely(nond101total, 'visit'))
+            
+        outfile.write('<p>%s</p>\n' % ' '.join(info))
+    
         names = []
-        outfile.write('<p><b>%d total visits to District 101 clubs since May 20</b>:<br />\n' % recent101visits)
-        for item in ambassadors:
-            if item[2] > 0:
-                names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[2]))
-        outfile.write(', '.join(names))
-        outfile.write('</p>\n')            
-        
-        # Sort by total visits
-        ambassadors.sort(key=lambda k:(-k[-1], k[1], k[0]))
-        names = []
-        outfile.write('<p><b>%d total visits to all clubs since July 1, 2017</b>:<br />\n' % grandtotalvisits) 
-        for item in ambassadors:
-            if item[-1] > 0:
-                names.append('<span class="altname">%s %s</span> (<b>%d</b>)' % (item[0], item[1], item[-1]))
-        outfile.write(', '.join(names))
-        outfile.write('</p>\n')            
-        outfile.write('<p>Information current %s.' % asof)
-        
-    # Now, the clubs
-    sheet = book.sheet_by_name('Clubs')
-    colnames = sheet.row_values(0)
-    clubs = {}
-    for row in range(1, sheet.nrows):
-        values = sheet.row_values(row)
-        values[0] = values[0].strip()
-        if values[0]:  # Avoid empty rows
-            try:
-                values[1] = int(values[1])
-            except ValueError:
-                continue        # Don't include clubs with no visits
-            try:
-                clubs[values[1]].append(values[0])
-            except KeyError:
-                clubs[values[1]] = [values[0],]
+        for a in ambassadors:
+            info = []
+            if a.points > 0:
+                info.append(nicely(a.points, 'point'))
+            if a.nond101visits > 0:
+                info.append(nicely(a.nond101visits, 'non-D101 visit'))
                 
-    # Now, sort by decreasing visits
-    keys = sorted(list(clubs.keys()),reverse=True)
+            names.append('<span class="altname"><b>%s</b></span>&nbsp;(%s)' % (a.name.replace(' ','&nbsp;'), ',&nbsp;'.join(info)))
+
+        outfile.write(makenamelist(names))
+        outfile.write('.</p>\n')
+                 
+    # Now, the clubs
+    sheet = book.worksheet('Clubs')
+    visited = []
+    for row in sheet.get_all_records():
+        visited.append(VisitedClub(row))
+      
+    # Sort  
+    visited.sort(key=lambda c:c.sortkey())
+                
+
     with open(parms.outprefix+'clubs.shtml', 'w') as outfile:
-        for n in keys:
-            clubs[n].sort()
-            outfile.write('<p><b>%d visit%s</b>: ' % (n, 's' if n > 1 else ''))
-            names = ['<span class="altname">%s</span>' % item for item in clubs[n]]
-            outfile.write(', '.join(names))
+        clublist = []
+        nond101list = []
+        vcount = 0
+        for club in visited:
+            if club.nond101location:
+                nond101list.append('<span class="altname">%s</span>&nbsp;(%s)' % (club.clubname.replace(' ','&nbsp;'), club.nond101location.replace(' ', '&nbsp;')))
+            else:
+                if club.visits != vcount:
+                    if clublist:
+                        outfile.write('<p>')
+                        outfile.write(makenamelist(clublist))
+                        outfile.write('</p>\n')
+                    outfile.write('<p><b>%s</b>:</p>\n' % nicely(club.visits, 'visit'))
+                    clublist = []
+                    vcount = club.visits
+                clublist.append('<span class="altname">%s</span>' % club.clubname.replace(' ', '&nbsp;'))
+                
+        if clublist:
+            outfile.write('<p>')
+            outfile.write(makenamelist(clublist))
             outfile.write('</p>\n')
+        
+        # Now, if there are any external clubs, list tnem:
+        if nond101list:
+            outfile.write('<h3>Clubs Visited Beyond District 101:</h3>\n')
+            outfile.write(makenamelist(nond101list))
+            outfile.write('</p>\n')        
+        
 
         
     # And finally, the insights
-    sheet = book.sheet_by_name('Insights')
-    colnames = sheet.row_values(0)
+    sheet = book.worksheet('Insights')
 
     newinsights = []
     oldinsights = []
-    for row in range(1, sheet.nrows):
-        val = sheet.row_values(row)
-        insight = val[1].encode('utf-8')
-        if val[0]:
+    for row in sheet.get_all_records():
+        insight = row['Insight Text']
+        if row['New?']:
             newinsights.append(insight)
         else:
             oldinsights.append(insight)
