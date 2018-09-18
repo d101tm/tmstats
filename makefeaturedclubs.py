@@ -94,7 +94,7 @@ table.featured td, table.featured th {
   vertical-align: top;
 }
 
-table.featured td.clubname {
+table.featured td. clubname {
   font-weight: bold;
 }
 
@@ -136,7 +136,7 @@ table.featured tfoot .links a{
         outfile.write('<thead>\n')
         outfile.write('<tr><th>')
         outfile.write('</th><th>'.join(('Club', 'Meeting Time', 'Location', 'Contact', 'Notes')))
-        outfile.write('<th></tr>\n')
+        outfile.write('</th></tr>\n')
         outfile.write('</thead>\n<tbody>\n')
         for club in clubs:
             outfile.write('<tr>')
