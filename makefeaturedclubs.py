@@ -94,7 +94,7 @@ table.featured td, table.featured th {
   vertical-align: top;
 }
 
-table.featured td. clubname {
+table.featured td.fclubname {
   font-weight: bold;
 }
 
@@ -140,7 +140,7 @@ table.featured tfoot .links a{
         outfile.write('</thead>\n<tbody>\n')
         for club in clubs:
             outfile.write('<tr>')
-            outfile.write('<td class="clubname">%s</td>\n' % club.clubname.replace(' ', '&nbsp;'))
+            outfile.write('<td class="fclubname">%s</td>\n' % club.clubname.replace(' ', '&nbsp;'))
             outfile.write('<td>%s<br />%s</td>\n' % (club.meetingtime, club.meetingday))
             locparts = '<br />'.join([p for p in (club.location, club.streetaddress, '%s, %s %s' % (club.city, club.state, club.zip)) if p])
             outfile.write('<td>%s</td>' % locparts)
