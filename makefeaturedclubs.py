@@ -93,6 +93,11 @@ table.featured td, table.featured th {
   padding: 3px 2px;
   vertical-align: top;
 }
+
+table.featured td.clubname {
+  font-weight: bold;
+}
+
 table.featured tr:nth-child(even) {
   background: #f2df74;
 }
@@ -135,7 +140,7 @@ table.featured tfoot .links a{
         outfile.write('</thead>\n<tbody>\n')
         for club in clubs:
             outfile.write('<tr>')
-            outfile.write('<td>%s</td>\n' % club.clubname.replace(' ', '&nbsp;'))
+            outfile.write('<td class="clubname">%s</td>\n' % club.clubname.replace(' ', '&nbsp;'))
             outfile.write('<td>%s<br />%s</td>\n' % (club.meetingtime, club.meetingday))
             locparts = '<br />'.join([p for p in (club.location, club.streetaddress, '%s, %s %s' % (club.city, club.state, club.zip)) if p])
             outfile.write('<td>%s</td>' % locparts)
