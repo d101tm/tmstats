@@ -99,7 +99,7 @@ table.featured td.fclubname {
 }
 
 table.featured tr:nth-child(even) {
-  background: #f2df74;
+  background: #f2df7440;
 }
 table.featured thead {
   background: #772432;
