@@ -80,70 +80,20 @@ if __name__ == "__main__":
     
     # Generate the output
     with open(parms.outfile, 'w') as outfile:
-        outfile.write("""<style type="text/css">
-table.featured {
-  border: 1px solid #1C6EA4;
-  width: 100%;
-  text-align: left;
-  vertical-align: top;
-  border-collapse: collapse;
-}
-table.featured td, table.featured th {
-  border: 1px solid #AAAAAA;
-  padding: 3px 2px;
-  vertical-align: top;
-}
-
-table.featured td.fclubname {
-  font-weight: bold;
-}
-
-table.featured tr:nth-child(even) {
-  background: #f2df7440;
-}
-table.featured thead {
-  background: #772432;
-  background: -moz-linear-gradient(top, #995b65 0%, #843a46 66%, #772432 100%);
-  background: -webkit-linear-gradient(top, #995b65 0%, #843a46 66%, #772432 100%);
-  background: linear-gradient(to bottom, #995b65 0%, #843a46 66%, #772432 100%);
-}
-table.featured thead th {
-  font-size: 15px;
-  font-weight: bold;
-  color: #FFFFFF;
-  border-left: 2px solid #D0E4F5;
-}
-table.featured thead th:first-child {
-  border-left: none;
-}
-
-table.featured tfoot td {
-  font-size: 14px;
-}
-table.featured tfoot .links {
-  text-align: right;
-}
-table.featured tfoot .links a{
-  display: inline-block;
-  background: #1C6EA4;
-  color: #FFFFFF;
-  padding: 2px 8px;
-  border-radius: 5px;
-}
-</style>
-""")        
-        outfile.write('<table class="featured">\n')
-        outfile.write('<thead>\n')
-        outfile.write('<tr><th>')
-        outfile.write('</th><th>'.join(('Club', 'Meeting Time', 'Location', 'Contact', 'Notes')))
-        outfile.write('</th></tr>\n')
-        outfile.write('</thead>\n<tbody>\n')
+        i = 0
         for club in clubs:
-            outfile.write('<tr>')
-            outfile.write('<td class="fclubname">%s</td>\n' % club.clubname.replace(' ', '&nbsp;'))
-            outfile.write('<td>%s<br />%s</td>\n' % (club.meetingtime, club.meetingday))
+            i += 1
+            outfile.write('<div class="clubinfo" onclick="jQuery(\'#club%dopen, #club%dclosed, #club%dinfo\').toggle()">\n' % (i, i, i))
+            outfile.write('<span id="club%dopen" style="display: none;">&#x2296;</span>\n' % i)
+            outfile.write('<span id="club%dclosed" style="display: inline;">&#x2295;</span>\n' % i)
+            outfile.write('<b>%s</b> - %s - %s - %s\n' % (club.clubname, club.meetingday, club.meetingtime, club.city))
+            outfile.write('</div>')
+            
+            outfile.write('<div id="club%dinfo" style="display: none; margin-left: 1em; margin-bottom: 1em;">\n' % i)
+            outfile.write('<p>')
             locparts = '<br />'.join([p for p in (club.location, club.streetaddress, '%s, %s %s' % (club.city, club.state, club.zip)) if p])
-            outfile.write('<td>%s</td>' % locparts)
+            outfile.write(locparts)
+            outfile.write('</p>\n')
             conparts = []
             if club.contact:
                 conparts.append(club.contact)
@@ -151,9 +101,11 @@ table.featured tfoot .links a{
                 conparts.append('<a href="mailto:%s">%s</a>' % (club.contactemail, club.contactemail))
             if club.contactphone:
                 conparts.append(club.contactphone)
-            club.contact = ',<br />'.join(conparts)
-            outfile.write('<td>%s</td>' % (club.contact if club.contact else '&nbsp;'))
-            outfile.write('<td>%s</td>' % (club.notes if club.notes else '&nbsp;'))
-            outfile.write('</tr>\n')
-        outfile.write('</tbody>\n</table>\n')
-        
+            club.contact = ', '.join(conparts)
+            if club.contact:
+                outfile.write('<p>Contact: %s</p>\n' % club.contact)
+            if club.notes:
+                outfile.write('<p>%s</p>\n' % club.notes)
+            outfile.write('</div>\n')
+            
+    
