@@ -182,7 +182,7 @@ if __name__ == "__main__":
     oldinsights = []
     for row in sheet.get_all_records():
         insight = row['Insight Text']
-        if row['New?']:
+        if row['New?'].lower().startswith('y'):
             newinsights.append(insight)
         else:
             oldinsights.append(insight)
