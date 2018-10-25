@@ -136,6 +136,7 @@ if __name__ == "__main__":
     parms.add_argument('--namefile', dest='namefile', default=None, help='filename into which to write the name of the output file.  Not changed if nothing is written.')
     parms.add_argument('--outdir', dest='outdir', default='', help="output directory for output file, especially useful if outfile is '+'")
     parms.add_argument('--dropboxtoken', dest='dropboxtoken', help="Dropbox access token")
+    parms.add_argument('--dbfilenamefile', dest='dbfilenamefile', default=None, help='filename into which to write the name of the file used on Dropbox.  Not changed if nothing is written')
     group = parms.add_mutually_exclusive_group()
     group.add_argument('--cursor', dest='cursor', default=None, help="Dropbox cursor")
     group.add_argument('--cfile', dest='cfile', default=None, help="Text file containing a Dropbox cursor; gets updated or created if required.")
@@ -195,13 +196,18 @@ if __name__ == "__main__":
                 outfn = parms.outfile
             
             outfn = os.path.join(parms.outdir, outfn)
-            # Write as an absolute filename
+            # Write the name of the file as an absolute filename
             if parms.namefile:
                 with open(parms.namefile, 'w') as f:
                     f.write(os.path.abspath(outfn))
             
             outfile = open(outfn, 'wb')  
         outfile.write(output.file.read())
+        
+        if parms.dbfilenamefile:
+            with open(parms.dbfilenamefile, 'w') as f:
+                f.write(output.filename)
+                f.write('\n')
         
         if parms.verbose:
             sys.stderr.write('Using %s, last modified at %s UTC\n' % (output.filename, output.filetime))
