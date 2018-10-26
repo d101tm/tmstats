@@ -55,20 +55,36 @@ if __name__ == "__main__":
     values = []
     
     if filetype in ['.xls', '.xlsx']:
+        sys.stderr.write('Cannot currently handle XLS files\n')
+        sys.exit(1)
         # Open the Excel file
         book = xlrd.open_workbook(parms.roster)
         sheet = book.sheet_by_index(0)
 
+        gotfields = False
         # Get the field names and normalize them; find the name columns
-        fieldnames = normalizefieldnames(sheet.row_values(0))
+        for linenum in range(0, 10):
+            fieldnames = normalizefieldnames(sheet.row_values(linenum))
+            if 'district' in fieldnames and \
+               'division' in fieldnames and \
+               'area' in fieldnames:
+                gotfields = True
+                break
+                
+        if not gotfields:
+            sys.stderr.write('No fieldnames found in first few lines.  Aborting.\n')
+            sys.exit(1)
+        
         fieldnames.append('fullname')
+        print(fieldnames)
         ifirstname = fieldnames.index('firstname')
-        imiddle = fieldnames.index('middle')
+        imiddle = fieldnames.index('middlename')
         ilastname = fieldnames.index('lastname')
     
         # And get the values
-        for row in range(1, sheet.nrows):
-            values.append(sheet.row_values(row))
+        for rownum in range(linenum+1, sheet.nrows):
+            row = sheet.row_values(rownum)
+            values.append(row)
             # And add the fullname
             values[-1].append(('%s, %s %s' % (row[ilastname],row[ifirstname],row[imiddle])).strip())
             
@@ -110,7 +126,7 @@ if __name__ == "__main__":
         ifirstname = fieldnames.index('firstname')
         imiddle = fieldnames.index('middlename')
         ilastname = fieldnames.index('lastname')
-        datecols = [cname for cname in fieldnames if cname.endswith('date')]
+        datecols = [cname for cname in fieldnames if (cname.endswith('date') or cname.endswith('since'))]
         idates = [fieldnames.index(cname) for cname in datecols]
         ijoin = fieldnames.index('joindate')
         itermbegin = fieldnames.index('termbegindate')
@@ -155,7 +171,7 @@ if __name__ == "__main__":
     for f in fieldnames:
         if f.endswith('num'):
             declare.append(f + ' INT')
-        elif f.endswith('date'):
+        elif f.endswith('date') or f.endswith('since'):
             declare.append(f + ' DATE')
         else:
             declare.append(f + ' VARCHAR(100)')
