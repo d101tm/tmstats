@@ -4,6 +4,7 @@
 import dbconn, tmutil, sys, os
 from simpleclub import Club
 from datetime import datetime
+from gsheet import GSheet 
 
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -28,11 +29,12 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--verbose', '-v', action='count')
-    parms.add_argument('--infile', default='openhouseclubs.txt')
+    parms.add_argument('--openhouseclubs', default='', help="")
     parms.add_argument('--outfile', default='openhouseclubs.html')
-    parms.add_argument('--basedate', default='12/31')
-    parms.add_argument('--finaldate', default='2/15')
-    parms.add_argument('--renewto', default='9/30')
+    parms.add_argument('--basedate', default='9/1')
+    parms.add_argument('--finaldate', default='10/31')
+    parms.add_argument('--renewto', default='3/3/2019')
+    parms.add_argument('--requireopenhouse', action='store_true')
 
     #Do global setup
     globals.setup(parms)
@@ -59,60 +61,77 @@ if __name__ == "__main__":
     clubsByName = {}
     for c in list(clubs.keys()):
         clubs[c].memdiff = 0
+        clubs[c].openhouse = False
+        clubs[c].earnings = 0
         clubname = simplify(clubs[c].clubname)
         clubsByName[clubname] = clubs[c]
     
+    sheet = GSheet(parms.openhouseclubs, parms.googlesheetsapikey)
     # Now read the openhouse clubs and get their numbers
-    eligible = {}
-    with open(parms.infile, 'r') as infile:
-        for l in infile.readlines():
-            l = simplify(l.strip())
-            if l in clubs:
-                eligible[l] = clubs[l]
-            elif l in clubsByName:
-                eligible[clubsByName[l].clubnumber] = clubsByName[l]
-            else:
-                sys.stderr.write('Could not find %s in clubs\n' % (l,))
-                
+    eligible = set()
+    for row in sheet:
+        cn = '%s' % row.clubnumber
+        eligible.add(cn)
+        clubs[cn].openhouse = True
+        clubs[cn].earnings += 20           # Earn $20 for an Open House
+   
 
     
     # And build "IN" clause.  We know all the items are numbers, so we don't have to worry about SQL injection.
-    eligibilityclause = ' clubnum IN (' + ','.join(list(eligible.keys())) + ') '
+    if parms.requireopenhouse:
+        eligibilityclause = 'AND clubnum IN (' + ','.join(list(eligible)) + ') '
+    else:
+        eligibilityclause = ''
+        
+    onlyOH = []
+    only3 = []
+    only5 = []
+    OHand3 = []
+    OHand5 = []
     
     # Now, get the count for each club of new members who have renewed for the following term
-    curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE joindate >= %s AND termenddate >= %s AND" + eligibilityclause + "GROUP BY clubnum, clubname", (basedate, renewtodate))
-
+    curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE memberofclubsince >= %s AND termenddate >= %s " + eligibilityclause + "GROUP BY clubnum, clubname", (basedate, renewtodate))
+    
+    # And assign clubs according to the Fall 2018 Criteria
+    
     for (clubnum, clubname, memdiff) in curs.fetchall():
-        eligible[tmutil.stringify(clubnum)].memdiff = memdiff
-        
-        
-    # Now, make the three lists:
-    level0clubs = []   # Open House only
-    level1clubs = []   # Open House, added 1 or 2 members who have renewed
-    level2clubs = []   # Open House, added 3 or more members who have renewed
-    
-    
-    
-    for c in list(eligible.values()):
-        if c.memdiff >= 3:
-            level2clubs.append(c)
-        elif c.memdiff > 0:
-            level1clubs.append(c)
-        else:
-            level0clubs.append(c)
+        cn = '%s' % clubnum
+        if memdiff >= 5:
+            clubs[cn].earnings += 40
+            if clubs[cn].openhouse:
+                OHand5.append(clubs[cn])
+            else:
+                only5.append(clubs[cn])
+        elif memdiff >= 3:
+            clubs[cn].earnings += 20
+            if clubs[cn].openhouse:
+                OHand3.append(clubs[cn])
+            else:
+                only3.append(clubs[cn])
+        elif clubs[cn].openhouse:
+            onlyOH.append(clubs[cn])
             
+        clubs['%s' % clubnum].memdiff = memdiff
+        
+    # This is all based on the 2018 Fall criteria.
+            
+   
 
-    def makecongrat(amount, winners):
+    def makecongrat(why, amount, winners):
         if len(winners) == 0:
             return ''
-        if len(winners) == 1:
-            return '<p>Congratulations to <span class="clubname">%s</span> for earning %s in District Credit.</p>\n' % (winners[0].clubname, amount)
-        return '<p>Congratulations to these clubs for earning %s in District Credit: %s.</p>\n' % (amount, tmutil.getClubBlock(winners))
+        elif len(winners) == 1:
+            return '<p>Congratulations to %s for earning %s in District Credit by %s.' % (tmutil.getClubBlock(winners), amount, why)
+        else:
+            return '<p>Congratulations to these clubs for earning %s in District Credit by %s: %s.</p>\n' % (amount, why, tmutil.getClubBlock(winners))
         
     with open(parms.outfile, 'w') as outfile:
-        outfile.write(makecongrat("$25", level0clubs))
-        outfile.write(makecongrat("$50", level1clubs))
-        outfile.write(makecongrat("$75", level2clubs))
+        outfile.write(makecongrat("holding an Open House and adding at least 5 members", "$60", OHand5))
+        outfile.write(makecongrat("holding an Open House and adding at least 3 members", "$40", OHand3))
+        outfile.write(makecongrat("holding an Open House", "$20", onlyOH))
+        outfile.write(makecongrat("adding at least 5 members", "$40", only5))
+        outfile.write(makecongrat("adding at least 3 members", "$20", only3))
+        
     
     
         
