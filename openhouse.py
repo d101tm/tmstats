@@ -121,9 +121,9 @@ if __name__ == "__main__":
         if len(winners) == 0:
             return ''
         elif len(winners) == 1:
-            return '<p>Congratulations to %s for earning %s in District Credit by %s.' % (tmutil.getClubBlock(winners), amount, why)
+            return '<p><b>Congratulations</b> to %s for earning %s in District Credit by %s.' % (tmutil.getClubBlock(winners), amount, why)
         else:
-            return '<p>Congratulations to these clubs for earning %s in District Credit by %s: %s.</p>\n' % (amount, why, tmutil.getClubBlock(winners))
+            return '<p><b>Congratulations</b> to these clubs for earning %s in District Credit by %s: %s.</p>\n' % (amount, why, tmutil.getClubBlock(winners))
         
     with open(parms.outfile, 'w') as outfile:
         outfile.write(makecongrat("holding an Open House and adding at least 5 members", "$60", OHand5))
