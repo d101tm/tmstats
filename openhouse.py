@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', default='openhouseclubs.html')
     parms.add_argument('--basedate', default='9/1')
     parms.add_argument('--finaldate', default='10/31')
-    parms.add_argument('--renewto', default='3/3/2019')
+    parms.add_argument('--renewto', default='3/31/2019')
     parms.add_argument('--requireopenhouse', action='store_true')
 
     #Do global setup
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     OHand5 = []
     
     # Now, get the count for each club of new members who have renewed for the following term
-    curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE memberofclubsince >= %s AND termenddate >= %s " + eligibilityclause + "GROUP BY clubnum, clubname", (basedate, renewtodate))
+    curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE memberofclubsince >= %s AND memberofclubsince <= %s AND termenddate >= %s " + eligibilityclause + "GROUP BY clubnum, clubname", (basedate, finaldate, renewtodate))
     
     # And assign clubs according to the Fall 2018 Criteria
     
