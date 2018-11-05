@@ -3,10 +3,6 @@
 Establish Github workflow with pull requests:
     - Trivial test case (this one)
 
-Convert all code to Python 3:
-    - Install Python 3.7 on DreamHost
-    - Find all the Unicode hacks and get rid of them
-
 Clean up the shell scripts:
     - In particular, refactor so that each major step is in its own script
     - Refactor environment setup for consistency 
