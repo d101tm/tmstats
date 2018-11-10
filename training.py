@@ -186,7 +186,13 @@ if __name__ == "__main__":
                 # Omit suspended clubs
                 if clubstatus.startswith('S'):
                     continue
-                club = clubs[clubnumber]
+                # If a club is brand new, it can be in the training report but
+                #   NOT in the clubs table.  If so, skip it (with message)
+                try:
+                    club = clubs[clubnumber]
+                except KeyError:
+                    print("Club %s not found in the clubs table.  This is not unusual for a brand new club." % clubnumber)
+                    continue
                 res = [club.division, club.area, clubname, clubnumber, clubstatus]
                 offlist = []
                 trained = 0
