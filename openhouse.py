@@ -66,56 +66,56 @@ if __name__ == "__main__":
         clubname = simplify(clubs[c].clubname)
         clubsByName[clubname] = clubs[c]
     
-    sheet = GSheet(parms.openhouseclubs, parms.googlesheetsapikey)
-    # Now read the openhouse clubs and get their numbers
-    eligible = set()
-    for row in sheet:
-        cn = '%s' % row.clubnumber
-        eligible.add(cn)
-        clubs[cn].openhouse = True
-        clubs[cn].earnings += 20           # Earn $20 for an Open House
-   
-
-    
-    # And build "IN" clause.  We know all the items are numbers, so we don't have to worry about SQL injection.
-    if parms.requireopenhouse:
-        eligibilityclause = 'AND clubnum IN (' + ','.join(list(eligible)) + ') '
-    else:
-        eligibilityclause = ''
-        
-    onlyOH = []
+    # Build the result arrays
     only3 = []
     only5 = []
     OHand3 = []
     OHand5 = []
+    onlyOH = []
+
+    sheet = GSheet(parms.openhouseclubs, parms.googlesheetsapikey)
+    # Now read the openhouse clubs and get their numbers
+    
+    hadOH = set()
+    for row in sheet:
+        cn = '%s' % row.clubnumber
+        hadOH.add(cn)
+        clubs[cn].openhouse = True
+        clubs[cn].earnings += 20           # Earn $20 for an Open House
+
+    
+    # And build "IN" clause.  We know all the items are numbers, so we don't have to worry about SQL injection.
+    if parms.requireopenhouse:
+        eligibilityclause = 'AND clubnum IN (' + ','.join(list(hadOH)) + ') '
+    else:
+        eligibilityclause = ''
+        
     
     # Now, get the count for each club of new members who have renewed for the following term
-    curs.execute("SELECT clubnum, clubname, count(*) FROM roster WHERE memberofclubsince >= %s AND memberofclubsince <= %s AND termenddate >= %s " + eligibilityclause + "GROUP BY clubnum, clubname", (basedate, finaldate, renewtodate))
+    curs.execute("SELECT clubnum, count(*) FROM roster WHERE memberofclubsince >= %s AND memberofclubsince <= %s AND termenddate >= %s " + eligibilityclause + "GROUP BY clubnum", (basedate, finaldate, renewtodate))
     
     # And assign clubs according to the Fall 2018 Criteria
     
-    for (clubnum, clubname, memdiff) in curs.fetchall():
+    for (clubnum, memdiff) in curs.fetchall():
         cn = '%s' % clubnum
+        clubs[cn].memdiff = memdiff
         if memdiff >= 5:
             clubs[cn].earnings += 40
             if clubs[cn].openhouse:
                 OHand5.append(clubs[cn])
+                hadOH.remove(cn)
             else:
                 only5.append(clubs[cn])
         elif memdiff >= 3:
             clubs[cn].earnings += 20
             if clubs[cn].openhouse:
                 OHand3.append(clubs[cn])
+                hadOH.remove(cn)
             else:
                 only3.append(clubs[cn])
-        elif clubs[cn].openhouse:
-            onlyOH.append(clubs[cn])
-            
-        clubs['%s' % clubnum].memdiff = memdiff
         
-    # This is all based on the 2018 Fall criteria.
-            
-   
+    # Now, 'hadOH' is reduced to clubs which had an Open House but didn't add enough members
+    onlyOH = [clubs[cn] for cn in hadOH]
 
     def makecongrat(why, amount, winners):
         if len(winners) == 0:
