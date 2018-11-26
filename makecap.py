@@ -23,11 +23,22 @@ def makenamelist(names):
         return(',\n'.join(names))
     else:
         return('\n'.join(names))
+
+def makeint(v):
+    try:
+        v = int(v)
+    except ValueError:
+        v = 0
+    return(v)
+
     
 class Ambassador:
     def __init__(self, row):
         for key in row:
             nkey = tmutil.normalize(key)
+            # Make sure columns that should be numbers are!
+            if 'name' not in nkey:
+                row[key] = makeint(row[key])
             setattr(self, nkey, row[key])
         self.name = self.firstname.strip() + ' ' + self.lastname.strip()
     
@@ -42,6 +53,8 @@ class VisitedClub:
     def __init__(self, row):
         for key in row:
             nkey = tmutil.normalize(key)
+            if nkey == 'visits':
+                row[key] = makeint(row[key])
             setattr(self, nkey, row[key])
 
         if self.clubnumber:
