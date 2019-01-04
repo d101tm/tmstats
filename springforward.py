@@ -32,7 +32,7 @@ def createResults(final, clubs):
             else:
                 info.append('currently leading Division %s' % club.division)
         
-        res.append('<span class="clubname">%s</span> (\\$%d: %s)' % (club.clubname, club.amount, '; '.join(info)))
+        res.append('<span class="clubname">%s</span> ($%d: %s)<br>' % (club.clubname, club.amount, '; '.join(info)))
          
     return('\n'.join(res))
    
@@ -176,7 +176,7 @@ if __name__ == "__main__":
                     club.leader = (club.growth == divmax[division])
                     
                 clubfile.write('[et_pb_tab title="Division %s" tab_font_select="default" tab_font="||||" tab_line_height="2em" tab_line_height_tablet="2em" tab_line_height_phone="2em" body_font_select="default" body_font="||||" body_line_height="1.3em" body_line_height_tablet="1.3em" body_line_height_phone="1.3em"]\n' % division)
-                clubfile.write('<p>%s.</p>\n' % createResults(final, divisions[division]))
+                clubfile.write('<p>%s</p>\n' % createResults(final, divisions[division]))
                 clubfile.write('[/et_pb_tab]\n')
                 
                 for club in sorted(divisions[division], key=lambda c: '%.2s%.2s%0.8d' % (c.division, c.area, c.clubnumber)):
