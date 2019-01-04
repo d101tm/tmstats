@@ -125,7 +125,7 @@ if __name__ == "__main__":
     
 
     # Your main program begins here.
-    outfile = open(parms.prefix + '.shtml', 'w')
+    outfile = open(parms.prefix + '.html', 'w')
 
     clauses = []
     # Figure out the timeframe for the queries.
