@@ -1,7 +1,5 @@
-#!/bin/sh
-# Even if we're running in a weird shell, let's use THIS directory as the current directory
-SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
-data="$SCRIPTPATH/data"
+#!/bin/bash
+. setup.sh
 cd "$data"   # Run in the data directory.
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/d101tm/lib/lib
 
