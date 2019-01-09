@@ -56,7 +56,7 @@ echo $ep
 echo
 echo Running makealignmentpage
 echo $bp
-../makealignmentpage.py > alignment/index.html
+../makealignmentpage.py --fordec > alignment/index.html
 echo $ep
 echo
 if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
