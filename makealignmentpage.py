@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     if parms.fordec:
         details.append('<li><a href="d101details.html">detailed list with club meeting times and places</a> (updated %s)</li>' % ltime)
-        details.append('<li><a href="d101proforma.html"><i>pro forma</i>performance report<a> (updated %s)</li>' % rtime)
+        details.append('<li><a href="d101proforma.html"><i>pro forma</i> performance report<a> (updated %s)</li>' % rtime)
 
 
     sys.stdout.write("""<html>
