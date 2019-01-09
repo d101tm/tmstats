@@ -27,6 +27,7 @@ if __name__ == "__main__":
     mfile = 'alignment/d101newmarkers.js'
     rfile = 'alignment/d101proforma.html'
     sfile = 'alignment/d101minimal.html'
+    dfile = 'alignment/d101details.html'
     postdecfile = 'alignment/changessincedecmeeting.html'
 
     # Get the last-modified dates for the alignment files.
@@ -34,13 +35,16 @@ if __name__ == "__main__":
     mtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(mfile)))
     rtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(rfile)))
     stime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(sfile)))
+    dtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(dfile)))
 
     details = []
     details.append('<li><a href="d101minimal.html">summary</a> (updated %s)</li>' % stime)
     details.append('<li><a href="d101align.htm">map</a> (updated %s)</li>' % mtime)
-    details.append('<li><a href="d101location.html">detailed list with club meeting times and places</a> (updated %s)</li>' % ltime)
+    if not parms.fordec:
+        details.append('<li><a href="d101location.html">detailed list with club meeting times and places</a> (updated %s)</li>' % ltime)
 
     if parms.fordec:
+        details.append('<li><a href="d101details.html">detailed list with club meeting times and places</a> (updated %s)</li>' % ltime)
         details.append('<li><a href="d101proforma.html"><i>pro forma</i>performance report<a> (updated %s)</li>' % rtime)
 
 
