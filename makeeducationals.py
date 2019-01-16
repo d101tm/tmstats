@@ -177,5 +177,5 @@ if __name__ == "__main__":
     outfile.write('</div>\n')
 
 
-    cmd = makeCongratulations(count, parms.district, timestamp, parms)
-    subprocess.call(' '.join(cmd),shell=True)
+    #cmd = makeCongratulations(count, parms.district, timestamp, parms)
+    #subprocess.call(' '.join(cmd),shell=True)
