@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parms.add_argument('--reward', type=str, default='$50 in District Credit')
     parms.add_argument('--phase1name', type=str, default='Lucky 7')
     parms.add_argument('--phase2name', type=str, default='Magnificent 7')
-    parms.add_argument('--bonusreward', type=str, default='$101 in District Credit and joining the Magnificent 7')
+    parms.add_argument('--bonusreward', type=str, default='$101 in District Credit')
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
     
     # Do global setup
