@@ -108,7 +108,8 @@ class Area():
 class Director():
     def __init__(self, row):
         for f in row.dict:
-            self.__dict__[f.lower().split()[0]] = row.dict[f]
+            if f:
+                self.__dict__[f.lower().split()[0]] = row.dict[f]
         part = self.title.split()
         if part[0] == 'Division':
             division = part[1]
