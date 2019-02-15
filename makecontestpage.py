@@ -42,7 +42,7 @@ class Division:
 class Event:
     ptemplate = '%Y-%m-%d %H:%M:%S'
     
-    def __init__(self, contents, area, venues, parms):
+    def __init__(self, contents, title, area, venues, parms):
         for item in contents:
             ours = item.replace("_","")
             self.__dict__[ours] = contents[item]
@@ -56,7 +56,7 @@ class Event:
         self.end = datetime.strptime(self.EventEndDate, self.ptemplate)
         self.include = (self.start >= parms.start) and (self.end <= parms.end)
         self.showreg = parms.showpast or (self.start > parms.now)
-
+        self.title = title
             
     def __repr__(self):
         if len(self.area) == 1:
@@ -68,10 +68,10 @@ class Event:
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
         self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
         if self.showreg:
-            self.register = '<br><a href="%(EventURL)s">Register</a>' % self.__dict__
+            self.register = ' | <a href="%(EventURL)s">Register</a>' % self.__dict__
         else:
             self.register = ""
-        ans = """<tr><td>%(name)s%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
+        ans = """<tr><td>%(name)s<br /><a href="%(title)s">More Information</a>%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
         return ans
 
 def tocome(what):
@@ -149,13 +149,15 @@ if __name__ == "__main__":
     
     # Find all published contest events in the database
     
-    stmt = "SELECT ID, post_title from %s p INNER JOIN %s t ON p.ID = t.object_id WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s" % (poststable, prefix+'term_relationships')
+    stmt = "SELECT ID, post_title, post_name from %s p INNER JOIN %s t ON p.ID = t.object_id WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s" % (poststable, prefix+'term_relationships')
     curs.execute(stmt, (tax_contest,))
     post_numbers = []
     post_titles = {}
-    for (number, title) in curs.fetchall():
+    post_names = {}
+    for (number, title, name) in curs.fetchall():
         post_numbers.append(number)
         post_titles[number] = title
+        post_names[number] = name
     nums = ','.join(['%d' % p for p in post_numbers])
     title_pattern = re.compile(r"""(Division|Area)\s+(.*)\s+Contest""")
     
@@ -183,7 +185,7 @@ if __name__ == "__main__":
         m = re.match(title_pattern, post_titles[id])
         if m:
             for area in m.group(2).replace('/',' ').split():
-                this = Event(p, area, venues, parms)
+                this = Event(p, post_names[id], area, venues, parms)
                 if this.include:
                     events[area] = this
                     if not events[area].EventURL:
