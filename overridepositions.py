@@ -54,14 +54,14 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
                 row[key] = ''
         
         # Now, process the data.
-        clubnumber = row['clubnumber']
+        clubnumber = row['clubnumber'].strip()
         if not clubnumber:
             clubnumber = '%s' % (0 - linenum)
             row['clubnumber'] = clubnumber
-            club.clubnumber = clubnumber
 
         if clubnumber not in clubs and createnewclubs:            
             club = Club([normalizespaces(f) for f in line], fieldnames=keys, fillall=True)  
+            club.clubnumber = clubnumber
             clubs[clubnumber] = club
                 
             if log:
@@ -73,10 +73,10 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
             # Indicate we touched this club
             club.touchedby = overridefile
             
-            # Override anything specified
+            # Override anything specified; add anything new
             for key in keys:
-                if key not in ignorefields and row[key]:
-                    if log and key not in donotlog and club.__dict__[key] != row[key]:
+                if key not in ignorefields and (row[key] or key not in club.__dict__):
+                    if log and key not in donotlog and key in club.__dict__ and club.__dict__[key] != row[key]:
                         print(("%8s/%s: Updating '%s' from '%s' to '%s'" % (club.clubnumber, club.clubname, key, club.__dict__[key], row[key])))
                     club.__dict__[key] = row[key]
                     
