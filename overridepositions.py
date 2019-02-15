@@ -41,7 +41,9 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
                 
     
     # Now, work through the overrides
+    linenum = 0
     for line in values[1:]:
+        linenum += 1
         # Convert the values to a dictionary, based on the keys.
         row = {}
         for i, key in enumerate(keys):
@@ -53,8 +55,13 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
         
         # Now, process the data.
         clubnumber = row['clubnumber']
+        if not clubnumber:
+            clubnumber = '%s' % (0 - linenum)
+            row['clubnumber'] = clubnumber
+            club.clubnumber = clubnumber
+
         if clubnumber not in clubs and createnewclubs:            
-            club = Club([normalizespaces(f) for f in line], fieldnames=keys)  
+            club = Club([normalizespaces(f) for f in line], fieldnames=keys, fillall=True)  
             clubs[clubnumber] = club
                 
             if log:
