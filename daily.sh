@@ -142,8 +142,8 @@ if [[ "$dorun" = "yes" ]] ; then
             ../renewals.py --program "madness" --pct 75 90 100 --earn 50 75 101 && isreal && cp madness.* ~/www/files/reports
         fi
 
-        # President's Club runs once we have March data and stops when we have April 16 data
-        if ../require.py --datafor S3 --nodatafor 4/16 ; then
+        # President's Club runs once we have February data and stops when we have April 16 data
+        if ../require.py --datafor S2 --nodatafor 4/16 ; then
             echo "Running President's Club"
             ../presidentsclub.py && isreal && cp presidentsclub.txt ~/www/files/reports/
         fi
