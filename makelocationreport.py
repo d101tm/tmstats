@@ -95,6 +95,8 @@ def inform(*args, **kwargs):
 def computeMaxDistance(locations):
     """locations is an array of clubname/lat/long tuples"""
     maxd = 0
+    maxc1 = ''
+    maxc2 = ''
     for i in range(len(locations)):
         (c1, lat1, lng1) = locations[i]
         for (c2, lat2, lng2) in locations[i+1:]:
@@ -148,11 +150,14 @@ def closearea(outfile, text, locations, gonefrom):
     # This is gross and relies on knowing what "openarea" does.
     
     if len(locations) > 1:
-        text[1] = text[1] % computeMaxDistance(locations)
-        outfile.write(''.join(text))
+        maxdistinfo = computeMaxDistance(locations)
+        if maxdistinfo[0] == 0.0:
+            text[1] = re.sub(r'\(.*\)', '', text[1])  # Remove distance
+        else:
+            text[1] = text[1] % computeMaxDistance(locations)
     else:
         text[1] = re.sub(r'\(.*\)', '', text[1])  # Remove distance
-        outfile.write(''.join(text))
+    outfile.write(''.join(text))
     outfile.write('</tbody></table>\n')
     if gonefrom:
         outfile.write('<p>Club%s leaving area:</p>\n' % ('' if len(gonefrom) == 1 else 's'))
