@@ -25,7 +25,7 @@ fi
 
 echo 'Running createalignment'
 echo $bp
-../createalignment.py --outfile $workfile || exit 1
+../createalignment.py --include --outfile $workfile || exit 1
 echo $ep
 echo
 echo Running alignmap 
