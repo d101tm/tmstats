@@ -101,7 +101,11 @@ if __name__ == "__main__":
                 del clubs[cnum]
             else:
                 if not c.newarea:
-                    c.newarea = c.oldarea
+                    try:
+                        c.newarea = c.oldarea
+                    except AttributeError:
+                        c.oldarea = '@'
+                        c.newarea = '@'
 
                 
         

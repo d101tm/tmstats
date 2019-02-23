@@ -127,10 +127,19 @@ def makemap(outfile, clubs, parms):
     districtBounds = Bounds()
     for c in sorted(clubs.keys()):
         club = clubs[c]
-        club.latitude = float(club.latitude)
-        club.longitude = float(club.longitude)  # In case the values in the database are funky
+        # Do what we can to make the club coordinates sensible
+        try:
+            club.latitude = float(club.latitude)
+        except ValueError:
+            club.latitude = 0.0
+        try:
+            club.longitude = float(club.longitude)
+        except ValueError:
+            club.longitude = 0.0
         if club.latitude == 0.0 or club.longitude == 0.0:
             print('no position for', club.clubnumber, club.clubname)
+            del clubs[c]
+            continue
         club.coords = '(%f,%f)' % (club.latitude, club.longitude)
         club.card = makeCard(club)
         if club.coords not in clubsByLocation:

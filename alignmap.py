@@ -82,6 +82,13 @@ if __name__ == "__main__":
     # Process new grouping
     if parms.testalign:
         clubs = overrideClubs(clubs, parms.testalign)
+
+    # Delete clubs at (0.0, 0.0)
+    for cnum in clubs:
+        c = clubs[cnum]
+        if c.latitude == 0.0 and c.longitude == 0.0:
+            print('Deleting', c)
+            del clubs[cnum]
         
     # Make the club entries for the map
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')

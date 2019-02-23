@@ -100,11 +100,14 @@ def computeMaxDistance(locations):
     for i in range(len(locations)):
         (c1, lat1, lng1) = locations[i]
         for (c2, lat2, lng2) in locations[i+1:]:
-            d = distance_on_unit_sphere(float(lat1), float(lng1), float(lat2), float(lng2))
-            if (d > maxd):
-                maxd = d
-                maxc1 = c1
-                maxc2 = c2
+            try:
+                d = distance_on_unit_sphere(float(lat1), float(lng1), float(lat2), float(lng2))
+                if (d > maxd):
+                    maxd = d
+                    maxc1 = c1
+                    maxc2 = c2
+            except ValueError:
+                pass
     return (maxd, maxc1, maxc2)
     
     
@@ -309,6 +312,8 @@ if __name__ == "__main__":
             'state', 'zip', 'latitude', 'longitude']
     for row in reader:
         newarea = row['newarea']
+        if not newarea:
+            newarea = '@'
         row['newarea'] = newarea[1:]
         row['newdivision'] = newarea[0]
         try:
