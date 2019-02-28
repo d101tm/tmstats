@@ -164,7 +164,7 @@ if __name__ == "__main__":
         nond101list = []
         vcount = 0
         for club in visited:
-            if club.nond101location:
+            if club.nond101location.strip():
                 nond101list.append('<span class="altname">%s</span>&nbsp;(%s)' % (club.clubname.replace(' ','&nbsp;'), club.nond101location.replace(' ', '&nbsp;')))
             else:
                 if club.visits != vcount:
@@ -202,7 +202,7 @@ if __name__ == "__main__":
             
     newinsights.sort(key=lambda k:makesortkey(k))
     oldinsights.sort(key=lambda k:makesortkey(k))
-        
+
     with open(parms.outprefix+'insights.shtml', 'w') as outfile:
         if newinsights:
             outfile.write('<h3>Recent Insights</h3>')
