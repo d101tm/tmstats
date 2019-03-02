@@ -90,13 +90,6 @@ if [[ "$dorun" = "yes" ]] ; then
         exit $rc
     fi
     
-    # Create the "marker" file that we use to figure out
-    #    what files need to be copied to the server.
-    touch marker
-
-
-    sleep 1   # Make sure that the marker file has an older timestamp
-   
     ### Run the allstats report
     if (( $haveboth == 0 )) ; then
         echo "running allstats"
@@ -207,8 +200,10 @@ if [[ "$dorun" = "yes" ]] ; then
             echo "Processing award letters as a dry run"
 	    ../sendawardmail.py --dryrun
     fi
+
+    # Make exportable copy of the database
+    isreal && ../exportdb.sh
         
-    rm marker
     rm *.success 2>/dev/null
 
     isreal && ../clearcache.py --all
