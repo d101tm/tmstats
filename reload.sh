@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Reload the database.
 cd data
 foo=$(grep 'dbpass:' tmstats.yml);export dbpass=${foo##* }

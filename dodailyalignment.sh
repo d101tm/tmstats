@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 cd data
 ../listclubsbycity.py
 ../buildareapage.py --outfile areapage.html 

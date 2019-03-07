@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 let spacing=32
 let line1=100
 let left=420
