@@ -5,7 +5,6 @@
 *.pyc
 bluehost.sh
 clearcache.sh
-removega.py
 *.db
 *.xls*
 hourly
