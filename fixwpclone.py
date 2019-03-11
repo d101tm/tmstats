@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # Establish parameters
     parms = tmparms.tmparms()
     # Add other parameters here
-    parms.add_argument('--configfile', type=str, default='wp-config.php')
+    parms.add_argument('--configfile', type=str, default='/var/www/html/wp-config.php')
 
     # Do global setup
     globals.setup(parms,connect=False)
@@ -33,6 +33,7 @@ if __name__ == "__main__":
     # Parse the WordPress configuration file
     config = tmutil.parseWPConfig(open(parms.configfile,'r'))
 
+
     # Connect as the active user, who needs full authority over WordPress
     conn = dbconn.dbconn('localhost', username, password, '')
     curs = conn.cursor()
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     # Make sure the WP user can access the database
     curs.execute("CREATE USER IF NOT EXISTS '%s'@'localhost' IDENTIFIED BY '%s'" % (config['DB_USER'], config['DB_PASSWORD']))
     ("GRANT ALL PRIVILEGES ON '%s'.'*' TO '%s'@'localhost'" % (config['DB_NAME'], config['DB_USER']))
-
+    curs.execute('FLUSH PRIVILEGES')
     conn.close()
 
 
