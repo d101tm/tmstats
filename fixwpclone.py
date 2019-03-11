@@ -33,7 +33,6 @@ if __name__ == "__main__":
     # Parse the WordPress configuration file
     config = tmutil.parseWPConfig(open(parms.configfile,'r'))
 
-
     # Connect as the active user, who needs full authority over WordPress
     conn = dbconn.dbconn('localhost', username, password, '')
     curs = conn.cursor()
@@ -41,7 +40,8 @@ if __name__ == "__main__":
     # Make sure the WP user can access the database
     curs.execute("CREATE USER IF NOT EXISTS '%s'@'localhost' IDENTIFIED BY '%s'" % (config['DB_USER'], config['DB_PASSWORD']))
     ("GRANT ALL PRIVILEGES ON '%s'.'*' TO '%s'@'localhost'" % (config['DB_NAME'], config['DB_USER']))
-    curs.execute('FLUSH PRIVILEGES')
+    curs.execute("FLUSH PRIVILEGES")
+
     conn.close()
 
 
@@ -52,34 +52,34 @@ if __name__ == "__main__":
     userstable = prefix + 'users'
     metatable = prefix + 'usermeta'
 
-    # Ensure there's a privileged user named 'admin' with password 'admin'
+    # Ensure there's a privileged user named 'd101dev' with password 'd101dev'
 
     # Get the hash of the password
-    curs.execute("SELECT MD5('admin')")
+    curs.execute("SELECT MD5('d101dev')")
     hash = curs.fetchone()[0]
     
-    stmt = "SELECT id FROM " + userstable + " WHERE user_login = 'admin'"
-    print(stmt)
-    print(curs.execute(stmt))
+    stmt = "SELECT id FROM " + userstable + " WHERE user_login = 'd101dev'"
+    curs.execute(stmt)
     res = curs.fetchone()
     if not res:
-        # No admin user exists - must create one
-        stmt = ("INSERT INTO " + userstable + " (user_login, user_pass, user_nicename, display_name, user_registered)" + " VALUES('admin', '%s', 'admin', 'admin', now())") % (hash, )
+        # No d101dev user exists - must create one
+        stmt = ("INSERT INTO " + userstable + " (user_login, user_pass, user_nicename, display_name, user_registered)" + " VALUES('d101dev', '%s', 'd101dev', 'd101dev', now())") % (hash, )
         curs.execute(stmt)
     else:
-        # Update the admin user's password
+        # Update the d101dev user's password
         stmt = ("UPDATE " + userstable + " SET user_pass = '%s' WHERE ID = %s") %  (hash, res[0])
         curs.execute(stmt)
 
-    # Get admin's id
-    curs.execute("SELECT id FROM " + userstable + " WHERE user_login = 'admin'")
+    # Get d101dev's id
+    curs.execute("SELECT id FROM " + userstable + " WHERE user_login = 'd101dev'")
     id = curs.fetchone()[0]
 
-    # Now we have to set the admin user as an Administrator - copy from user 1
+    # Now we have to set the d101dev user as an Administrator - copy from user 1
     curs.execute("SELECT meta_key, meta_value FROM " + metatable + " WHERE user_id = 1")
     ans = curs.fetchall() 
 
     keys_to_copy = [prefix + 'capabilities', prefix + 'user_level', 'health_check', 'dismissed_wp_pointers']
+    keys_to_copy = []
     for (key, value) in ans:
         if key in keys_to_copy:
             stmt = 'INSERT INTO ' + metatable + ' (user_id, meta_key, meta_value) VALUES (%s, %s, %s)'
