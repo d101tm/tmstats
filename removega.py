@@ -35,6 +35,9 @@ if __name__ == "__main__":
 
     pattern = re.compile(r"(</script>|^)(\s*)(<script>.*?GoogleAnalyticsObject.*?</script>)", re.I|re.M|re.S)
     m = re.search(pattern, searchText)
+    if not m:
+        sys.stderr.write('No Google Analytics found in et_divi option\n')
+        sys.exit(2)
     # We need to keep the length of the string unchanged
     need = len(m.group(1)) + len(m.group(2)) + len(m.group(3))
     result = re.sub(pattern, ('</script>'.ljust(need)), searchText)
