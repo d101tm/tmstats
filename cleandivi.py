@@ -6,14 +6,14 @@ class DiviOption:
     def dostr(self, count, s):
         count = int(count)
         item = s[1:1+count]
-        print('---------\n'+item+'---------')
+        
         s = s[1+count:]
         if s[0] != '"':
-            print('string not "')
-            print(s)
+            
+            
             return
         s = s[1:]
-        print('"%s"' % item)
+        
         return(item, s)
         
         
@@ -23,19 +23,19 @@ class DiviOption:
         itemcount = int(count)
         ret = []
         if s[0] != '{':
-            print('not {')
+            
             return
         s = s[1:]
         while s[0] != '}':
-            print('input: %s'% s[0:70])
+            
             (key, s) = s.split(':', 1)
-            print(key, s[0:70])
+            
             if key == 'a':
                 (count, s) = s.split(':', 1)
                 (item, s) = self.doarray(count + ':' + s)
-                print('Back from doarray')
-                print(s)
-                print('')
+                
+                
+                
                 s = ';' + s
 
             elif key == 's':
@@ -54,23 +54,23 @@ class DiviOption:
                 s = ';' + s
                 item = float(count)
             else:
-                print('unknown key %s' % key)
-                print(s)
+                
+                
                 return
-            print('** %s **, %s' % (item, s[0:40]))
+            
             if s[0] == ';':
                 s = s[1:]
                 ret.append(item)
             elif s[0] == '}':
                 ret.append(item)
             else:
-                print('%s is not ; or }' % s[0])
+                
                 return
-        print('Exit doarray')
-        print(s)
+        
+        
 
         if s[0] != '}':
-            print('not }')
+            
             return    
         s = s[1:]
         return(ret, s)
@@ -83,8 +83,14 @@ class DiviOption:
         (key, work) = work.split(':', 1)
         if key != 'a':
             return    # We have problems
-        (self.value, work) =  self.doarray(work)
-        print('Remaining string is %s' % work)  
+        (self.value, self.work) =  self.doarray(work)
+        self.values = {}
+        i = 0
+        while i < len(self.value):
+            self.values[self.value[i]] = self.value[i+1]
+            i += 2
+        
+        
 
         
 
@@ -115,5 +121,7 @@ jQuery(function($){
 
 ";s:27:"divi_integration_single_top";s:0:"";s:30:"divi_integration_single_bottom";s:0:"";s:15:"divi_468_enable";s:5:"false";s:14:"divi_468_image";s:0:"";s:12:"divi_468_url";s:0:"";s:16:"divi_468_adsense";s:0:"";s:21:"et_pb_image-animation";s:3:"off";s:14:"footer_columns";s:1:"1";s:9:"footer_bg";s:7:"#ffffff";s:24:"show_footer_social_icons";b:1;s:24:"footer_widget_text_color";s:7:"#000000";s:26:"footer_widget_header_color";s:7:"#000000";s:24:"show_header_social_icons";b:1;s:12:"header_email";s:0:"";s:15:"hide_fixed_logo";b:0;s:12:"phone_number";s:0:"";s:18:"divi_color_palette";s:63:"#000000|#ffffff|#004165|#772432|#a9b2b1|#cd202c|#f2df74|#000000";s:14:"divi_menupages";a:1:{i:0;i:44;}s:12:"heading_font";s:5:"Arial";s:9:"body_font";s:5:"Arial";s:22:"fixed_secondary_nav_bg";s:7:"#000000";s:22:"fixed_menu_link_active";s:7:"#f2df74";s:21:"minimized_menu_height";i:60;s:11:"logo_height";i:100;s:15:"fixed_menu_link";s:7:"#ffffff";s:10:"font_color";s:7:"#000000";s:12:"header_color";s:7:"#000000";s:23:"secondary_nav_fullwidth";b:0;s:16:"secondary_nav_bg";s:7:"#000000";s:28:"secondary_nav_text_color_new";s:7:"#ffffff";s:32:"secondary_nav_dropdown_animation";s:4:"fade";s:13:"nav_fullwidth";b:1;s:17:"hide_primary_logo";b:0;s:31:"primary_nav_dropdown_link_color";s:7:"#ffffff";s:9:"menu_link";s:7:"#ffffff";s:14:"primary_nav_bg";s:7:"#000000";s:13:"color_schemes";s:4:"none";s:28:"footer_menu_background_color";s:21:"rgba(221,153,51,0.05)";s:22:"footer_menu_text_color";s:7:"#000000";s:29:"footer_menu_active_link_color";s:7:"#f2df74";s:27:"bottom_bar_background_color";s:7:"#772432";s:12:"accent_color";s:7:"#004165";s:23:"primary_nav_dropdown_bg";s:7:"#111111";s:31:"primary_nav_dropdown_line_color";s:7:"#004165";s:30:"primary_nav_dropdown_animation";s:4:"fade";s:21:"bottom_bar_text_color";s:7:"#ffffff";s:10:"link_color";s:7:"#0000ee";s:20:"all_buttons_bg_color";s:20:"rgba(119,36,50,0.57)";s:26:"all_buttons_bg_color_hover";s:20:"rgba(119,36,50,0.57)";s:12:"vertical_nav";b:0;s:24:"vertical_nav_orientation";s:5:"right";s:8:"hide_nav";b:0;s:21:"primary_nav_font_size";i:14;s:24:"primary_nav_font_spacing";i:0;s:12:"header_style";s:4:"left";s:16:"menu_link_active";s:7:"#f2df74";s:16:"show_search_icon";b:0;s:12:"boxed_layout";b:0;s:16:"body_font_height";d:1.5;s:25:"divi_scroll_to_anchor_fix";s:5:"false";s:25:"3_0_flush_rewrite_rules_2";s:4:"done";s:32:"et_fb_pref_settings_bar_location";s:6:"bottom";s:30:"et_fb_pref_modal_snap_location";s:4:"left";s:21:"et_fb_pref_modal_snap";s:5:"false";s:27:"et_fb_pref_modal_fullscreen";s:5:"false";s:32:"et_fb_pref_modal_dimension_width";i:1811;s:33:"et_fb_pref_modal_dimension_height";i:683;s:27:"et_fb_pref_modal_position_x";i:30;s:27:"et_fb_pref_modal_position_y";i:50;s:40:"divi_email_provider_credentials_migrated";b:1;s:21:"et_pb_static_css_file";s:2:"on";s:19:"et_pb_css_in_footer";s:3:"off";s:39:"static_css_custom_css_safety_check_done";b:1;s:30:"et_pb_static_css_cache_version";s:6:"3.0.57";s:19:"product_tour_status";a:5:{i:14;s:3:"off";i:17;s:3:"off";i:18;s:3:"off";i:9;s:3:"off";i:2;s:3:"off";}s:28:"et_fb_pref_builder_animation";s:4:"true";s:41:"et_fb_pref_builder_display_modal_settings";s:5:"false";s:21:"et_fb_pref_event_mode";s:5:"hover";s:32:"et_fb_pref_hide_disabled_modules";s:5:"false";s:28:"et_fb_pref_history_intervals";i:1;s:27:"et_fb_pref_modal_preference";s:7:"default";s:24:"et_fb_pref_toolbar_click";s:5:"false";s:26:"et_fb_pref_toolbar_desktop";s:4:"true";s:23:"et_fb_pref_toolbar_grid";s:5:"false";s:24:"et_fb_pref_toolbar_hover";s:5:"false";s:24:"et_fb_pref_toolbar_phone";s:4:"true";s:25:"et_fb_pref_toolbar_tablet";s:4:"true";s:28:"et_fb_pref_toolbar_wireframe";s:4:"true";s:23:"et_fb_pref_toolbar_zoom";s:4:"true";s:21:"et_pb_layouts_updated";b:1;s:30:"library_removed_legacy_layouts";b:1;s:24:"footer_widget_link_color";s:7:"#ffffff";s:12:"divi_sidebar";s:16:"et_right_sidebar";s:27:"divi_minify_combine_scripts";s:2:"on";s:26:"divi_minify_combine_styles";s:2:"on";s:25:"et_pb_product_tour_global";s:2:"on";s:31:"divi_previous_installed_version";s:4:"3.21";s:29:"divi_latest_installed_version";s:6:"3.21.1";s:30:"3_0_flush_rewrite_rules_3.19.3";s:4:"done";s:30:"et_flush_rewrite_rules_library";s:6:"3.21.1";s:24:"divi_show_instagram_icon";s:5:"false";s:18:"divi_instagram_url";s:1:"#";s:27:"et_pb_post_type_integration";a:4:{s:4:"post";s:2:"on";s:4:"page";s:2:"on";s:7:"project";s:2:"on";s:12:"tribe_events";s:2:"on";}s:24:"et_enable_classic_editor";s:3:"off";}"""
     v = DiviOption(value.replace('\n', '\r\n'))
-    for item in v.value:
-        print(item)
+    if v.work:
+        print('Remaining: "%s"' % v.work)
+    for k in v.values:
+        print(k, v.values[k])
