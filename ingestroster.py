@@ -42,6 +42,7 @@ if __name__ == "__main__":
     import tmparms
     parms = tmparms.tmparms()
     parms.add_argument('roster', type=str, nargs=1, help='Name of the roster file')
+    parms.add_argument('--tablename', type=str, default='ROSTER', help='Name of the table to create')
     
     # Do global setup
     globals.setup(parms)
@@ -177,14 +178,19 @@ if __name__ == "__main__":
             declare.append(f + ' VARCHAR(100)')
         
 
-    create = 'CREATE TABLE roster \n(%s,\n INDEX (clubnum, fullname))' % ',\n'.join(declare)
+    create = 'CREATE TABLE %s \n(%s,\n INDEX (clubnum, fullname))' % (parms.tablename, ',\n'.join(declare))
     
     # And create the table (dropping an old one if it exists)
-    curs.execute('DROP TABLE IF EXISTS roster')
+    drop = 'DROP TABLE IF EXISTS %s' % parms.tablename
+    print(drop)
+    print(create)
+    curs.execute(drop)
     curs.execute(create)
     
     # And now, populate the table
+    inspart = 'INSERT INTO %s VALUES' % parms.tablename
     valuepart = ','.join(['%s']*len(fieldnames))
-    
-    print(curs.executemany('INSERT INTO roster VALUES (' + valuepart + ')', values), 'members found.')
+    insertstmt = inspart + '(' + valuepart + ')'
+    print(insertstmt)
+    print(curs.executemany(insertstmt, values), 'members found.')
     conn.commit()
