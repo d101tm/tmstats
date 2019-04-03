@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-""" Open House Challenge - build the HTML fragment for the Open House Challenge """
+""" Open House Challenge - build the HTML fragment for the Open House Challenge 
+    Using the newest version of the Toastmasters District Roster, with the previous
+    term's memberships shown as 'UNPAID'.
+"""
 
 import dbconn, tmutil, sys, os
 from simpleclub import Club
@@ -53,9 +56,9 @@ if __name__ == "__main__":
     finaldate = tmutil.cleandate(parms.finaldate)
     # Also figure out the term end date we need, anchored to the calendar year
     renewtodate = tmutil.cleandate(parms.renewto, usetmyear=False)
- 
-    # And get the clubs on the base date
-    clubs = Club.getClubsOn(curs,date=basedate)
+     
+    # Get all clubs for this year; we'll sort out suspended clubs later if need be
+    clubs = Club.getClubsOn(curs)
     
     # And index them by name as well as number; set memdiff = 0 for each club.
     clubsByName = {}
@@ -90,9 +93,13 @@ if __name__ == "__main__":
     else:
         eligibilityclause = ''
         
-    
-    # Now, get the count for each club of new members who have renewed for the following term
-    curs.execute("SELECT clubnum, count(*) FROM roster WHERE memberofclubsince >= %s AND memberofclubsince <= %s AND termenddate >= %s " + eligibilityclause + "GROUP BY clubnum", (basedate, finaldate, renewtodate))
+    # Build the query:
+    query = """SELECT roster.clubnum, COUNT(*) FROM roster 
+              INNER JOIN (SELECT clubnum, membernum FROM roster WHERE termbegindate >= %s AND termbegindate <= %s ) n 
+              ON roster.clubnum = n.clubnum AND roster.membernum = n.membernum 
+              WHERE termenddate >= %s """ + eligibilityclause + "GROUP BY roster.clubnum"
+    # And get the results:
+    curs.execute(query, (basedate, finaldate, renewtodate))
     
     # And assign clubs according to the Fall 2018 Criteria
     
