@@ -42,7 +42,7 @@ if __name__ == "__main__":
     import tmparms
     parms = tmparms.tmparms()
     parms.add_argument('roster', type=str, nargs=1, help='Name of the roster file')
-    parms.add_argument('--tablename', type=str, default='ROSTER', help='Name of the table to create')
+    parms.add_argument('--tablename', type=str, default='roster', help='Name of the table to create')
     
     # Do global setup
     globals.setup(parms)
