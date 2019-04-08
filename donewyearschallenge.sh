@@ -9,7 +9,7 @@ echo "<p>Processing New Year's Challenge Report</p>"
 echo "<p>Using roster file '$(cat rosterondropbox.txt)' from Dropbox</p>"
 
 echo "<pre>"
-../openhouse.py --outfile newyearschallenge.html --basedate 12/1 --finaldate 2/28 --renewto 9/30/2019 && isreal && cp newyearschallenge.html ~/files/reports/ 
+../openhouse.py --outfile newyearschallenge.html --basedate 12/1 --finaldate 3/31 --renewto 9/30/2019 && isreal && cp newyearschallenge.html ~/files/reports/ 
 src=$?
 ../clearcache.py district-programs
 echo "</pre>"
