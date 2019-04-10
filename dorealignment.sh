@@ -7,7 +7,15 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/d101tm/lib/lib
 mkdir alignment 2>/dev/null
 export workfile=alignment/d101align.csv
 
-if [ "$1" = "html" ]
+# Process parameters
+if [[ "$*" =~ .*include.* ]]
+then
+    include=--include
+else
+    include=""
+fi
+
+if [[ "$*" =~ .*html.* ]]
 then
 cat << EOF
 Content-Type: text/html; charset=utf-8
@@ -25,7 +33,7 @@ fi
 
 echo 'Running createalignment'
 echo $bp
-../createalignment.py --include --outfile $workfile || exit 1
+../createalignment.py $include --outfile $workfile || exit 1
 echo $ep
 echo
 echo Running alignmap 
@@ -65,7 +73,7 @@ if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
         cp alignment/* ~/files/workingalignment/
 fi
 
-if [ "$1" = "html" ]
+if [[ "$*" =~ .*html.* ]]
 then
 
 cat << EOF
