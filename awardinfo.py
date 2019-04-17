@@ -12,6 +12,7 @@ class Awardinfo:
 
     pathids = {'DL': 'Dynamic Leadership',
                'EC': 'Effective Coaching',
+               'EH': 'Engaging Humor',
                'IP': 'Innovative Planning',
                'LD': 'Leadership Development',
                'MS': 'Motivational Strategies',
