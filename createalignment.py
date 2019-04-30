@@ -117,7 +117,7 @@ if __name__ == "__main__":
     writer = csv.DictWriter(outfile, fieldnames=outfields, extrasaction='ignore')
     writer.writeheader()
     
-    outclubs = sorted(list(clubs.values()),key=lambda club:club.newarea+club.clubnumber.rjust(8))
+    outclubs = sorted(list(clubs.values()),key=lambda club:str(club.newarea)+club.clubnumber.rjust(8))
     # Omit suspended clubs
     for c in outclubs:
         try:
