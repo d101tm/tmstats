@@ -61,7 +61,10 @@ if __name__ == "__main__":
         overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey,log=True, createnewclubs=True)
     
     # Now, add info from clubperf (and create club.oldarea for each club)
-    curs.execute('SELECT clubnumber, color, goalsmet, activemembers, clubstatus FROM clubperf WHERE entrytype = "L"')
+    # We use the 'lastfor' table to get information for all clubs, even those which Toastmasters dropped from
+    #   the list because they were suspended for two renewal cycles.
+    curs.execute('''SELECT clubnumber, color, goalsmet, activemembers, clubstatus FROM clubperf 
+                    WHERE id in (SELECT clubperf_id FROM lastfor WHERE tmyear = %s)''', (globals.tmyear,))
     for (clubnumber, color, goalsmet, activemembers, clubstatus) in curs.fetchall():
         c = clubs[str(clubnumber)]
         c.color = color

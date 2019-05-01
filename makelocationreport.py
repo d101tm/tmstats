@@ -286,7 +286,10 @@ if __name__ == "__main__":
 
     perffields = ['clubnumber', 'clubname', 'district', 'area', 'division', 'eligibility', 'color', 'membase', 'activemembers', 'goalsmet']
 
-    curs.execute("SELECT clubnumber, clubname, district, area, division, clubstatus as eligibility, color, membase, activemembers, goalsmet FROM clubperf WHERE entrytype = 'L' and district = %s", (parms.district,))
+    curs.execute("""SELECT clubnumber, clubname, district, area, division, clubstatus 
+                    AS eligibility, color, membase, activemembers, goalsmet FROM clubperf 
+                    WHERE id IN (SELECT clubperf_id FROM lastfor WHERE tmyear = %s) AND district = %s""",
+                    (globals.tmyear, parms.district))
 
     for info in curs.fetchall():
         clubnum = Club.stringify(info[0])
