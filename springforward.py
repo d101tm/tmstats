@@ -153,7 +153,7 @@ if __name__ == "__main__":
     # Also make a CSV with all of the information
     columns = ['Division', 'Area', 'Club Number', 'Club Name', 'Members Added', 'Amount Earned', 'Division Leader']
     fields = ['division', 'area', 'clubnumber', 'clubname', 'growth', 'amount', 'leader']
-    csvfile = open(parms.csvfile, 'wb')
+    csvfile = open(parms.csvfile, 'w')
     writer = csv.DictWriter(csvfile, fieldnames=fields, extrasaction='ignore')
     csvfile.write(','.join(columns))
     csvfile.write('\n')
