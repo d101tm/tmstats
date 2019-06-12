@@ -315,6 +315,8 @@ def doDailyClubs(infile, conn, cdate, firsttime=False):
             club.division = "0D"
 
         # Clean up the charter date
+        if not club.charterdate.strip():
+            continue    # This is a prospective club that Toastmasters didn't mark properly; ignore it.
         club.charterdate = cleandate(club.charterdate)
 
         # Clean up advanced status
