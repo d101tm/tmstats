@@ -147,14 +147,13 @@ if __name__ == "__main__":
             clubfile.write("<p>Congratulations to <b>%s</b> for earning $%d for adding %d member%s.</p>\n" %
                            (theclub.clubname, theclub.amount, theclub.growth, "s" if theclub.growth > 1 else ""))
         else:
-            clubfile.write("<p>Congratulations to these clubs for adding new members:</p>\n")
-            clubfile.write("<p>&nbsp;</p>\n")
+            clubfile.write("<p><b>Congratulations to these clubs for adding new members:</b></p>\n")
             for amount in sorted(winners.keys(),reverse=True):
                 tranche = winners[amount]
                 growth = tranche[0].growth
                 clubfile.write("<p><b>Earning $%d for adding %d member%s:</b> " % (amount, growth, "s" if growth > 1 else ""))
                 clubfile.write(getClubBlock(tranche))
-                clubfile.write("</p>\n")
+                clubfile.write(".</p>\n")
 
 
     clubfile.close()
