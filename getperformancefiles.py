@@ -47,7 +47,6 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
-    print(url)
     try:
         clubinfo = requests.get(url).text.replace('\r','').split('\n')
     except requests.exceptions.SSLError:
@@ -71,7 +70,7 @@ def getreportfromWHQ(report, district, tmyearpiece, month, thedate):
     url = makeurl(report, district, tmyearpiece, getmonthend(month[0],month[1]), datetime.strftime(thedate, '%m/%d/%Y'))
     resp = getresponse(url)
     if not resp:
-        print("No valid response received")
+        print("No valid response received for %s" % url)
     return resp
     
 def gettmyearfordate(d):
