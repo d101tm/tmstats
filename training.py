@@ -114,9 +114,9 @@ if __name__ == "__main__":
     curs = globals.curs
     conn = globals.conn
     
-    # If we're in the first cycle, ignore 9a, even if specified
+    # If we're in the first cycle, ignore 9a, even if specified, unless lastmonth is explicit (to allow for historical reports)
     thismonth = datetime.today().month
-    if thismonth >= 6 and thismonth <= 10:
+    if thismonth >= 6 and thismonth <= 10 and not parms.lastmonth:
         parms.bonus9a = False
         parms.require9a = False
     
