@@ -154,9 +154,15 @@ if [[ "$dorun" = "yes" ]] ; then
         fi
 
         # Spring Forward runs once we have April data and stops when we have data for the next year
-        if ../require.py --datafor S5 --oldtmyear ; then
+        if false && ../require.py --datafor S5 --oldtmyear ; then
             echo "Running Spring Forward"
             ../springforward.py && isreal && cp springforward.* ~/www/files/reports
+        fi
+
+        # Sensational Summer runs once we have April data and stops when we have data for the next year
+        if ../require.py --datafor S5 --oldtmyear ; then
+            echo "Running Sensational Summer"
+            ../summer.py && isreal && cp summer.* ~/www/files/reports
         fi
 
         # Five for 5 runs once we have April data and stops when we get data for 5/16.
