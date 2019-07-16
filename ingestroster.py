@@ -21,11 +21,16 @@ def normalizefieldnames(fields):
     # ('middle' -> 'middlename')
     fieldnames = []
     for f in fields:
+        # Toastmasters has used various field headers at different times; this
+        #   part of the code tries to compensate
         f = f.lower().strip().replace('#', 'num')
         f = f.replace(' id', 'num')
         f = f.replace('membership begin', 'termbegindate')
         f = f.replace('membership end', 'termenddate')
         f = f.replace('original join date', 'joindate')
+        f = f.replace('tm join date', 'joindate')
+        f = f.replace('term begin', 'termbegindate')
+        f = f.replace('term end', 'termenddate')
         if f == 'middle':
             f = 'middlename'
         f = re.sub(r'[^a-zA-z0-9]+','',f)
