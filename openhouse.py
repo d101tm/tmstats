@@ -34,9 +34,9 @@ if __name__ == "__main__":
     parms.add_argument('--verbose', '-v', action='count')
     parms.add_argument('--openhouseclubs', default='', help="")
     parms.add_argument('--outfile', default='openhouseclubs.html')
-    parms.add_argument('--basedate', default='9/1')
+    parms.add_argument('--basedate', default='8/1')
     parms.add_argument('--finaldate', default='10/31')
-    parms.add_argument('--renewto', default='3/31/2019')
+    parms.add_argument('--renewto', default='3/31/2020')
     parms.add_argument('--requireopenhouse', action='store_true')
 
     #Do global setup
