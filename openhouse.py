@@ -95,10 +95,11 @@ if __name__ == "__main__":
         
     # Build the query:
     query = """SELECT roster.clubnum, COUNT(*) FROM roster 
-              INNER JOIN (SELECT clubnum, membernum FROM roster WHERE termbegindate >= %s AND termbegindate <= %s ) n 
+              INNER JOIN (SELECT clubnum, membernum FROM roster WHERE termbegindate >= %s AND termbegindate <= %s AND paidstatus = 'PAID') n 
               ON roster.clubnum = n.clubnum AND roster.membernum = n.membernum 
-              WHERE termenddate >= %s """ + eligibilityclause + "GROUP BY roster.clubnum"
+              WHERE termenddate >= %s """ + eligibilityclause + " AND paidstatus = 'PAID' GROUP BY roster.clubnum"
     # And get the results:
+
     curs.execute(query, (basedate, finaldate, renewtodate))
     
     # And assign clubs according to the Fall 2018 Criteria
