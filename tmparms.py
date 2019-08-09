@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ Handle parameters for the TMSTATS family of programs.
-    Parameters can come on the command line or from the tmstats.yml file.
+    Parameters can come on the command line or from the tmstats.ini file.
 
     Usage:
        Create the tmparms instance.
@@ -9,7 +9,8 @@
        Interpret other parameters in self.args as needed.
     """
 
-import argparse, yaml, os
+import argparse, yaml, os, configparser
+
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
     pass
@@ -21,8 +22,10 @@ class Singleton(object):
             type._the_instance = object.__new__(type)
         return type._the_instance
 
+
 class tmparms(Singleton):
-    def __init__(self, description='A program in the TMSTATS suite.', YMLfile='tmstats.yml', includedbparms=True, customformatter=True, **kwargs):
+    def __init__(self, description='A program in the TMSTATS suite.', configfile='tmstats.ini', includedbparms=True,
+                 customformatter=True, **kwargs):
         if self.__dict__.get('parms', False):
             return
         if customformatter is True:
@@ -35,7 +38,7 @@ class tmparms(Singleton):
             self.parser = argparse.ArgumentParser(description=description, formatter_class=formatter_class, **kwargs)
         else:
             self.parser = argparse.ArgumentParser(description=description)
-        self.parser.add_argument('--YMLfile',  help="YML file with information for this program", default=YMLfile)
+        self.parser.add_argument('--configfile', help="INI file with information for this program", default=configfile)
         if includedbparms:
             self.parser.add_argument('--dbname', help="MySQL database to use", dest='dbname')
             self.parser.add_argument('--dbhost', help="host for MySQL database", dest='dbhost')
@@ -46,6 +49,8 @@ class tmparms(Singleton):
         return '\n'.join(['%s: "%s"' % (k, self.__dict__[k]) for k in self.__dict__ if k != 'parser'])
 
     def add_argument(self, *args, **kwargs):
+        if 'default' in kwargs and isinstance(kwargs['default'], str):
+            kwargs['default'] = os.path.expandvars(kwargs['default'])
         self.parser.add_argument(*args, **kwargs)
 
     def add_argument_group(self, *args, **kwargs):
@@ -56,28 +61,46 @@ class tmparms(Singleton):
 
     def parse(self):
 
-        # Parameters are put directly into this object, based on their name in the YML file
+        # Parameters are put directly into this object, based on their name in the config file
         #   or the command line.
         # NOTE:  Parameters with default values which evaluate to TRUE will ALWAYS override the file!
         #
-        # self.ymlvalues is the result of reading the YML file
+        # self.configvalues is the result of reading the config file
         # self.args is the result from the parser
 
-        # Parse the command line (in case the YMLfile has been overridden)
+        # Parse the command line (in case the configfile has been overridden)
         self.args = self.parser.parse_args()
 
-        # Set values from the YML file
-        self.ymlvalues= yaml.load(open(self.args.YMLfile,'r'))
-        for name in self.ymlvalues:
-            self.__dict__[name] = self.ymlvalues[name]
+        # Set values from the configfile
+        configParser = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
+        configParser.read(self.args.configfile)
 
+        # Now, add selected values from the environment to the parser's default section - but only
+        # values that don't exist there yet.
+
+        selected_keys = ('home', 'tmstats', 'tmstats_data', 'workdir')
+
+        for k in os.environ:
+            if k not in configParser['default'] and k.lower() in selected_keys:
+                configParser.set('default', k, os.environ[k])
+
+        # Now, promote the values in the configuration file to top level.
+        # Add selected values to the environment (as upper case) so they work in os.path.expandvars
+        self.configvalues = dict(configParser['default'])
+        for name in self.configvalues:
+            if name in selected_keys:
+                os.environ[name.upper()] = self.configvalues[name]
+            self.__dict__[name] = self.configvalues[name]
+
+        # @@TODO@@ Deal with non-default sections.  Does anything use them yet?
 
         # Override with non-false values from the command line (or the default).
-        # If no value is in the YMLfile, use the command line or default whether it's true or false.
+        # If no value is in the configfile, use the command line or default whether it's true or false.
+        # Expand environment variables here (which now includes values from the config file).
         args = vars(self.args)
         for name in list(args.keys()):
             if args[name] or name not in self.__dict__:
-                self.__dict__[name] = args[name]
+                self.__dict__[name] = os.path.expandvars(args[name]) if args[name] else args[name]
 
         # And handle dbhost specially to make sure it exists:
         if 'dbhost' not in self.__dict__ or not self.dbhost:
@@ -86,6 +109,7 @@ class tmparms(Singleton):
 
 if __name__ == '__main__':
     import tmglobals
+
     globals = tmglobals.tmglobals()
     parms = tmparms()
     globals.setup(parms)
