@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.parser.add_argument("--fromend", dest='fromend', type=int, default=12)
     parms.parser.add_argument("--toend", dest='toend', type=int, default=2)
-    parms.parser.add_argument("--outfile", dest='outfile', type=argparse.FileType('w'), default='punch.html')
+    parms.parser.add_argument("--outfile", dest='outfile', type=str, default='${WORKDIR}/punch.html')
     parms.parser.add_argument("--needed", dest='needed', type=int, default=5)
     parms.parser.add_argument("--renewbase", dest='renewbase', type=int, default=2)
     parms.parser.add_argument("--renewbyend", dest='renewbyend', type=int, default=3)
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     endmonth = '%d-%0.2d-01' % (today.year, parms.toend)
     startmonth = '%d-%0.2d-01' % (today.year - (1 if parms.toend < parms.fromend else 0), parms.fromend)
 
-    outfile = parms.outfile
+    outfile = open(parms.outfile, 'w')
 
     # If there's monthly data for the end date, use it; otherwise, use
     #   today's data.
