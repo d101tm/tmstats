@@ -30,11 +30,11 @@ class tmglobals(Singleton):
         self.conn = None
         self.curs = None
         self.tmyear = None
-        if kwargs.get('gotodatadir', True):
-            curdir = os.path.realpath(os.curdir)  # Get the canonical directory
-            lastpart = curdir.split(os.sep)[-1]
-            if lastpart.lower() != 'data':
-                os.chdir('data')   # Fails if there is no data directory; that is intentional.
+        #if kwargs.get('gotodatadir', True):
+        #    curdir = os.path.realpath(os.curdir)  # Get the canonical directory
+        #    lastpart = curdir.split(os.sep)[-1]
+        #    if lastpart.lower() != 'data':
+        #        os.chdir('data')   # Fails if there is no data directory; that is intentional.
         if kwargs.get('defaultencoding', ''):
             imp.reload(sys).setdefaultencoding(defaultencoding)
         if kwargs.get('parse', True):
