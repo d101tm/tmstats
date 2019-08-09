@@ -549,7 +549,7 @@ class Area(Aggregate):
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
 parms.add_argument("--testalignment", dest="testalignment", default=None, help="CSV file with alignment information to create a report with a new alignment.")
-parms.add_argument('--outdir', default='.', help='Where to put the output files')
+parms.add_argument('--outdir', default='$WORKDIR', help='Where to put the output files')
 parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
 parms.add_argument("--title", dest="title", default=None, help="Title for the HTML page.")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
@@ -558,7 +558,7 @@ globals.setup(parms)
 
 conn = globals.conn
 curs = globals.curs
-district = '%02d' % parms.district 
+district = '%02d' % int(parms.district)
 
 # Find the latest date in the system and work backwards from there to the beginning of the TM year.
 today = globals.today

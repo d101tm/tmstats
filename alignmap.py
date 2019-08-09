@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--verbose', '-v', action='count', default=0)
     parms.add_argument('--outfile', dest='outfile', default=None)
-    parms.add_argument('--outdir', default='.', help='Where to put the output files')
+    parms.add_argument('--outdir', default='$WORKDIR', help='Where to put the output files')
     parms.add_argument('--divfile', dest='divfile', default=None)
     parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
