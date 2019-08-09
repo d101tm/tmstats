@@ -15,8 +15,8 @@ if __name__ == "__main__":
     
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--divfile', default='awardsbydivision.csv', dest='divfile', type=argparse.FileType('w'), help="CSV file: awards by division")
-    parms.add_argument('--typefile', default='awardsbytype.csv', dest='typefile', type=argparse.FileType('w'), help="CSV file: awards by type")
+    parms.add_argument('--divfile', default='${WORKDIR}/awardsbydivision.csv', dest='divfile', type=str, help="CSV file: awards by division")
+    parms.add_argument('--typefile', default='${WORKDIR}/awardsbytype.csv', dest='typefile', type=str, help="CSV file: awards by type")
     parms.add_argument('--tmyear', default=None, dest='tmyear', type=int, help='TM Year (current if omitted)')
     
     # Do global setup
@@ -38,24 +38,24 @@ if __name__ == "__main__":
 
 
     # First, deal with awards by Division
-    parms.divfile.write('Division,Awards\n')
-    curs.execute("SELECT division, count(*) FROM awards WHERE tmyear = %s AND award != 'LDREXC' GROUP BY division ORDER BY division", (tmyear,))
-    for l in curs.fetchall():
-        parms.divfile.write('%s,%d\n' % (l[0].replace(',',';'), l[1]))
-    parms.divfile.close()
+    with open(parms.divfile, 'w') as outfile:
+        outfile.write('Division,Awards\n')
+        curs.execute("SELECT division, count(*) FROM awards WHERE tmyear = %s AND award != 'LDREXC' GROUP BY division ORDER BY division", (tmyear,))
+        for l in curs.fetchall():
+            outfile.write('%s,%d\n' % (l[0].replace(',',';'), l[1]))
      
     # And then awards by type
-    parms.typefile.write('Award,Achieved\n')
-    curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award = 'CC'", (tmyear,))
-    parms.typefile.write('Competent Communicator,%d\n'% curs.fetchone()[0])
-    curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award LIKE 'AC%%'", (tmyear,))
-    parms.typefile.write('Advanced Communicator,%d\n'% curs.fetchone()[0])
-    curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award = 'CL'", (tmyear,))
-    parms.typefile.write('Competent Leader,%d\n'% curs.fetchone()[0])
-    curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award LIKE 'AL%%'", (tmyear,))
-    parms.typefile.write('Advanced Leader,%d\n'% curs.fetchone()[0])
-    curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award = 'DTM'", (tmyear,))
-    parms.typefile.write('Distinguished Toastmaster,%d\n'% curs.fetchone()[0])
-    parms.typefile.close()    
-    
+    with open(parms.typefile, 'w') as outfile:
+        outfile.write('Award,Achieved\n')
+        curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award = 'CC'", (tmyear,))
+        outfile.write('Competent Communicator,%d\n'% curs.fetchone()[0])
+        curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award LIKE 'AC%%'", (tmyear,))
+        outfile.write('Advanced Communicator,%d\n'% curs.fetchone()[0])
+        curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award = 'CL'", (tmyear,))
+        outfile.write('Competent Leader,%d\n'% curs.fetchone()[0])
+        curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award LIKE 'AL%%'", (tmyear,))
+        outfile.write('Advanced Leader,%d\n'% curs.fetchone()[0])
+        curs.execute("SELECT COUNT(*) FROM awards WHERE tmyear = %s AND award = 'DTM'", (tmyear,))
+        outfile.write('Distinguished Toastmaster,%d\n'% curs.fetchone()[0])
+
     # And that's it.
