@@ -99,8 +99,8 @@ class tmparms(Singleton):
         # Expand environment variables here (which now includes values from the config file).
         args = vars(self.args)
         for name in list(args.keys()):
-            if args[name] or name not in self.__dict__:
-                self.__dict__[name] = os.path.expandvars(args[name]) if args[name] else args[name]
+            if (args[name] or name not in self.__dict__):
+                self.__dict__[name] = os.path.expandvars(args[name]) if isinstance(args[name], str) else args[name]
 
         # And handle dbhost specially to make sure it exists:
         if 'dbhost' not in self.__dict__ or not self.dbhost:
