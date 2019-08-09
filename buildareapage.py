@@ -139,7 +139,7 @@ class Director():
 ### Main Program ###
 
 parms = tmparms.tmparms(description=__doc__)
-parms.add_argument('--outfile', dest='outfile', default='areasanddivisions.html')
+parms.add_argument('--outfile', dest='outfile', default='${WORKDIR}/areasanddivisions.html')
 parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
 parms.add_argument('--officers', dest='officers', help='URL of a Google Spreadsheet with Area/Division Directors')
 parms.add_argument('--mapdir', default=None, help='Directory to use for the area map files.')
