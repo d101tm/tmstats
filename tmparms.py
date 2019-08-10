@@ -97,8 +97,11 @@ class tmparms(Singleton):
         for name in list(args.keys()):
             if (args[name] or name not in self.__dict__):
                 if isinstance(args[name], str):
-                    configParser.set(resolver_section, resolver_name, args[name])
-                    args[name] = configParser.get(resolver_section, resolver_name)
+                    try:
+                        configParser.set(resolver_section, resolver_name, args[name])
+                        args[name] = configParser.get(resolver_section, resolver_name)
+                    except ValueError:
+                        pass  # Ignore interpolation problems here
                 self.__dict__[name] = args[name]
 
         # And handle dbhost specially to make sure it exists:
