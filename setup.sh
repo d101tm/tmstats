@@ -11,30 +11,15 @@ then
     # Put Python 3.7 in the front
     export PATH="$HOME/opt/python-3.7.0/bin:$PATH"
 
-
-    # Even if we're running in a weird shell, let's use THIS directory as the current directory
-    export SCRIPTPATH="$( cd "$(dirname -- "$0")" ; pwd -P )"
-    export data="$SCRIPTPATH/data"
-
-    export STATS_HOME="$SCRIPTPATH"
-    export STATS_DATA="$STATS_HOME/data"
-    
-    export hour=$(date +'%k')
-    export xmd="x$(date +'%m%d')"
-    # We need to know today's date and yesterday's.
-    export today=$(date +'%Y-%m-%d')
-    
-    # Work with GNU date or regular POSIX date command
-    if ! yday=$(date -v-1d +'%Y-%m-%d' 2>/dev/null)
-    then
-        yday=$(date -d '1 day ago' +'%Y-%m-%d' 2>/dev/null)
-    fi
-    export yday
-
+    # Set environment variables
+    # There are bugs in some versions of Bash that require the following ugly workaround
+    source /dev/stdin <<< "$(./exportsettings.py)"
 
     export TMSTATS_SETUP=1
 
 fi
+
+cd "$SCRIPTPATH"       # Always move to this directory (no effect if not 'source'd, of course)
 
 # Define helper functions
 
