@@ -78,32 +78,28 @@ class tmparms(Singleton):
         configParser = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
         configParser.read(self.args.configfile)
 
-        # Now, add selected values from the environment to the parser's default section - but only
-        # values that don't exist there yet.
-
-        selected_keys = ('home', 'tmstats', 'tmstats_data', 'workdir')
-
-        for k in os.environ:
-            if k not in configParser['default'] and k.lower() in selected_keys:
-                configParser.set('default', k, os.environ[k])
-
         # Now, promote the values in the configuration file to top level.
-        # Add selected values to the environment (as upper case) so they work in os.path.expandvars
+
+
         self.configvalues = dict(configParser['default'])
         for name in self.configvalues:
-            if name in selected_keys:
-                os.environ[name.upper()] = self.configvalues[name]
             self.__dict__[name] = self.configvalues[name]
 
         # @@TODO@@ Deal with non-default sections.  Does anything use them yet?
 
         # Override with non-false values from the command line (or the default).
         # If no value is in the configfile, use the command line or default whether it's true or false.
-        # Expand environment variables here (which now includes values from the config file).
+        # Resolve any strings against the configfile.
+        resolver_section = 'internal-resolver'
+        resolver_name = 'xyzzy'
+        configParser.add_section(resolver_section)
         args = vars(self.args)
         for name in list(args.keys()):
             if (args[name] or name not in self.__dict__):
-                self.__dict__[name] = os.path.expandvars(args[name]) if isinstance(args[name], str) else args[name]
+                if isinstance(args[name], str):
+                    configParser.set(resolver_section, resolver_name, args[name])
+                    args[name] = configParser.get(resolver_section, resolver_name)
+                self.__dict__[name] = args[name]
 
         # And handle dbhost specially to make sure it exists:
         if 'dbhost' not in self.__dict__ or not self.dbhost:
