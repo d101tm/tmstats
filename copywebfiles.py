@@ -5,13 +5,16 @@ import dropbox
 import os.path
 from datetime import datetime
 import sys
-from tmutil import gotodatadir
+
+# Use tmparms to resolve the cursor directory from the configuration file
+import tmparms
+parms = tmparms.tmparms()
+parms.parse()
 
 
-state_file = 'copystate.txt'
-appinfo_file = 'copytokens.txt'
+state_file = os.path.join(parms.cursordir, 'copystate.txt')
+appinfo_file = os.path.join(parms.cursordir, 'copytokens.txt')
 
-gotodatadir()  # Ensure we are in the data directory
 
 
 def authorize():
