@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import dbconn, tmparms, os, sys
-from datetime import date, datetime
-from tmutil import showclubswithvalues, gotodatadir, getClubBlock, getTMYearFromDB
-import argparse
+import os
 import tmglobals
+import tmparms
+from tmutil import showclubswithvalues, getClubBlock
+
 
 class myclub:
     """ Just enough club info to sort the list nicely """
@@ -57,7 +57,7 @@ winners = [c for c in clubs if c.goalsmet >= 5]
 almost = [c for c in clubs if c.goalsmet == 4]
 
 # Write the HTML version
-outfile = open(parms.outfileprefix + '.html', 'w')
+outfile = open(os.path.join(parms.workdir, parms.outfileprefix + '.html'), 'w')
 
 outfile.write("""<h3 id="early">Early Achievers</h3>
 <p>
@@ -77,7 +77,7 @@ outfile.close()
 
 # Write the text block version
 
-outfile = open(parms.outfileprefix + '.text', 'w')
+outfile = open(os.path.join(parms.workdir, parms.outfileprefix + '.text'), 'w')
 if len(winners) > 0:
     outfile.write("<b>Congratulations to our first Early Achiever Club%s</b>:  " % ('s' if len(winners) > 1 else ''))
     outfile.write(getClubBlock(winners))
