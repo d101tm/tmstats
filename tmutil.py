@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """ Utility functions for the TMSTATS suite """
-from datetime import date, timedelta, datetime
-from six import StringIO
-import csv, codecs
-import os
+import codecs
+import csv
 import numbers
-import tmglobals
+import os
 import re
+from datetime import date, timedelta, datetime
+
+import tmglobals
+from six import StringIO
+
 globals = tmglobals.tmglobals()
 
-def gotodatadir():
-    """ Go to the 'data' directory if we're not already there """
-    curdir = os.path.realpath(os.curdir)  # Get the canonical directory
-    lastpart = curdir.split(os.sep)[-1]
-    if lastpart.lower() != 'data':
-        os.chdir('data')   # Fails if there is no data directory; that is intentional.
+def gotoworkdir():
+    """ Go to the work directory ($workdir); if not defined, fail. """
+    os.chdir(os.path.expandvars('${WORKDIR}'))
 
 import math
  
