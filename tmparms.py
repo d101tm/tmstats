@@ -9,7 +9,7 @@
        Interpret other parameters in self.args as needed.
     """
 
-import argparse, yaml, os, configparser
+import argparse, os, configparser, sys
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -38,6 +38,9 @@ class tmparms(Singleton):
             self.parser = argparse.ArgumentParser(description=description, formatter_class=formatter_class, **kwargs)
         else:
             self.parser = argparse.ArgumentParser(description=description)
+        if os.path.basename(configfile) == configfile:
+            # If the configuration file is only a basename, take it from the same directory as the source code
+            configfile = os.path.join(sys.path[0], 'tmstats.ini')
         self.parser.add_argument('--configfile', help="INI file with information for this program", default=configfile)
         if includedbparms:
             self.parser.add_argument('--dbname', help="MySQL database to use", dest='dbname')
