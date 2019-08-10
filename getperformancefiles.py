@@ -10,12 +10,14 @@
 
 """
 
-import tmparms, os, sys
-from tmutil import cleandate
 from datetime import datetime, timedelta, date
+
 import requests
 
 import tmglobals
+import tmparms
+from tmutil import cleandate, gotoworkdir
+
 globals = tmglobals.tmglobals()
     
 # Map filenames to report names from Toastmasters
@@ -166,12 +168,12 @@ if __name__ == "__main__":
     parms.add_argument('--district', type=int)
     parms.add_argument('--startdate', default=None)
     parms.add_argument('--enddate', default=None)
-    parms.add_argument('--skipclubs', action='store_true',
-     help='Do not get latest club information.')
+    parms.add_argument('--skipclubs', action='store_true', help='Do not get latest club information.')
     
     globals.setup(parms, connect=False)
+    gotoworkdir()
 
-    district = "%0.2d" % parms.district
+    district = "%0.2d" % int(parms.district)
 
    
     if not parms.startdate:
