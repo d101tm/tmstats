@@ -8,14 +8,14 @@ import tmparms
 import datetime
 
 # Do the setup
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 # Establish parameters
 parms = tmparms.tmparms()
 
 # Do global setup
-globals.setup(parms)
-curs = globals.curs
-conn = globals.conn
+myglobals.setup(parms)
+curs = myglobals.curs
+conn = myglobals.conn
 
 res = {}
 # Information from the configuration file:
@@ -28,7 +28,7 @@ res['cursordir'] = parms.cursordir
 res['SCRIPTPATH'] = sys.path[0]
 
 # Date-related information
-res['dbtmyear'] = globals.tmyear
+res['dbtmyear'] = myglobals.tmyear
 today = datetime.datetime.now()
 res['caltmyear'] = today.year if today.month >= 7 else today.year - 1
 res['hour'] = today.hour

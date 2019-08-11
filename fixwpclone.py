@@ -8,7 +8,7 @@ import dbconn
 import tmglobals
 import tmutil
 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     parms.add_argument('--wpconfigfile', type=str, default='/var/www/html/wp-config.php')
 
     # Do global setup
-    globals.setup(parms,connect=False)
+    myglobals.setup(parms,connect=False)
 
     # Parse the current user's .my.cnf file; this must have the username and password in the [client] section.
     msconfig = configparser.ConfigParser()

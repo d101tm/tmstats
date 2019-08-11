@@ -3,7 +3,7 @@
 
 import tmutil, sys
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 import re
 import gspread
 from simpleclub import Club
@@ -58,8 +58,8 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', default='featuredclubs.shtml')
     # Add other parameters here
     # Do global setup
-    globals.setup(parms)
-    allclubs = Club.getClubsOn(globals.curs)
+    myglobals.setup(parms)
+    allclubs = Club.getClubsOn(myglobals.curs)
     
     # Open the spreadsheet
     gc = gspread.authorize(tmutil.getGoogleCredentials())

@@ -7,7 +7,7 @@ from tmutil import overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
 from makemap import makemap, setClubCoordinatesFromGEO
 from tmglobals import tmglobals
-globals = tmglobals()
+myglobals = tmglobals()
 
 def inform(*args, **kwargs):
     """ Print information to 'file', depending on the verbosity level.
@@ -38,9 +38,9 @@ if __name__ == "__main__":
     parms.add_argument('--showdetails', dest='showdetails', action='store_true')
 
     # Do global setup 
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     # Compute verbosity level.  Default is zero.
     parms.verbosity = parms.verbose - parms.quiet

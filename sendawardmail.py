@@ -11,7 +11,7 @@ import re
 from awardinfo import Awardinfo as info
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 from collections.abc import Iterable
 
@@ -224,9 +224,9 @@ if __name__ == "__main__":
     parms.add_argument('--dryrun', action='store_true', help="Don't send letters; do say who they'd go to.")
     
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     
     parms.fromdate = cleandate(parms.fromdate)

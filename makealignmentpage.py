@@ -4,7 +4,7 @@
 import dbconn, tmutil, sys, os
 from time import localtime, strftime
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
@@ -18,9 +18,9 @@ if __name__ == "__main__":
     parms.add_argument('--fordec', action='store_true')
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     
     lfile = 'alignment/d101location.html'

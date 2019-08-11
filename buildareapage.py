@@ -11,7 +11,7 @@ from overridepositions import overrideClubPositions
 from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs
 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 class Division():
@@ -151,9 +151,9 @@ parms.add_argument('--mapoverride', dest='mapoverride', default=None,
                    help='Google spreadsheet with overriding address and coordinate information')
 
 # Do global setup
-globals.setup(parms)
-conn = globals.conn
-curs = globals.curs
+myglobals.setup(parms)
+conn = myglobals.conn
+curs = myglobals.curs
 
 # Get all clubs
 clubs = Club.getClubsOn(curs)

@@ -7,7 +7,7 @@
 
 import tmutil, sys, datetime
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 def cleandate(s):
     return datetime.datetime.strptime(tmutil.cleandate(s, usetmyear=False), '%Y-%m-%d').date()
@@ -17,17 +17,17 @@ def datacheck(s):
     if s.startswith('s') or s.startswith('m'):
         month = int(s[1:])
         # Compute the month to check:
-        year = globals.tmyear if month >= 7 else globals.tmyear + 1
+        year = myglobals.tmyear if month >= 7 else myglobals.tmyear + 1
         start = "monthstart = '%d-%0.2d-01'" % (year, month)
             
         # Do we need final for the month?
         final = " AND ENTRYTYPE = 'M'" if s.startswith('m') else ''
         
         # See if we've got it
-        globals.curs.execute('SELECT COUNT(*) FROM clubperf WHERE ' + start + final)
+        myglobals.curs.execute('SELECT COUNT(*) FROM clubperf WHERE ' + start + final)
     else:
         # We have a specific date
-        globals.curs.execute('SELECT COUNT(*) FROM clubperf WHERE ASOF = %s', (cleandate(s),))
+        myglobals.curs.execute('SELECT COUNT(*) FROM clubperf WHERE ASOF = %s', (cleandate(s),))
     res = curs.fetchone()[0]
     if res > 0:
         return True
@@ -58,10 +58,10 @@ if __name__ == "__main__":
     group.add_argument('--oldtmyear', action='store_true', help='Data is NOT available for the TM Year beginning July 1 of this calendar year')
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
-    today = globals.today
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
+    today = myglobals.today
 
     if parms.starting:
         starting = cleandate(parms.starting)
@@ -90,9 +90,9 @@ if __name__ == "__main__":
             sys.exit(5)
         
     if parms.newtmyear:
-        if globals.today.year != globals.tmyear:
+        if myglobals.today.year != myglobals.tmyear:
             sys.exit(6)
             
     if parms.oldtmyear:
-        if globals.today.year == globals.tmyear:
+        if myglobals.today.year == myglobals.tmyear:
             sys.exit(7)

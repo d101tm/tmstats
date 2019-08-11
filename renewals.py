@@ -39,7 +39,7 @@ if __name__ == "__main__":
     import tmglobals
     import os
 
-    globals = tmglobals.tmglobals()
+    myglobals = tmglobals.tmglobals()
 
     # Define args and parse command line
     parms = tmparms.tmparms(description=__doc__,
@@ -55,9 +55,9 @@ if __name__ == "__main__":
                        help='Name for each level.  Specify \'\' if no name for a level.')
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
 
     # Ensure proper matching of names, pct, and earns.
     if not isinstance(parms.pct, list):

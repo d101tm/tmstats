@@ -9,13 +9,13 @@ import os, sys
 from uncodeit import myclub
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 # Set up global environment
 parms = tmparms.tmparms()
-globals.setup(parms)
-conn = globals.conn
-curs = globals.curs
+myglobals.setup(parms)
+conn = myglobals.conn
+curs = myglobals.curs
 
 #urllib3.disable_warnings()
 #logging.captureWarnings(True)

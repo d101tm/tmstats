@@ -3,7 +3,7 @@
 
 import tmutil, sys, os
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -22,9 +22,9 @@ if __name__ == "__main__":
     # Add other arguments here
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     if len(parms.zipfiles) == 0 and not parms.database:
         parms.parser.print_help()

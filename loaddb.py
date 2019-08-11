@@ -11,7 +11,7 @@ from tmutil import cleandate
 import geocode
 import tmparms, tmglobals
 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 # Global variable to see how many entries got changed.  All we really care about is zero/nonzero.
 global changecount
@@ -783,8 +783,8 @@ if __name__ == "__main__":
     parms.add_argument("--quiet", "-q", action="count", default=0)
 
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
+    myglobals.setup(parms)
+    conn = myglobals.conn
 
     inform("Processing Clubs", supress=1)
     doHistoricalClubs(conn, parms.googlemapsapikey)

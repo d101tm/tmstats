@@ -3,7 +3,7 @@
 # Create the "awards by division" and "awards by type" CSVs
 
 import dbconn, tmutil, sys, os, datetime, tmglobals, tmparms, argparse
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -20,11 +20,11 @@ if __name__ == "__main__":
     parms.add_argument('--tmyear', default=None, dest='tmyear', type=int, help='TM Year (current if omitted)')
     
     # Do global setup
-    globals.setup(parms)
+    myglobals.setup(parms)
    
     # Connect to the database        
-    conn = globals.conn
-    curs = globals.curs
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     # We go by the calendar, not the TMyear in the database, because WHQ never stops processing awards    
     if parms.tmyear:

@@ -9,7 +9,7 @@ import csv
 from operator import attrgetter
 
 from tmglobals import tmglobals
-globals = tmglobals()
+myglobals = tmglobals()
 
 dists = {
     'P': 'President\'s Distinguished = %d',
@@ -554,14 +554,14 @@ parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Outp
 parms.add_argument("--title", dest="title", default=None, help="Title for the HTML page.")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
 # Do global setup
-globals.setup(parms)
+myglobals.setup(parms)
 
-conn = globals.conn
-curs = globals.curs
+conn = myglobals.conn
+curs = myglobals.curs
 district = '%02d' % int(parms.district)
 
 # Find the latest date in the system and work backwards from there to the beginning of the TM year.
-today = globals.today
+today = myglobals.today
 (latestmonth, latestdate) = latest.getlatest('clubperf', conn)
 (latestyear, latestmonth) = [int(f) for f in latestmonth.split('-')[0:2]]
 latestdate = datetime.datetime.strptime(latestdate, "%Y-%m-%d")

@@ -18,7 +18,7 @@ from overridepositions import overrideClubPositions
 import time, calendar
 
 import tmglobals, tmparms
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 def inform(*args, **kwargs):
@@ -46,9 +46,9 @@ if __name__ == "__main__":
     parms.add_argument('--includeprecharter', dest='includeprecharter', action='store_true', help='Specify this to include "pre-charter" clubs (ones with negative club numbers in the newAlignment file)')
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     
     # Get all defined clubs from the database.
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # We use the 'lastfor' table to get information for all clubs, even those which Toastmasters dropped from
     #   the list because they were suspended for two renewal cycles.
     curs.execute('''SELECT clubnumber, color, goalsmet, activemembers, clubstatus FROM clubperf 
-                    WHERE id in (SELECT clubperf_id FROM lastfor WHERE tmyear = %s)''', (globals.tmyear,))
+                    WHERE id in (SELECT clubperf_id FROM lastfor WHERE tmyear = %s)''', (myglobals.tmyear,))
     for (clubnumber, color, goalsmet, activemembers, clubstatus) in curs.fetchall():
         c = clubs[str(clubnumber)]
         c.color = color

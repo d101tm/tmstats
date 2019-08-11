@@ -18,7 +18,7 @@ import tmglobals
 import tmparms
 from tmutil import cleandate, gotoworkdir
 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
     
 # Map filenames to report names from Toastmasters
 reportnames = {'clubperf':'clubperformance',
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     parms.add_argument('--enddate', default=None)
     parms.add_argument('--skipclubs', action='store_true', help='Do not get latest club information.')
     
-    globals.setup(parms, connect=False)
+    myglobals.setup(parms, connect=False)
     gotoworkdir()
 
     district = "%0.2d" % int(parms.district)

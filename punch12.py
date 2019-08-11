@@ -5,7 +5,7 @@ from tmutil import showclubswithvalues, showclubswithoutvalues
 import argparse
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 def inform(*args, **kwargs):
     """ Print information to 'file' unless suppressed by the -quiet option.
@@ -56,9 +56,9 @@ if __name__ == "__main__":
     parms.parser.add_argument("--renewbyend", dest='renewbyend', type=int, default=3)
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
 
     today = datetime.now()

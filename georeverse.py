@@ -7,7 +7,7 @@ import googlemaps
 import tmglobals
 import tmparms
 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 def inform(*args, **kwargs):
@@ -30,9 +30,9 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count', default=0)
     
     # Do global setup
-    globals = globals.setup(parms)
-    conn = globals.conn
-    c = globals.curs
+    myglobals = myglobals.setup(parms)
+    conn = myglobals.conn
+    c = myglobals.curs
 
 
     # Your main program begins here.

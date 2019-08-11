@@ -3,7 +3,7 @@
 
 import tmutil, sys
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -19,9 +19,9 @@ if __name__ == "__main__":
     # Add other parameters here
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     # Get the year start
     if not parms.year:

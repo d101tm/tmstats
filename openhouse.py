@@ -10,7 +10,7 @@ from datetime import datetime
 from gsheet import GSheet 
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
     
@@ -40,9 +40,9 @@ if __name__ == "__main__":
     parms.add_argument('--requireopenhouse', action='store_true')
 
     #Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
    
     # Connect to the database        

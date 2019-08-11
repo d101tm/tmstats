@@ -10,7 +10,7 @@ from tmutil import cleandate, overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
 import imp
 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 # Create the templates
 
@@ -128,9 +128,9 @@ parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Ov
 parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
 
 # Do global setup
-globals.setup(parms)
-conn = globals.conn
-curs = globals.curs
+myglobals.setup(parms)
+conn = myglobals.conn
+curs = myglobals.curs
 
 parms.date = cleandate(parms.date)
 

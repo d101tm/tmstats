@@ -6,7 +6,7 @@ import tmutil, sys, os
 from simpleclub import Club
 from datetime import datetime
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 headers = "Div,Area,Club Name,Number,Status,Trained,Pres,VPE,VPM,VPPR,Sec,Treas,SAA"
@@ -110,9 +110,9 @@ if __name__ == "__main__":
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
     
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     # If we're in the first cycle, ignore 9a, even if specified, unless lastmonth is explicit (to allow for historical reports)
     thismonth = datetime.today().month

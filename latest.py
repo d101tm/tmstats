@@ -4,7 +4,7 @@
 
 """
 import tmparms, tmglobals, os, sys, tmutil, MySQLdb
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -32,8 +32,8 @@ if __name__ == '__main__':
     parms.add_argument('--table', dest='table', default='clubperf')
     
     # Do global setup
-    globals.setup(parms)
+    myglobals.setup(parms)
     parms.parse()
     
-    ans = getlatest(parms.table, globals.conn)
+    ans = getlatest(parms.table, myglobals.conn)
     print(' '.join(ans))

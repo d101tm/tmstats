@@ -29,12 +29,12 @@ parms.parser.add_argument("--toend", dest='toend', type=int, default=10)
 parms.parser.add_argument("--outfileprefix", dest='outfileprefix', type=str, default='earlyachievers')
 
 # Set up global environment
-globals = tmglobals.tmglobals(parms)
+myglobals = tmglobals.tmglobals(parms)
 
-conn = globals.conn
-curs = globals.curs
-today = globals.today
-endmonth = '%d-%0.2d-01' % (globals.tmyear, parms.toend)
+conn = myglobals.conn
+curs = myglobals.curs
+today = myglobals.today
+endmonth = '%d-%0.2d-01' % (myglobals.tmyear, parms.toend)
 
 
 # If there's monthly data for the end date, use it; otherwise, use

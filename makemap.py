@@ -7,7 +7,7 @@ from simpleclub import Club
 from tmutil import overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 def inform(*args, **kwargs):
@@ -369,9 +369,9 @@ if __name__ == "__main__":
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     # Add other parameters here
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     # Compute verbosity level.  Default is zero.
     parms.verbosity = parms.verbose - parms.quiet

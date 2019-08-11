@@ -9,7 +9,7 @@ import sys
 import tmglobals
 import tmutil
 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 def inform(*args, **kwargs):
@@ -36,9 +36,9 @@ if __name__ == "__main__":
     parms.add_argument('--district', type=int)
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     
     # Get the existing awards (significant parts only) so we don't create duplicates.  We can't 

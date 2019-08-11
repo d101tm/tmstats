@@ -35,10 +35,10 @@ if __name__ == '__main__':
     import tmparms, tmglobals
 
     parms = tmparms.tmparms()
-    globals = tmglobals.tmglobals(parms)
+    myglobals = tmglobals.tmglobals(parms)
     #print('Connecting to %s:%s as %s' % (parms.dbhost, parms.dbname, parms.dbuser))
-    conn = globals.conn
-    curs = globals.curs
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     curs.execute('show tables')
     print('Tables:\n%s' % '\n'.join('  ' + p[0] for p in curs.fetchall()))

@@ -13,7 +13,7 @@ import tmparms, os, sys, tmutil
 from datetime import datetime, timedelta
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 if 'TM_DIRECTORY' in os.environ:
@@ -29,9 +29,9 @@ yesterday = yesterday.strftime('%Y-%m-%d')
 parms.parser.add_argument("--date", dest='date', default=None)
 
 # Do global setup
-globals.setup(parms)
-conn = globals.conn
-curs = globals.curs
+myglobals.setup(parms)
+conn = myglobals.conn
+curs = myglobals.curs
 
 
 date = parms.date

@@ -9,7 +9,7 @@ import dbconn, tmutil, sys, os
 from datetime import datetime
 import re
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     parms.add_argument('--outfile', type=str, default='trainingschedule.html')
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
     # Add other parameters here
-    globals.setup(parms, connect=False)
+    myglobals.setup(parms, connect=False)
 
  
       

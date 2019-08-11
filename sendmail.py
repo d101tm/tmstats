@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 from collections.abc import Iterable
 def flatten(l):
@@ -31,7 +31,7 @@ parms.parser.add_argument("--cc", dest='cc', nargs='+', default=[], action='appe
 parms.parser.add_argument("--bcc", dest='bcc', nargs='+', default=[], action='append')
 parms.parser.add_argument("--subject", dest='subject', default='Mail from the District Webmaster')
 
-globals.setup(parms, connect=False)
+myglobals.setup(parms, connect=False)
 
 parms.sender = parms.__dict__['from']  # Get around reserved word
 

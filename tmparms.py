@@ -112,7 +112,7 @@ class tmparms(Singleton):
 if __name__ == '__main__':
     import tmglobals
 
-    globals = tmglobals.tmglobals()
+    myglobals = tmglobals.tmglobals()
     parms = tmparms()
-    globals.setup(parms)
+    myglobals.setup(parms)
     print(parms)

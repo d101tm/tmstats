@@ -6,7 +6,7 @@
 import tmutil, sys
 import tmglobals
 import xlrd, re, codecs
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 class Guide:
     guides = {}
@@ -45,9 +45,9 @@ if __name__ == "__main__":
     # Add other parameters here
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
 
     outfile = codecs.open(parms.outfile, 'w', 'utf-8', errors='ignore')
     outfile.write('<table id="guides">\n')

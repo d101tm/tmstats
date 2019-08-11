@@ -6,7 +6,7 @@
 import tmutil, sys, os, datetime, subprocess, codecs
 import tmglobals, tmparms
 from awardinfo import Awardinfo 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
@@ -118,9 +118,9 @@ if __name__ == "__main__":
             help='Slide to use as the base for the "Congratulations" slide')
 
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     
 
