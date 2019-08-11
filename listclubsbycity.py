@@ -124,6 +124,7 @@ if 'TM_DIRECTORY' in os.environ:
 # Handle parameters
 parms = tmparms.tmparms()
 parms.parser.add_argument("--date", dest='date', default='today')
+parms.add_argument('--outdir', dest='outdir', default='${workdir}', help='Where to put the files created by this program.')
 parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
 parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
 
@@ -131,6 +132,7 @@ parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Goog
 myglobals.setup(parms)
 conn = myglobals.conn
 curs = myglobals.curs
+
 
 parms.date = cleandate(parms.date)
 
@@ -164,11 +166,11 @@ for c in clubs:
     cities[club.city].append(club)
 
 
-outfile = open('clublist.html', 'w')
-headfile = open('clublist.css', 'w')
-bodyfile = open('clublist.body', 'w')
-narrowfile = open('narrowclublist.html', 'w')
-narrowbodyfile = open('narrowclublist.body', 'w')
+outfile = open(os.path.join(parms.outdir, 'clublist.html'),'w')
+headfile = open(os.path.join(parms.outdir, 'clublist.css'),'w')
+bodyfile = open(os.path.join(parms.outdir, 'clublist.body'),'w')
+narrowfile = open(os.path.join(parms.outdir, 'narrowclublist.html'),'w')
+narrowbodyfile = open(os.path.join(parms.outdir, 'narrowclublist.body'),'w')
 
 headfile.write(headinfo['style'])
 outfile.write(header)
