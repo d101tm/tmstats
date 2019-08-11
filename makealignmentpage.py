@@ -1,76 +1,79 @@
 #!/usr/bin/env python3
 """ Create the index.html page for the alignment directory on d101tm """
 
-import dbconn, tmutil, sys, os
+import os
+import sys
 from time import localtime, strftime
-import tmglobals
-myglobals = tmglobals.tmglobals()
 
+import tmglobals
+
+myglobals = tmglobals.tmglobals()
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
 if __name__ == "__main__":
- 
+
     import tmparms
+
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--fordec', action='store_true')
-    
+    parms.add_argument('--outdir', type=str, default='${alignmentdir}')
+
     # Do global setup
-    myglobals.setup(parms)
+    myglobals.setup(parms, sections='alignment')
     conn = myglobals.conn
     curs = myglobals.curs
 
-    
-    lfile = 'alignment/d101location.html'
-    mfile = 'alignment/d101newmarkers.js'
-    rfile = 'alignment/d101proforma.html'
-    sfile = 'alignment/d101minimal.html'
-    dfile = 'alignment/d101details.html'
-    postdecfile = 'alignment/changessincedecmeeting.html'
+    os.chdir(parms.outdir)
 
-    # Get the last-modified dates for the alignment files.
-    ltime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(lfile)))
-    mtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(mfile)))
-    rtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(rfile)))
-    stime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(sfile)))
-    dtime = strftime("%Y-%m-%d %X", localtime(os.path.getmtime(dfile)))
+    class alignmentfile:
+        def __init__(self, filename):
+            self.filename = filename
+            self.mtime = localtime(os.path.getmtime(filename))
+
+        def makeitem(self, s):
+            return f'<li><a href="{self.filename}">{s}</li>'
+
+
+    filenames = ['detailfile', 'markerfile', 'mapfile', 'reportfile', 'summaryfile', 'colordetailfile',
+                 'changesfile', 'postdecchangesfile']
+    files = {n:alignmentfile(getattr(parms, n, None)) for n in filenames}
+    lastupdate = strftime('%B %-d, %Y at %-I:%m %p', max([files[item].mtime for item in files]))
 
     details = []
-    details.append('<li><a href="d101minimal.html">summary</a> (updated %s)</li>' % stime)
-    details.append('<li><a href="d101align.htm">map</a> (updated %s)</li>' % mtime)
+    details.append(files['summaryfile'].makeitem('summary'))
+    details.append(files['mapfile'].makeitem('map'))
     if not parms.fordec:
-        details.append('<li><a href="d101location.html">detailed list with club meeting times and places</a> (updated %s)</li>' % ltime)
+        details.append(files['detailfile'].makeitem('detailed list with club meeting times and places'))
+    else:
+        details.append(files['colordetailfile'].makeitem('detailed list with club meeting times and places'))
+        details.append(files['reportfile'].makeitem('<i>pro forma</i> performance report'))
 
-    if parms.fordec:
-        details.append('<li><a href="d101details.html">detailed list with club meeting times and places</a> (updated %s)</li>' % ltime)
-        details.append('<li><a href="d101proforma.html"><i>pro forma</i> performance report<a> (updated %s)</li>' % rtime)
-
-
-    sys.stdout.write("""<html>
+    sys.stdout.write(f"""<html>
     <head>
-      <title>D101 Proposed Realignment</title>
+      <title>D101 Proposed Realignment as of {lastupdate}</title>
     </head>
     <body>
-      <p>This page lets you see the proposed realignment as follows:
+      <p>This page lets you see the proposed realignment as of {lastupdate}:
       <ul>
       %s
       </ul>
 """ % ('\n'.join(details)))
-    sys.stdout.write(open('alignmentsource.txt').read())
 
+    sys.stdout.write(open(parms.datacurrencyfile).read())
 
     if parms.fordec:
         sys.stdout.write("""
         <p>In addition, there is information on club changes:
         <ul>
-        <li><a href="changesthisyear.html">All changes this Toastmasters Year</a>
-    """)
-        if (open(postdecfile, 'r').readlines()):
+        %s
+    """ % files['changesfile'].makeitem('Club changes since July 1'))
+        if (open(files['postdecchangesfile'].filename, 'r').readlines()):
             sys.stdout.write("""
-        <li><a href="changessincedecmeeting.html">Changes since the DEC meeting</a> 
-    """)
+        %s
+    """ % files['postdecchangesfile'].makeitem('Club changes since the DEC meeting'))
         sys.stdout.write("""
         </ul>
     """)
@@ -78,6 +81,3 @@ if __name__ == "__main__":
     </body>
 </html>
 """)
-    
-    
-    

@@ -1,11 +1,10 @@
 #!/bin/bash
 . setup.sh
-cd "$data"   # Run in the data directory.
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/d101tm/lib/lib
 
-# Make a subdirectory for all of the products of this run
-mkdir alignment 2>/dev/null
-export workfile=alignment/d101align.csv
+# Make a directory for all of the products of this run
+mkdir "${alignmentdir}" 2>/dev/null
+export workfile="${alignmentdir}/d101align.csv"
 
 # Process parameters
 if [[ "$*" =~ .*include.* ]]
@@ -33,51 +32,51 @@ fi
 
 echo 'Running createalignment'
 echo $bp
-../createalignment.py $include --outfile $workfile || exit 1
+"$SCRIPTPATH"/createalignment.py $include --outfile $workfile || exit 1
 echo $ep
 echo
 echo Running alignmap 
 echo $bp
-../alignmap.py --pindir pins --district 101 --testalign $workfile --makedivisions --outdir alignment || exit 2
+"$SCRIPTPATH"/alignmap.py --pindir pins --district 101 --testalign $workfile --makedivisions --outdir "${alignmentdir}" || exit 2
 echo $ep
 echo
 echo Running allstats
 echo $bp
-../allstats.py --outfile d101proforma.html --testalign $workfile --outdir alignment --title "pro forma performance report" || exit 3
+"$SCRIPTPATH"/allstats.py --outfile d101proforma.html --testalign $workfile --outdir "${alignmentdir}" --title "pro forma performance report" || exit 3
 echo $ep
 echo
 echo Running makelocationreport with color
 echo $bp
-../makelocationreport.py --color --outfile d101details.html --infile $workfile --outdir alignment || exit 4
+"$SCRIPTPATH"/makelocationreport.py --color --outfile d101details.html --infile $workfile --outdir "${alignmentdir}" || exit 4
 echo $ep
 echo
 echo Running makelocationreport without color
 echo $bp
-../makelocationreport.py --infile $workfile --outdir alignment || exit 5
+"$SCRIPTPATH"/makelocationreport.py --infile $workfile --outdir "${alignmentdir}" || exit 5
 echo $ep
 echo
 echo Running clubchanges
 echo $bp
-../clubchanges.py --from $(../getfirstdaywithdata.py) --outfile alignment/changesthisyear.html
-../clubchanges.py --from 3/17 --to 5/19 --outfile alignment/changessincedecmeeting.html
+"$SCRIPTPATH"/clubchanges.py --from $("$SCRIPTPATH"/getfirstdaywithdata.py) --outfile "${alignmentdir}"/changesthisyear.html
+"$SCRIPTPATH"/clubchanges.py --from 3/17 --to 5/19 --outfile "${alignmentdir}"/changessincedecmeeting.html
 echo $ep
 echo
 echo Running makealignmentpage
 echo $bp
-../makealignmentpage.py --fordec > alignment/index.html
+"$SCRIPTPATH"/makealignmentpage.py --fordec > "${alignmentdir}"/index.html
 echo $ep
 echo
 if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
         echo "Copying to workingalignment"
         mkdir ~/files/workingalignment 2>/dev/null
-        cp alignment/* ~/files/workingalignment/
+        cp "${alignmentdir}"/* ~/files/workingalignment/
 fi
 
 if [[ "$*" =~ .*html.* ]]
 then
 
 cat << EOF
-<p>Go to <a href="/files/workingalignment/">http://d101tm.org/files/workingalignment</a> to see the results.
+<p>Go to <a href="/files/workingalignment"/">http://d101tm.org/files/workingalignment</a> to see the results.
 </p>
 </body>
 </html>
