@@ -10,11 +10,11 @@ from datetime import date, timedelta, datetime
 import tmglobals
 from six import StringIO
 
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 def gotoworkdir():
     """ Go to the work directory ($workdir); if not defined, fail. """
-    os.chdir(os.path.expandvars('${WORKDIR}'))
+    os.chdir(myglobals.parms.workdir)
 
 import math
  
@@ -65,11 +65,11 @@ def cleandate(indate, usetmyear=True):
             # We need to add the year
             if usetmyear:
                 if int(indate[0])>= 7:
-                    indate.append('%d' % globals.tmyear)
+                    indate.append('%d' % myglobals.tmyear)
                 else:
-                    indate.append('%d' % (globals.tmyear+1))
+                    indate.append('%d' % (myglobals.tmyear + 1))
             else:
-                indate.append('%d' % globals.today.year)
+                indate.append('%d' % myglobals.today.year)
         indate = [indate[2], indate[0], indate[1]]
     elif '-' in indate:
         indate = indate.split('-')
@@ -214,7 +214,7 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
             from simpleclub import Club
             club = Club(list(row.values()), fieldnames=list(row.keys()), fillall=True)
             if 'district' not in list(row.keys()):
-                club.district = globals.parms.district
+                club.district = myglobals.parms.district
             clubs[clubnum] = club
         keepers.add(clubnum)
         if row['newarea'] and row['newarea'] != '0D0A':
@@ -377,5 +377,5 @@ def getGoogleCredentials(scope=None):
         scope = ['https://spreadsheets.google.com/feeds',
                  'https://www.googleapis.com/auth/drive']
 
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(globals.parms.googleoauthfile, scope)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(myglobals.parms.googleoauthfile, scope)
     return credentials
