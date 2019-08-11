@@ -1,7 +1,7 @@
 #!/bin/bash
 . setup.sh  # Do common setup
 
-cd "$data"   # Run in the data directory.
+cd "$workdir"   # Run in the data directory.
 
 touch daily       # We were here!
 
@@ -52,7 +52,7 @@ fi
 if [[ "$dorun" = "yes" ]] ; then
     # Run the daily cycle
     if [[ "$update" = "update" ]] ; then
-        ../updateit.sh "$*"
+        $SCRIPTPATH/updateit.sh "$*"
     else
         true  # Set return code to indicate success
     fi
@@ -83,7 +83,7 @@ if [[ "$dorun" = "yes" ]] ; then
     
     
     # Check for currency of data in the database.  If not, leave.
-    ../currency.py
+    $SCRIPTPATH/currency.py
     rc=$?
     if [[ "$rc" != 0 ]] ; then
         echo "currency RC = $rc, exiting."
@@ -93,7 +93,7 @@ if [[ "$dorun" = "yes" ]] ; then
     ### Run the allstats report
     if (( $haveboth == 0 )) ; then
         echo "running allstats"
-        ../allstats.py --outfile performance.html
+        $SCRIPTPATH/allstats.py --outfile performance.html
         rc=$?
         echo "allstats rc = $rc"
         if [[ "$rc" == 0 ]] ; then
@@ -104,7 +104,7 @@ if [[ "$dorun" = "yes" ]] ; then
     
     if (( $haveperf == 0 )) ; then
         echo "Running award tallies"
-        ../awardtallies.py
+        $SCRIPTPATH/awardtallies.py
         echo "Creating award files"
         month=$(date '+%m')
         year=$(date '+%Y')
@@ -114,7 +114,7 @@ if [[ "$dorun" = "yes" ]] ; then
         # Python 3.7 passes a default locale to subprocesses that the
         # 'convert' command doesn't like, so override it with
         # LC_ALL=C in the invocation of makeeducationals.
-        LC_ALL=C ../makeeducationals.py --since "$year-07-01"
+        LC_ALL=C $SCRIPTPATH/makeeducationals.py --since "$year-07-01"
         rc=$?
         echo "makeeducationals rc = $rc"
         if [[ "$rc" == 0 ]] ; then
@@ -124,95 +124,95 @@ if [[ "$dorun" = "yes" ]] ; then
 
         # Run renewals when appropriate
         # Stellar September starts with August data and continues through September 15
-        if ../require.py --newtmyear --datafor S8 --nodatafor 9/16 ; then
+        if $SCRIPTPATH/require.py --newtmyear --datafor S8 --nodatafor 9/16 ; then
             echo "Running Stellar September"
-            ../renewals.py --program "stellar" --pct 75 100 --earn 75 100 && isreal && cp stellar.* ~/www/files/reports
+            $SCRIPTPATH/renewals.py --program "stellar" --pct 75 100 --earn 75 100 && isreal && cp stellar.* ~/www/files/reports
         fi
 
         # March Madness starts with February data and continues through March 15
-        if ../require.py --datafor S2 --nodatafor 3/16 ; then
+        if $SCRIPTPATH/require.py --datafor S2 --nodatafor 3/16 ; then
             echo "Running March Madness"
-            ../renewals.py --program "madness" --pct 75 90 100 --earn 50 75 101 && isreal && cp madness.* ~/www/files/reports
+            $SCRIPTPATH/renewals.py --program "madness" --pct 75 90 100 --earn 50 75 101 && isreal && cp madness.* ~/www/files/reports
         fi
 
         # President's Club runs once we have February data and stops when we have April 16 data
-        if ../require.py --datafor S2 --nodatafor 4/16 ; then
+        if $SCRIPTPATH/require.py --datafor S2 --nodatafor 4/16 ; then
             echo "Running President's Club"
-            ../presidentsclub.py && isreal && cp presidentsclub.txt ~/www/files/reports/
+            $SCRIPTPATH/presidentsclub.py && isreal && cp presidentsclub.txt ~/www/files/reports/
         fi
 
         # Early Achievers starts when we have data for the new year and ends when we have November data
-        if ../require.py --newtmyear --nodatafor S11 ; then
+        if $SCRIPTPATH/require.py --newtmyear --nodatafor S11 ; then
             echo "Running Early Achievers"
-            ../earlyachievers.py && isreal && cp earlyachievers.* ~/www/files/reports/
+            $SCRIPTPATH/earlyachievers.py && isreal && cp earlyachievers.* ~/www/files/reports/
         fi
         
         # Take a Leap runs once we have April data and stops when we have data for the next year
-        if false && ../require.py --datafor S4 --oldtmyear ; then
+        if false && $SCRIPTPATH/require.py --datafor S4 --oldtmyear ; then
             echo "Running Take A Leap"
-            ../takealeap.py && isreal && cp takealeap.* ~/www/files/reports/
+            $SCRIPTPATH/takealeap.py && isreal && cp takealeap.* ~/www/files/reports/
         fi
 
         # Spring Forward runs once we have April data and stops when we have data for the next year
-        if false && ../require.py --datafor S5 --oldtmyear ; then
+        if false && $SCRIPTPATH/require.py --datafor S5 --oldtmyear ; then
             echo "Running Spring Forward"
-            ../springforward.py && isreal && cp springforward.* ~/www/files/reports
+            $SCRIPTPATH/springforward.py && isreal && cp springforward.* ~/www/files/reports
         fi
 
         # Sensational Summer runs once we have April data and stops when we have data for the next year
-        if ../require.py --datafor S5 --oldtmyear ; then
+        if $SCRIPTPATH/require.py --datafor S5 --oldtmyear ; then
             echo "Running Sensational Summer"
-            ../summer.py && isreal && cp summer.* ~/www/files/reports
+            $SCRIPTPATH/summer.py && isreal && cp summer.* ~/www/files/reports
         fi
 
         # Five for 5 runs once we have April data and stops when we get data for 5/16.
-        if false && ../require.py --datafor S4 --nodatafor 5/16; then
+        if false && $SCRIPTPATH/require.py --datafor S4 --nodatafor 5/16; then
             echo "Running Five for 5"
-            ../fivefor5.py && isreal && (cp fivefor5.html ~/www/files/reports; ../sendmail.py --subject "Five for 5 Report" --to quality@d101tm.org --html fivefor5.email)
+            $SCRIPTPATH/fivefor5.py && isreal && (cp fivefor5.html ~/www/files/reports; $SCRIPTPATH/sendmail.py --subject "Five for 5 Report" --to quality@d101tm.org --html fivefor5.email)
         fi
 
     fi
     
     ### During alignment season, run the daily alignment report
-    if ../require.py --between 2/1 5/11; then
+    if $SCRIPTPATH/require.py --between 2/1 5/11; then
         echo "Running realignment programs"
-        (cd ..;./dorealignment.sh > /dev/null)
+        (cd $SCRIPTPATH;./dorealignment.sh > /dev/null)
     fi
 
     ### Run daily housekeeping
     if (( $haveclubs == 0 )) ; then
         
         echo "Running Club Change Report"
-        (cd ..;./runclubchanges.sh) 
+        (cd $SCRIPTPATH;./runclubchanges.sh) 
 	
         echo "Running alignment-related"
-        (cd ..;./dodailyalignment.sh)
+        (cd $SCRIPTPATH;./dodailyalignment.sh)
 		
 		echo "Creating anniversary table"
-		(cd ../;./makeanniversarytable.py) && isreal && cp anniversary.csv ~/www/files/reports
+		(cd $SCRIPTPATH/;./makeanniversarytable.py) && isreal && cp anniversary.csv ~/www/files/reports
     fi
 
 
     # Now, ingest rosters if need be
     echo "Checking for a new roster"
-    ../getroster.sh
+    $SCRIPTPATH/getroster.sh
 
     # And process award letters
     if [[ $I_AM_D101TM == 1 ]]
         then
             echo "Processing award letters"
-            ../sendawardmail.py
+            $SCRIPTPATH/sendawardmail.py
     else
             echo "Processing award letters as a dry run"
-	    ../sendawardmail.py --dryrun
+	    $SCRIPTPATH/sendawardmail.py --dryrun
     fi
 
     # Make exportable copy of the database
-    isreal && ../exportdb.sh
+    isreal && $SCRIPTPATH/exportdb.sh
         
     rm *.success 2>/dev/null
 
-    isreal && ../clearcache.py --all
+    isreal && $SCRIPTPATH/clearcache.py --all
     
     echo "Finished at $(date)" > "$success"
     cat "$success"

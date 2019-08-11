@@ -81,7 +81,7 @@ class tmparms(Singleton):
         # Now, promote the values in the configuration file to top level.
 
 
-        self.configvalues = dict(configParser['default'])
+        self.configvalues = dict(configParser[configParser.default_section])
         for name in self.configvalues:
             self.__dict__[name] = self.configvalues[name]
 
@@ -90,8 +90,8 @@ class tmparms(Singleton):
         # Override with non-false values from the command line (or the default).
         # If no value is in the configfile, use the command line or default whether it's true or false.
         # Resolve any strings against the configfile.
-        resolver_section = 'internal-resolver'
         resolver_name = 'xyzzy'
+        resolver_section = 'xyzzy'
         configParser.add_section(resolver_section)
         args = vars(self.args)
         for name in list(args.keys()):

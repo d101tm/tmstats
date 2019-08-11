@@ -14,6 +14,7 @@ then
     # Set environment variables
     # There are bugs in some versions of Bash that require the following ugly workaround
     source /dev/stdin <<< "$(./exportsettings.py)"
+    export data="$workdir"  # For now
 
     export TMSTATS_SETUP=1
 
