@@ -15,7 +15,7 @@ if __name__ == "__main__":
     
     # Establish parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--outfile', default='anniversary.csv')
+    parms.add_argument('--outfile', default='${workdir}/anniversary.csv')
     # Add other parameters here
 
     # Do global setup
