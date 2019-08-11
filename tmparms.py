@@ -62,13 +62,13 @@ class tmparms(Singleton):
     def add_mutually_exclusive_group(self, *args, **kwargs):
         return self.parser.add_mutually_exclusive_group(*args, **kwargs)
 
-    def parse(self):
+    def parse(self, sections=None):
 
         # Parameters are put directly into this object, based on their name in the config file
         #   or the command line.
         # NOTE:  Parameters with default values which evaluate to TRUE will ALWAYS override the file!
         #
-        # self.configvalues is the result of reading the config file
+        # self.configValues is the result of reading the config file
         # self.args is the result from the parser
 
         # Parse the command line (in case the configfile has been overridden)
@@ -78,18 +78,30 @@ class tmparms(Singleton):
         configParser = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
         configParser.read(self.args.configfile)
 
-        # Now, promote the values in the configuration file to top level.
+        # Get the default section
+        configValues = dict(configParser[configParser.default_section])
 
-
-        self.configvalues = dict(configParser[configParser.default_section])
-        for name in self.configvalues:
-            self.__dict__[name] = self.configvalues[name]
-
-        # @@TODO@@ Deal with non-default sections.  Does anything use them yet?
-
+        # Add any sections we've been asked to include.  If there is a collision between earlier and
+        #   later sections, the later section wins; note that the default section is the earliest one.
+        #   We use the consolidated dictionary for interpolation of values from the command line.
+        if sections:
+            if isinstance(sections, str):
+                sections = (sections,)
+            for s in sections:
+                for name in configParser[s]:
+                    configValues[name] = configParser[s][name]
+                    
+        # Now, put values from the configfile into the parms object:
+        for name in configValues:
+            self.__dict__[name] = configValues[name]
+            
         # Override with non-false values from the command line (or the default).
         # If no value is in the configfile, use the command line or default whether it's true or false.
-        # Resolve any strings against the configfile.
+        # Do interpolation on strings against the consolidated dictionary of values from the configfile.
+        
+        # We use section and key 'xyzzy' for interpolation; by this point, everything we might 
+        # interpolate against has been promoted to the configValues dictionary.
+        configParser.remove_section('xyzzy')
         resolver_name = 'xyzzy'
         resolver_section = 'xyzzy'
         configParser.add_section(resolver_section)
@@ -99,7 +111,7 @@ class tmparms(Singleton):
                 if isinstance(args[name], str):
                     try:
                         configParser.set(resolver_section, resolver_name, args[name])
-                        args[name] = configParser.get(resolver_section, resolver_name)
+                        args[name] = configParser.get(resolver_section, resolver_name, vars=configValues)
                     except ValueError:
                         pass  # Ignore interpolation problems here
                 self.__dict__[name] = args[name]

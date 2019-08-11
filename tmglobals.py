@@ -38,7 +38,7 @@ class tmglobals(Singleton):
         if kwargs.get('defaultencoding', ''):
             imp.reload(sys).setdefaultencoding(defaultencoding)
         if kwargs.get('parse', True):
-            self.parms.parse()
+            self.parms.parse(sections=kwargs.get('sections', None))
         if kwargs.get('connect', True):
             self.conn = dbconn.dbconn(self.parms.dbhost, self.parms.dbuser, self.parms.dbpass, self.parms.dbname)
             self.curs = self.conn.cursor()
