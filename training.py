@@ -179,6 +179,11 @@ if __name__ == "__main__":
             for row in rows:
                 cells = row.find_all('td')
                 if not cells:
+                    info = [' '.join([s for s in f.stripped_strings]) for f in row.select('.col-md-2')][0].replace('&nbsp;', ' ')
+                    m = re.match(r'Area\s*(\S*).*Division\s*(\S*)', info)
+                    if m:
+                        area = m.group(1)
+                        division = m.group(2)
                     continue   # Must be a header row
                 clubname = ''.join(cells[1].stripped_strings)
                 clubstatus = ''.join(cells[2].stripped_strings)
@@ -186,14 +191,7 @@ if __name__ == "__main__":
                 # Omit suspended clubs
                 if clubstatus.startswith('S'):
                     continue
-                # If a club is brand new, it can be in the training report but
-                #   NOT in the clubs table.  If so, skip it (with message)
-                try:
-                    club = clubs[clubnumber]
-                except KeyError:
-                    print("Club %s not found in the clubs table.  This is not unusual for a brand new club." % clubnumber)
-                    continue
-                res = [club.division, club.area, clubname, clubnumber, clubstatus]
+                res = [division, area, clubname, clubnumber, clubstatus]
                 offlist = []
                 trained = 0
                 for o in row.find_all('input', type='checkbox'):
