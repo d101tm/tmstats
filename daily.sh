@@ -192,6 +192,8 @@ if [[ "$dorun" = "yes" ]] ; then
 		(cd $SCRIPTPATH/;./makeanniversarytable.py) && isreal && cp anniversary.csv ~/www/files/reports
     fi
 
+    echo "Updating anniversary open houses"
+    (cd ../;./updateanniversaryopenhouses.py)
 
     # Now, ingest rosters if need be
     echo "Checking for a new roster"
