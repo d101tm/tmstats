@@ -1,4 +1,5 @@
 #!/bin/bash
+. setup.sh
 let spacing=32
 let line1=100
 let left=420
@@ -34,6 +35,6 @@ if [ -z "$district" -o -z "$count" -o -z "$month" ] ; then
     exit 1
 fi
 
-cd data
+cd "$workdir"
 
-convert ed-achieve-base.png  -quality "$quality" -font "$font"   -pointsize 26 -fill  black -draw "text $sleft,$sline1 'Congratulations to the $count District $district'" -draw "text $sleft,$sline2 'members who achieved one or more'" -draw "text $sleft,$sline3 'of their educational goals in $month.'" -draw "text $sleft,$sline4 'Will you be recognized next?'" -fill white   -draw "text $left,$line1 'Congratulations to the $count District $district'" -draw "text $left,$line2 'members who achieved one or more'" -draw "text $left,$line3 'of their educational goals in $month.'" -draw "text $left,$line4 'Will you be recognized next?'" ed-achieve.jpg && open ed-achieve.jpg  && ls -la ed-achieve.jpg
+convert "$SCRIPTPATH"/ed-achieve-base.png  -quality "$quality" -font "$font"   -pointsize 26 -fill  black -draw "text $sleft,$sline1 'Congratulations to the $count District $district'" -draw "text $sleft,$sline2 'members who achieved one or more'" -draw "text $sleft,$sline3 'of their educational goals in $month.'" -draw "text $sleft,$sline4 'Will you be recognized next?'" -fill white   -draw "text $left,$line1 'Congratulations to the $count District $district'" -draw "text $left,$line2 'members who achieved one or more'" -draw "text $left,$line3 'of their educational goals in $month.'" -draw "text $left,$line4 'Will you be recognized next?'" ed-achieve.jpg && open ed-achieve.jpg  && ls -la ed-achieve.jpg
