@@ -193,20 +193,20 @@ if [[ "$dorun" = "yes" ]] ; then
     fi
 
     echo "Updating anniversary open houses"
-    (cd ../;./updateanniversaryopenhouses.py)
+    (cd $SCRIPTPATH/;./updateanniversaryopenhouses.py)
 
     # Now, ingest rosters if need be
     echo "Checking for a new roster"
-    $SCRIPTPATH/getroster.sh
+    (cd $SCRIPTPATH/;./getroster.sh)
 
     # And process award letters
     if isreal
         then
             echo "Processing award letters"
-            $SCRIPTPATH/sendawardmail.py
+            (cd $SCRIPTPATH;./sendawardmail.py)
     else
             echo "Processing award letters as a dry run"
-	    $SCRIPTPATH/sendawardmail.py --dryrun
+            (cd $SCRIPTPATH;./sendawardmail.py --dryrun)
     fi
 
     # Make exportable copy of the database
