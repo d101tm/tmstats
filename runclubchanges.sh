@@ -5,7 +5,7 @@ export PYTHONIOENCODING="utf8"
 
 . setup.sh
 
-cd "$data"
+cd "$workdir"
 outfile="clubchanges.$today.html"
 
 if "$SCRIPTPATH/clubchanges.py" $* --outfile "$outfile"

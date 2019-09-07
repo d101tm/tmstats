@@ -1,7 +1,7 @@
 #!/bin/bash
 . setup.sh  # Do common setup
 
-cd "$workdir"   # Run in the data directory.
+cd "$workdir"   # Run in the work directory.
 
 touch daily       # We were here!
 
@@ -200,7 +200,7 @@ if [[ "$dorun" = "yes" ]] ; then
     $SCRIPTPATH/getroster.sh
 
     # And process award letters
-    if [[ $I_AM_D101TM == 1 ]]
+    if isreal
         then
             echo "Processing award letters"
             $SCRIPTPATH/sendawardmail.py
