@@ -167,7 +167,7 @@ clubs = removeSuspendedClubs(clubs, curs)
 # Remove clubs from outside our District
 for c in list(clubs.keys()):
     try:
-        if int(clubs[c].district) != parms.district:
+        if clubs[c].district != parms.district:
             del clubs[c]
     except ValueError:
         print((clubs[c]))
