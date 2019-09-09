@@ -125,7 +125,7 @@ if 'TM_DIRECTORY' in os.environ:
 parms = tmparms.tmparms()
 parms.parser.add_argument("--date", dest='date', default='today')
 parms.add_argument('--outdir', dest='outdir', default='${workdir}', help='Where to put the files created by this program.')
-parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
+parms.add_argument('--newalignment', dest='newalignment', default=None, help='Overrides area/division data from the CLUBS table.')
 parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
 
 # Do global setup
@@ -148,8 +148,8 @@ clubs = Club.getClubsOn(curs, parms.date)
 clubs = removeSuspendedClubs(clubs, curs)
 
 # And override it if needed.
-if parms.newAlignment:
-    overrideClubs(clubs, parms.newAlignment, exclusive=False)
+if parms.newalignment:
+    overrideClubs(clubs, parms.newalignment, exclusive=False)
     
 
 # If there are overrides to club positioning, handle them now

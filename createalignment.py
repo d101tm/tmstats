@@ -2,7 +2,7 @@
 """ Create alignment work file based on:
 
     * Information from the tmstats database
-    * Limited to clubs in the latest CSV file in the 'newAlignment' Dropbox directory 
+    * Limited to clubs in the latest CSV file in the 'newalignment' Dropbox directory 
     * Information in that CSV file overrides info from tmstats 
     
     The output work file is used by other programs in the alignment process such as 'alignmap' and 'makelocationreport'
@@ -42,8 +42,8 @@ if __name__ == "__main__":
     parms.add_argument('--outdir', default='${alignmentdir}', help='Directory to put the output file in')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     parms.add_argument('--workingalignment', dest='workingalignment', default=None, help='Google spreadsheet with proposed alignment')
-    parms.add_argument('--trustWHQ', dest='trust', action='store_true', help='Specify this to use information from WHQ because we are in the new year')
-    parms.add_argument('--includeprecharter', dest='includeprecharter', action='store_true', help='Specify this to include "pre-charter" clubs (ones with negative club numbers in the newAlignment file)')
+    parms.add_argument('--trust', dest='trust', action='store_true', help='Specify this to use information from WHQ because we are in the new year')
+    parms.add_argument('--includeprecharter', dest='includeprecharter', action='store_true', help='Specify this to include "pre-charter" clubs (ones with negative club numbers in the newalignment file)')
     
     # Do global setup
     myglobals.setup(parms, sections='alignment')

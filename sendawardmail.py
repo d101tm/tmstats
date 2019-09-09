@@ -210,7 +210,7 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count', default=0)
-    parms.parser.add_argument("--mailYML", dest='mailyml', default="awardmail.yml")
+    parms.parser.add_argument("--mailyml", dest='mailyml', default="awardmail.yml")
     parms.parser.add_argument("--mailserver", dest='mailserver')
     parms.parser.add_argument("--mailpw", dest='mailpw')
     parms.parser.add_argument("--mailport", dest='mailport')
@@ -232,7 +232,7 @@ if __name__ == "__main__":
     parms.fromdate = cleandate(parms.fromdate)
     parms.todate = cleandate(parms.todate)
     
-    # If there are mail-related values not yet resolved, get them from the mailYML file.
+    # If there are mail-related values not yet resolved, get them from the mailyml file.
     ymlvalues = yaml.load(open(parms.mailyml, 'r'))
 
     for name in ['mailserver', 'mailpw', 'mailport', 'from', 'replyto']:

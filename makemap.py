@@ -364,7 +364,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--verbose', '-v', action='count', default=0)
     parms.add_argument('--outfile', dest='outfile', default='markers.js')
-    parms.add_argument('--newAlignment', dest='newAlignment', default=None, help='Overrides area/division data from the CLUBS table.')
+    parms.add_argument('--newalignment', dest='newalignment', default=None, help='Overrides area/division data from the CLUBS table.')
     parms.add_argument('--pindir', dest='pindir', default=None, help='Directory with pins; default uses Google pins')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     # Add other parameters here
@@ -390,11 +390,11 @@ if __name__ == "__main__":
 
 
     # Add current coordinates and remove clubs without coordinates unless there's a new alignment file to deal with
-    setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=not parms.newAlignment)
+    setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=not parms.newalignment)
 
     # Process new alignment, if needed
-    if parms.newAlignment:
-        overrideClubs(clubs, parms.newAlignment, exclusive=False)
+    if parms.newalignment:
+        overrideClubs(clubs, parms.newalignment, exclusive=False)
         
     # If there are overrides to club positioning, handle them now
     if parms.mapoverride:

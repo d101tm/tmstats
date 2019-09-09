@@ -178,11 +178,11 @@ class UnicodeWriter:
             self.writerow(row)
 
 
-def overrideClubs(clubs, newAlignment, exclusive=True):
-    """ Updates 'clubs' to reflect the alignment in the newAlignment spreadsheet.
+def overrideClubs(clubs, newalignment, exclusive=True):
+    """ Updates 'clubs' to reflect the alignment in the newalignment spreadsheet.
         Typically used at a TM year boundary or for planning realignment.
     
-        newAlignment is a "test alignment" file - a CSV with the clubs in the new
+        newalignment is a "test alignment" file - a CSV with the clubs in the new
         alignment.  Non-blank columns in the file override information from the database,
         with the following exceptions:
         
@@ -195,7 +195,7 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
     """
     
     
-    pfile = open(newAlignment, 'r')
+    pfile = open(newalignment, 'r')
     reader = csv.DictReader(pfile)
     keepers = set()
     # Sadly, the callers of this routine have different types of key.

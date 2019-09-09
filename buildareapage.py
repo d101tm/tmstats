@@ -142,7 +142,7 @@ class Director():
 
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument('--outfile', dest='outfile', default='${WORKDIR}/areasanddivisions.html')
-parms.add_argument('--newAlignment', dest='newAlignment', default=None,
+parms.add_argument('--newalignment', dest='newalignment', default=None,
                    help='Overrides area/division data from the CLUBS table.')
 parms.add_argument('--officers', dest='officers', help='URL of a Google Spreadsheet with Area/Division Directors')
 parms.add_argument('--mapdir', default=None, help='Directory to use for the area map files.')
@@ -158,8 +158,8 @@ curs = myglobals.curs
 # Get all clubs
 clubs = Club.getClubsOn(curs)
 
-if parms.newAlignment:
-    overrideClubs(clubs, parms.newAlignment, exclusive=False)
+if parms.newalignment:
+    overrideClubs(clubs, parms.newalignment, exclusive=False)
 
 # Remove suspended clubs
 clubs = removeSuspendedClubs(clubs, curs)
@@ -173,7 +173,7 @@ for c in list(clubs.keys()):
         print((clubs[c]))
 
 # Add current coordinates and remove clubs without coordinates (unless there's a new alignment)
-setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=not parms.newAlignment)
+setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=not parms.newalignment)
 
 # If there are overrides to club positioning, handle them now
 if parms.mapoverride:
