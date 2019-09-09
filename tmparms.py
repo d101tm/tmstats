@@ -49,7 +49,7 @@ class tmparms(Singleton):
             self.parser.add_argument('--dbpass', help="password for MySQL database", dest='dbpass')
 
     def __repr__(self):
-        return '\n'.join(['%s: "%s"' % (k, self.__dict__[k]) for k in self.__dict__ if k != 'parser'])
+        return '\n'.join(['%s: (%s) "%s"' % (k, type(self.__dict__[k]), self.__dict__[k]) for k in self.__dict__ if k != 'parser'])
 
     def add_argument(self, *args, **kwargs):
         if 'default' in kwargs and isinstance(kwargs['default'], str):
