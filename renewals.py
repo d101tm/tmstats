@@ -127,7 +127,7 @@ if __name__ == "__main__":
         rtype = 'octrenewals'
 
     rawdata = [('clubnumber', 'clubname', rtype, 'membase', 'division', 'area', 'asof')]
-    query = "SELECT c.clubnumber, c.clubname,  %s, c.membase, c.division, c.area   from clubperf c  inner join distperf d on c.clubnumber = d.clubnumber and c.asof = '%s' and d.asof = '%s' order by c.division, c.area" % (
+    query = "SELECT c.clubnumber, c.clubname,  %s, c.membase, c.division, c.area   from clubperf c  inner join distperf d on c.clubnumber = d.clubnumber and c.asof = '%s' and d.asof = '%s' order by c.division, c.area, c.clubnumber" % (
         rtype, asof, asof)
     curs.execute(query)
     for c in curs.fetchall():
