@@ -37,13 +37,13 @@ class GSheet:
 
     
     
-    def __init__(self, sheetid, apikey):
+    def __init__(self, sheetid, apikey, sheetname="Sheet1"):
         if '/' in sheetid:
             # Have a whole URL; get the key
             sheetid = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', sheetid).groups()[0]
             
         service = discovery.build('sheets', 'v4', developerKey=apikey)
-        request = service.spreadsheets().values().get(spreadsheetId=sheetid, range='a1:zz999')
+        request = service.spreadsheets().values().get(spreadsheetId=sheetid, range=sheetname)
         self.values = request.execute()['values']
         self.rownum = 0
         
