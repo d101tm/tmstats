@@ -79,7 +79,7 @@ if __name__ == "__main__":
     
     # Establish parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--capsheet', default='https://docs.google.com/spreadsheets/d/1dBc6CvqXuE77dGSj4F5cXcDbVjRR0Y_oabFnPcFAyrA')
+    parms.add_argument('--capsheet', default='')
     parms.add_argument('--outprefix', default='cap')
     parms.add_argument('--minvisits', default=1, type=int)
     parms.add_argument('--listexternal', action='store_true')
