@@ -117,7 +117,9 @@ class Director():
         for f in row.dict:
             if f:
                 self.__dict__[f.lower().split()[0]] = row.dict[f]
+        self.fullname = self.first + ' ' + self.last
         part = self.title.split()
+        self.position = ' '.join(part)
         if part[0] == 'Division':
             division = part[1]
             Division.find(division).director = self
@@ -125,8 +127,6 @@ class Director():
             area = part[1][1]
             division = part[1][0]
             Area.find(division, area).director = self
-        self.position = part[0] + ' ' + part[1] + ' Director'
-        self.fullname = self.first + ' ' + self.last
 
     def html(self, isacting=False):
         return """<tr>
