@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Define args and parse command line
     parms = tmparms.tmparms(description=__doc__, epilog='pct and earns must have the same number of items.\nIf names is specified, it must have the same number as well.')
     parms.add_argument('--finaldate', default='', dest='finaldate', help="Final date for qualifying.")
-    parms.add_argument('--outfileprefix', default='', dest='outfileprefix', type=str, help="Output file prefix.")
+    parms.add_argument('--outfileprefix', default='stellar', dest='outfileprefix', type=str, help="Output file prefix.")
     parms.add_argument('--format', default='$%d in District Credit')
     parms.add_argument('--pct', dest='pct', nargs='+', type=float, help='Threshold to qualify (in percent) for each level.', default='75.0')
     parms.add_argument('--earns', dest='earns', nargs='+', type=int, help='Amount earned for each level.', default='50')
