@@ -90,8 +90,16 @@ if __name__ == "__main__":
             int(row.clubnumber)  # Skip non-club rows
         except ValueError:
             continue
+        if renewalcol > len(row.values):
+            print('Ignoring short row:', '; '.join([f'{item[0]}={item[1]}' for item in zip(row.fieldnames, row.values)])) 
+            continue
         curs.execute("SELECT area, division, clubname, asof FROM clubperf WHERE clubnumber = %s ORDER BY ASOF DESC LIMIT 1", (row.clubnumber,))
         (area, division, clubname, asof) = curs.fetchone() 
+        if (clubname.strip() != row.clubname):
+            print(f'Wrong club name for {row.clubnumber}: "{row.clubname}" should be "{clubname.strip()}"')
+        alignment = division+area        
+        if alignment != row.alignment:
+            print(f'Wrong alignment for {row.clubname}: should be {row.alignment}, not {alignment}')
         club = myclub(row.clubnumber, clubname, row.values[renewalcol], row.base, division, area)
         for each in levels:
             if club.pct >= each.pct:
