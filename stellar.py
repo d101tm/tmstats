@@ -97,9 +97,10 @@ if __name__ == "__main__":
         (area, division, clubname, asof) = curs.fetchone() 
         if (clubname.strip() != row.clubname):
             print(f'Wrong club name for {row.clubnumber}: "{row.clubname}" should be "{clubname.strip()}"')
-        alignment = division+area        
-        if alignment != row.alignment:
-            print(f'Wrong alignment for {row.clubname}: should be {row.alignment}, not {alignment}')
+        if 'alignment' in row.fieldnames:
+            alignment = division+area        
+            if alignment != row.alignment:
+                print(f'Wrong alignment for {row.clubname}: should be {row.alignment}, not {alignment}')
         club = myclub(row.clubnumber, clubname, row.values[renewalcol], row.base, division, area)
         for each in levels:
             if club.pct >= each.pct:
