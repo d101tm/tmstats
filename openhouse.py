@@ -38,6 +38,7 @@ if __name__ == "__main__":
     parms.add_argument('--finaldate', default='10/31')
     parms.add_argument('--renewto', default='3/31/2020')
     parms.add_argument('--requireopenhouse', action='store_true')
+    parms.add_argument('--sheetname', default='2019 Summer')
 
     #Do global setup
     globals.setup(parms)
@@ -76,7 +77,7 @@ if __name__ == "__main__":
     OHand5 = []
     onlyOH = []
 
-    sheet = GSheet(parms.openhouseclubs, parms.googlesheetsapikey)
+    sheet = GSheet(parms.openhouseclubs, parms.googlesheetsapikey, sheetname=parms.sheetname)
     # Now read the openhouse clubs and get their numbers
     
     hadOH = set()
