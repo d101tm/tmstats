@@ -10,7 +10,7 @@ from datetime import datetime
 from gsheet import GSheet 
 
 import tmglobals
-myglobals = tmglobals.tmglobals()
+globals = tmglobals.tmglobals()
 
 
     
@@ -38,11 +38,12 @@ if __name__ == "__main__":
     parms.add_argument('--finaldate', default='10/31')
     parms.add_argument('--renewto', default='3/31/2020')
     parms.add_argument('--requireopenhouse', action='store_true')
+    parms.add_argument('--sheetname', default='2019 Summer')
 
     #Do global setup
-    myglobals.setup(parms)
-    curs = myglobals.curs
-    conn = myglobals.conn
+    globals.setup(parms)
+    curs = globals.curs
+    conn = globals.conn
     
    
     # Connect to the database        
@@ -76,7 +77,7 @@ if __name__ == "__main__":
     OHand5 = []
     onlyOH = []
 
-    sheet = GSheet(parms.openhouseclubs, parms.googlesheetsapikey)
+    sheet = GSheet(parms.openhouseclubs, parms.googlesheetsapikey, sheetname=parms.sheetname)
     # Now read the openhouse clubs and get their numbers
     
     hadOH = set()
