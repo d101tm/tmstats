@@ -193,7 +193,7 @@ if [[ "$dorun" = "yes" ]] ; then
     fi
 
     echo "Updating anniversary open houses"
-    (cd $SCRIPTPATH/;./updateanniversaryopenhouses.py)
+    (cd $SCRIPTPATH/;./updateanniversaryopenhouses.py) && isreal && cp amazing.txt ~/www/files/reports
 
     # Now, ingest rosters if need be
     echo "Checking for a new roster"
