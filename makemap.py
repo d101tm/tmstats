@@ -310,7 +310,7 @@ def makemap(outfile, clubs, parms):
                 inform('%s%s %s' % (club.division, club.area, club.clubname), file=sys.stdout, level=2, verbosity=parms.verbosity)
                 inform('   %s' % (club.address), file=sys.stdout, level=2, verbosity=parms.verbosity)
                 clubinfo.append('new iwTab("%s", "%s")' % (club.clubname, makeCard(club)))
-                if club.division not in divs:
+                if club.division not in divs and club.division != '0D':
                     divs.append(club.division)
             clubinfo = '[%s]' % ', '.join(clubinfo)
             if len(divs) == 1:
