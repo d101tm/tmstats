@@ -1,5 +1,5 @@
 #!/bin/bash
-rsync -vtzrL --exclude 'build' --exclude '*.yml' d101tm.org:src/tmstats/data/ ~/src/tmstats/data/
+#rsync -vtzrL --exclude 'build' --exclude '*.yml' d101tm.org:src/tmstats/data/ ~/src/tmstats/data/
 echo "Loading TMSTATS"
 curl "https://d101tm.org/files/exports/tmstats.sql.gz" | gunzip | mysql d101tm_tmstats
 echo "Loading WordPress"
