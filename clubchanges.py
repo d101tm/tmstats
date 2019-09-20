@@ -163,7 +163,7 @@ if __name__ == "__main__":
         
                     </style>
             </head>""")
-            outfile.write("<body>\n")
+            outfile.write("\n<body>\n")
             outfile.write("<h2>Club changes from %s to %s</h2>\n" % (fromdate, todate))
 
     
@@ -227,4 +227,5 @@ if __name__ == "__main__":
                             outfile.write("<tr><td class='item'>%s</td><td class='old'>%s</td><td class='new'>%s</td></tr>\n" % (item, old.replace('\n','<br />'), new.replace('\n', '<br />')))
                     outfile.write("</tbody></table>\n")
         
+            outfile.write("</html>\n")    
 sys.exit(rc)

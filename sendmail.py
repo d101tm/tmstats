@@ -3,6 +3,7 @@
 import tmparms, os, sys, argparse, smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate
 
 import tmglobals
 myglobals = tmglobals.tmglobals()
@@ -19,7 +20,7 @@ def flatten(l):
 
 
 # Handle parameters
-parms = tmparms.tmparms(description=__doc__, YMLfile="tmmail.yml", includedbparms=False)
+parms = tmparms.tmparms(description=__doc__, includedbparms=False)
 parms.parser.add_argument("--htmlfile", dest='htmlfile')
 parms.parser.add_argument("--textfile", dest='textfile')
 parms.parser.add_argument("--mailserver", dest='mailserver')
@@ -30,8 +31,13 @@ parms.parser.add_argument("--to", dest='to', nargs='+', default=[], action='appe
 parms.parser.add_argument("--cc", dest='cc', nargs='+', default=[], action='append')
 parms.parser.add_argument("--bcc", dest='bcc', nargs='+', default=[], action='append')
 parms.parser.add_argument("--subject", dest='subject', default='Mail from the District Webmaster')
+parms.parser.add_argument("--section", dest='section', help='INI file section to use in addition to [common]')
 
 myglobals.setup(parms, connect=False)
+if parms.section:
+    # Need to reparse to pick up proper defaults from the named section
+    myglobals.setup(parms, connect=False, sections=parms.section)
+
 
 parms.sender = parms.__dict__['from']  # Get around reserved word
 
@@ -41,6 +47,7 @@ parms.sender = parms.__dict__['from']  # Get around reserved word
 msg = MIMEMultipart('alternative')
 msg['Subject'] = parms.subject
 msg['From'] = parms.sender
+msg['Date'] = formatdate(localtime=True)
 
 # Flatten recipient lists and insert to and cc into the message header
 parms.to = list(flatten(parms.to))
@@ -76,8 +83,6 @@ if parms.cc:
     targets.extend(parms.cc)
 if parms.bcc:
     targets.extend(parms.bcc)
-
-
 
 # Connect to the mail server:
 mailconn = smtplib.SMTP_SSL(parms.mailserver, parms.mailport)
