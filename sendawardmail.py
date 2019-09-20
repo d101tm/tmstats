@@ -7,6 +7,7 @@ import tmparms, os, sys, argparse, smtplib, time
 from tmutil import cleandate
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate
 import re
 from awardinfo import Awardinfo as info
 
@@ -116,6 +117,7 @@ def sendletter(email, firstname, letterinfo, parms):
     
     msg['Subject'] = subject
     msg['From'] = parms.sender
+    msg['Date'] = formatdate(localtime=True)
 
     # Flatten recipient lists and insert to and cc into the message header
     to = list(flatten([email]))
@@ -210,7 +212,6 @@ if __name__ == "__main__":
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count', default=0)
-    parms.parser.add_argument("--mailyml", dest='mailyml', default="awardmail.yml")
     parms.parser.add_argument("--mailserver", dest='mailserver')
     parms.parser.add_argument("--mailpw", dest='mailpw')
     parms.parser.add_argument("--mailport", dest='mailport')
@@ -224,20 +225,14 @@ if __name__ == "__main__":
     parms.add_argument('--dryrun', action='store_true', help="Don't send letters; do say who they'd go to.")
     
     # Do global setup
-    myglobals.setup(parms)
+    myglobals.setup(parms, sections='awardmail')
     curs = myglobals.curs
     conn = myglobals.conn
     
     
     parms.fromdate = cleandate(parms.fromdate)
     parms.todate = cleandate(parms.todate)
-    
-    # If there are mail-related values not yet resolved, get them from the mailyml file.
-    ymlvalues = yaml.load(open(parms.mailyml, 'r'))
 
-    for name in ['mailserver', 'mailpw', 'mailport', 'from', 'replyto']:
-        if name not in parms.__dict__ or not parms.__dict__[name]:
-            parms.__dict__[name] = ymlvalues[name]
     parms.sender = parms.__dict__['from']    
     
 
