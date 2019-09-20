@@ -3,6 +3,7 @@
 import tmparms, os, sys, argparse, smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate
 
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -41,6 +42,7 @@ parms.sender = parms.__dict__['from']  # Get around reserved word
 msg = MIMEMultipart('alternative')
 msg['Subject'] = parms.subject
 msg['From'] = parms.sender
+msg['Date'] = formatdate(localtime=True)
 
 # Flatten recipient lists and insert to and cc into the message header
 parms.to = list(flatten(parms.to))
