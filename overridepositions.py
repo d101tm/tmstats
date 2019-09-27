@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     import tmutil, sys
     import tmglobals
-    globals = tmglobals.tmglobals()
+    myglobals = tmglobals.tmglobals()
  
 
     import tmparms
@@ -118,9 +118,9 @@ if __name__ == '__main__':
     # Add other parameters here
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     clubs = Club.getClubsOn(curs)
     print(('Using %s as the override spreadsheet' % parms.mapoverride))

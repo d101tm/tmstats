@@ -9,7 +9,7 @@ import dbconn, tmutil, sys, os, xlrd, re, csv, codecs
 from datetime import datetime, date
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
@@ -50,9 +50,9 @@ if __name__ == "__main__":
     parms.add_argument('--tablename', type=str, default='roster', help='Name of the table to create')
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
     
     parms.roster = parms.roster[0]
 

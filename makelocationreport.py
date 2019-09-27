@@ -7,7 +7,7 @@ from makemap import Bounds
 from simpleclub import Club
 from datetime import datetime
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 minimalhead = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
@@ -203,9 +203,9 @@ if __name__ == "__main__":
     parms.add_argument('--minimal', default='d101minimal.html')
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
  
     
     # Your main program begins here.
@@ -289,7 +289,7 @@ if __name__ == "__main__":
     curs.execute("""SELECT clubnumber, clubname, district, area, division, clubstatus 
                     AS eligibility, color, membase, activemembers, goalsmet FROM clubperf 
                     WHERE id IN (SELECT clubperf_id FROM lastfor WHERE tmyear = %s) AND district = %s""",
-                    (globals.tmyear, parms.district))
+                    (myglobals.tmyear, parms.district))
 
     for info in curs.fetchall():
         clubnum = Club.stringify(info[0])

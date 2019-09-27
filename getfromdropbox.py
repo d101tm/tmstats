@@ -8,7 +8,7 @@ from dropbox.exceptions import ApiError, AuthError
 from datetime import datetime
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 # Patch around SSL problems in outdated versions of Python (*cough* HostGator *cough*)
 if sys.hexversion < 0x02070900:
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     group.add_argument('--cfile', dest='cfile', default=None, help="Text file containing a Dropbox cursor; gets updated or created if required.")
     
     # Do global setup
-    globals.setup(parms, connect=False)
+    myglobals.setup(parms, connect=False)
     
     # Flatten extension in case it was specified many times
     if parms.extensions:

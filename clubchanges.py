@@ -16,7 +16,7 @@ import os, sys
 from tmutil import cleandate, removeSuspendedClubs, stringify
 import datetime, argparse
 import tmglobals, tmparms
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
         
@@ -38,9 +38,9 @@ if __name__ == "__main__":
     parms.add_argument('--short', action='store_true', help="Print short output instead of creating HTML")
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     # Let's see if we're supposed to run today.
     if parms.runon:

@@ -30,7 +30,7 @@ if __name__ == "__main__":
     
     # Establish parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--outfile', default='amazing.txt')
+    parms.add_argument('--outfile', default='${workdir}/amazing.txt')
     parms.add_argument('--prize1', default='an Amazing Gift Basket ($45 value)')
     parms.add_argument('--prize2', default='an even more Amazing Gift Basket ($70 value)')
     parms.add_argument('--needed', default=3)

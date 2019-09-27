@@ -3,7 +3,7 @@ import tmparms, os, sys
 from datetime import date, datetime
 from tmutil import showclubswithoutvalues, cleandate, stringify, getClubBlock
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 class myclub:
     """ Just enough club info to sort the list nicely """
@@ -25,9 +25,9 @@ if __name__ == "__main__":
     parms.parser.add_argument('--requiremembership', action='store_true', help='Specify to require that clubs meet membership goals to qualify.')
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     
     # Your main program begins here.

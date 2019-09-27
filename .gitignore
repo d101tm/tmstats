@@ -16,3 +16,7 @@ d4data/
 .tm_properties
 .idea/
 googleoauth2key.json
+*.ini
+pins
+cursors/
+workingalignment/

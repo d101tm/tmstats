@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """ Utility functions for the TMSTATS suite """
-from datetime import date, timedelta, datetime
-from six import StringIO
-import csv, codecs
-import os
+import codecs
+import csv
 import numbers
-import tmglobals
+import os
 import re
-globals = tmglobals.tmglobals()
+from datetime import date, timedelta, datetime
 
-def gotodatadir():
-    """ Go to the 'data' directory if we're not already there """
-    curdir = os.path.realpath(os.curdir)  # Get the canonical directory
-    lastpart = curdir.split(os.sep)[-1]
-    if lastpart.lower() != 'data':
-        os.chdir('data')   # Fails if there is no data directory; that is intentional.
+import tmglobals
+from six import StringIO
+
+myglobals = tmglobals.tmglobals()
+
+def gotoworkdir():
+    """ Go to the work directory ($workdir); if not defined, fail. """
+    os.chdir(myglobals.parms.workdir)
 
 import math
  
@@ -65,11 +65,11 @@ def cleandate(indate, usetmyear=True):
             # We need to add the year
             if usetmyear:
                 if int(indate[0])>= 7:
-                    indate.append('%d' % globals.tmyear)
+                    indate.append('%d' % myglobals.tmyear)
                 else:
-                    indate.append('%d' % (globals.tmyear+1))
+                    indate.append('%d' % (myglobals.tmyear + 1))
             else:
-                indate.append('%d' % globals.today.year)
+                indate.append('%d' % myglobals.today.year)
         indate = [indate[2], indate[0], indate[1]]
     elif '-' in indate:
         indate = indate.split('-')
@@ -178,11 +178,11 @@ class UnicodeWriter:
             self.writerow(row)
 
 
-def overrideClubs(clubs, newAlignment, exclusive=True):
-    """ Updates 'clubs' to reflect the alignment in the newAlignment spreadsheet.
+def overrideClubs(clubs, newalignment, exclusive=True):
+    """ Updates 'clubs' to reflect the alignment in the newalignment spreadsheet.
         Typically used at a TM year boundary or for planning realignment.
     
-        newAlignment is a "test alignment" file - a CSV with the clubs in the new
+        newalignment is a "test alignment" file - a CSV with the clubs in the new
         alignment.  Non-blank columns in the file override information from the database,
         with the following exceptions:
         
@@ -195,7 +195,7 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
     """
     
     
-    pfile = open(newAlignment, 'r')
+    pfile = open(newalignment, 'r')
     reader = csv.DictReader(pfile)
     keepers = set()
     # Sadly, the callers of this routine have different types of key.
@@ -214,7 +214,7 @@ def overrideClubs(clubs, newAlignment, exclusive=True):
             from simpleclub import Club
             club = Club(list(row.values()), fieldnames=list(row.keys()), fillall=True)
             if 'district' not in list(row.keys()):
-                club.district = globals.parms.district
+                club.district = myglobals.parms.district
             clubs[clubnum] = club
         keepers.add(clubnum)
         if row['newarea'] and row['newarea'] != '0D0A':
@@ -377,5 +377,5 @@ def getGoogleCredentials(scope=None):
         scope = ['https://spreadsheets.google.com/feeds',
                  'https://www.googleapis.com/auth/drive']
 
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(globals.parms.googleoauthfile, scope)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(myglobals.parms.googleoauthfile, scope)
     return credentials

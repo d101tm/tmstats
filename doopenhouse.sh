@@ -1,7 +1,7 @@
 #!/bin/bash
 . setup.sh
 
-cd "$data"
+cd "$workdir"
 
 echo "<p>Getting new roster</p>"
 ../getroster.sh

@@ -7,7 +7,7 @@ import tmutil, sys, os
 from datetime import date
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -49,15 +49,15 @@ if __name__ == "__main__":
     parms.add_argument('--short', action='store_true')
     parms.add_argument('--tmyear', type=int, default=0)
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     
     # Figure out the year
     tmyear = parms.tmyear
     if not tmyear:
-        tmyear = globals.tmyear
+        tmyear = myglobals.tmyear
     
     # Get the Triple Crown winners
     curs.execute("SELECT membername, award FROM awards WHERE membername IN (SELECT membername FROM (SELECT la.membername, lcount+ccount AS n FROM (SELECT membername, COUNT(DISTINCT award) AS lcount FROM awards WHERE award IN ('CL', 'ALB', 'ALS', 'DTM') AND tmyear = %s GROUP BY membername) la INNER JOIN (SELECT membername, COUNT(DISTINCT award) AS ccount FROM awards WHERE award IN ('CC', 'ACB', 'ACS', 'ACG') AND tmyear = %s GROUP BY membername) ca on la.membername = ca.membername AND la.lcount > 0 AND ca.ccount > 0 GROUP BY membername HAVING n >= 3 ORDER BY membername) winners) AND award != 'LDREXC' ORDER BY membername;", (tmyear, tmyear))

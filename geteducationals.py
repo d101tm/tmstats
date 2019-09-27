@@ -2,10 +2,14 @@
 
 # Get Educational Awards
 
-import dbconn, tmutil, sys, os, requests
 from bs4 import BeautifulSoup
+
+import requests
+import sys
 import tmglobals
-globals = tmglobals.tmglobals()
+import tmutil
+
+myglobals = tmglobals.tmglobals()
 
 
 def inform(*args, **kwargs):
@@ -32,9 +36,9 @@ if __name__ == "__main__":
     parms.add_argument('--district', type=int)
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     
     # Get the existing awards (significant parts only) so we don't create duplicates.  We can't 
@@ -47,7 +51,7 @@ if __name__ == "__main__":
         
     
     # Get the data from Toastmasters
-    url = "http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%d&s=Club&sortOrder=0" % parms.district
+    url = "http://reports.toastmasters.org/reports/dprReports.cfm?r=3&d=%s&s=Club&sortOrder=0" % parms.district
     data = requests.get(url).text
     # Parse it
     soup = BeautifulSoup(data, 'html.parser')

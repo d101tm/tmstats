@@ -9,7 +9,7 @@ import dbconn, tmutil, sys, os
 from datetime import datetime
 import re
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -97,9 +97,9 @@ if __name__ == "__main__":
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
    
 
       

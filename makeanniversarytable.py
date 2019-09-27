@@ -3,7 +3,7 @@
 
 import tmutil, sys
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -15,20 +15,20 @@ if __name__ == "__main__":
     
     # Establish parameters
     parms = tmparms.tmparms()
-    parms.add_argument('--outfile', default='anniversary.csv')
+    parms.add_argument('--outfile', default='${workdir}/anniversary.csv')
     # Add other parameters here
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
-    yy = globals.today.year
-    mm = globals.today.month
-    dd = globals.today.day
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
+    yy = myglobals.today.year
+    mm = myglobals.today.month
+    dd = myglobals.today.day
     if mm == 12:
-        nextfirst = globals.today.replace(year=yy+1,month=1,day=1)
+        nextfirst = myglobals.today.replace(year=yy+1,month=1,day=1)
     else:
-        nextfirst = globals.today.replace(month=mm+1,day=1)
+        nextfirst = myglobals.today.replace(month=mm+1,day=1)
         
     monthname = nextfirst.strftime('%B, %Y')
 

@@ -1,6 +1,6 @@
 #!/bin/bash
+# Fetch latest roster from Dropbox and ingest into database
 
-# Ingest roster and process awards
-
-cd $STATS_DATA
-$STATS_HOME/getfromdropbox.py --outfile latestroster.+ --namefile rosterfilename.txt --cfile rostercursor.txt --dbfilenamefile rosterondropbox.txt --ext csv  --dir roster  && $STATS_HOME/ingestroster.py $(cat rosterfilename.txt)
+. setup.sh
+cd $workdir
+$SCRIPTPATH/getfromdropbox.py --outfile latestroster.+ --namefile rosterfilename.txt --cfile ${cursordir}/rostercursor.txt --dbfilenamefile rosterondropbox.txt --ext csv  --dir roster  && $SCRIPTPATH/ingestroster.py $(cat rosterfilename.txt)

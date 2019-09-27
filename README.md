@@ -347,7 +347,7 @@ Most of the information that differs between installations of __tmstats__ is hel
 | dbuser | For connection to MySQL |
 | dbpass | For connection to MySQL |
 | officers | The URL of the CSV published form of the ["officers file"][] |
-| newAlignment | The filename of an XLSX file containing information about alignment to override that provided by Toastmasters.  Typically used at the beginning of a Toastmasters year.  (**TODO** change this to a Google spreadsheet) |
+| newalignment | The filename of an XLSX file containing information about alignment to override that provided by Toastmasters.  Typically used at the beginning of a Toastmasters year.  (**TODO** change this to a Google spreadsheet) |
 | googlemapsapikey | Used by the various mapping programs |
 | makemap | Contains subkeys "mapoverride" and "pindir" |
 | makemap.mapoverride | The URL of the CSV published form of a Google Spreadsheet with information about club meeting locations and times which is used in preference to that obtained from Toastmasters. |
@@ -388,7 +388,7 @@ All programs which use the test alignment file can use the [consolidated CSV fil
 
 This file is created by [createalignment.py][] and contains a merger of information from the Toastmasters database, as updated by the ["map override" file][] and the ["test alignment" file][].  Only clubs specifically listed in the test alignment file are included in this file.  Several programs use this file as their data source if told to do so.
 
-### --newAlignment ###
+### --newalignment ###
 
 This is an Excel (.XLSX) file matching the format of the Toastmasters alignment file for 2015-16.  It should be replaced by the simpler ["test alignment" file][], but that hasn't happened yet.  The overrideClubs__ function in [tmutil.py][] processes this file.
 

@@ -7,7 +7,7 @@ New clubs are considered "not Distinguished" for the previous year. """
 
 import tmutil, sys, csv
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 levels = {' ':0, 'D': 1, 'S': 2, 'P': 3}
 
@@ -39,12 +39,12 @@ if __name__ == "__main__":
     # Add other parameters here
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     if not parms.tmyear:
-        parms.tmyear = globals.today.year - 1   # Use the previous TM Year during July-December
+        parms.tmyear = myglobals.today.year - 1   # Use the previous TM Year during July-December
         
     # Find the latest date in the database for this and the previous TM years:
     finder = "SELECT MAX(asof) FROM clubperf WHERE monthstart >= '%d-07-01' AND monthstart <= '%d-06-01'"

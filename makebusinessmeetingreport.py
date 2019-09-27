@@ -3,7 +3,7 @@
 
 import tmutil, sys
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 import csv, xlsxwriter
 
 
@@ -49,9 +49,9 @@ if __name__ == "__main__":
     parms.add_argument('--outtemplate', default='d101bm-div%s.xlsx')
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
 
     # Start by getting alignment from the DEC file
     reader = csv.DictReader(open(parms.decfile, 'r'))

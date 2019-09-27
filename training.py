@@ -6,7 +6,7 @@ import tmutil, sys, os
 from simpleclub import Club
 from datetime import datetime
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 headers = "Div,Area,Club Name,Number,Status,Trained,Pres,VPE,VPM,VPPR,Sec,Treas,SAA"
@@ -110,9 +110,9 @@ if __name__ == "__main__":
     parms.add_argument('--lastmonth', type=str, help='Last month in this training cycle, default is "August" in June-November and "February" other times.')
     
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     # If we're in the first cycle, ignore 9a, even if specified, unless lastmonth is explicit (to allow for historical reports)
     thismonth = datetime.today().month
@@ -179,6 +179,7 @@ if __name__ == "__main__":
             for row in rows:
                 cells = row.find_all('td')
                 if not cells:
+                    # If this is an Area header row, pick up the Area and Division to use with the clubs in the Area.
                     info = [' '.join([s for s in f.stripped_strings]) for f in row.select('.col-md-2')][0].replace('&nbsp;', ' ')
                     m = re.match(r'Area\s*(\S*).*Division\s*(\S*)', info)
                     if m:

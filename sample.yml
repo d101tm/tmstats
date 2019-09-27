@@ -13,7 +13,7 @@ dbname: d4tmadmn_tmstats
 
 officers: https://docs.google.com/spreadsheets/d/<sheetid>/pub?gid=0&single=true&output=csv
 
-#newAlignment: 2015-16Alignment.xlsx
+#newalignment: 2015-16Alignment.xlsx
 googlemapsapikey: goes here
 
 makemap:

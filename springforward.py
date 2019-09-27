@@ -6,7 +6,7 @@ import tmparms, datetime
 from tmutil import cleandate, UnicodeWriter, daybefore, stringify, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords, neaten
 
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 def createResults(final, clubs):
     """ Returns a text string representing the clubs.  
@@ -69,9 +69,9 @@ if __name__ == "__main__":
     parms.add_argument('--csvfile', dest='csvfile', default='springforward.csv')
     
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
 
     # See if we have the data needed to run and build the base part of the query
@@ -81,9 +81,9 @@ if __name__ == "__main__":
             sys.exit(1)
         basepart = 'monthstart = "%s" AND entrytype = "M"' % getMonthStart(basemonth, curs)
         friendlybase = 'New Members on %s' % neaten(getMonthEnd(basemonth))
-        msgdate = datetime.date(globals.today.year, basemonth+1, 1)
+        msgdate = datetime.date(myglobals.today.year, basemonth+1, 1)
         if basemonth == 12:
-            msgdate = datetime.date(globals.today.year, 1, 1)
+            msgdate = datetime.date(myglobals.today.year, 1, 1)
     else:
         basedate = cleandate(parms.basedate)
         if not haveDataFor(basedate, curs):

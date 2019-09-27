@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-""" Get performance information from Toastmasters and write them to files.
+""" Get performance information from Toastmasters and write them to files in the work directory.
 
     Unless invoked with --startdate, only gets the latest available information,
-    including club information (unles --skip-clubs is specified).
+    including club information (unless --skip-clubs is specified).
 
     If invoked with --startdate, gets information and writes files for that date 
     (and, if --enddate is specified, for all available dates through --enddate).
@@ -10,13 +10,15 @@
 
 """
 
-import tmparms, os, sys
-from tmutil import cleandate
 from datetime import datetime, timedelta, date
+
 import requests
 
 import tmglobals
-globals = tmglobals.tmglobals()
+import tmparms
+from tmutil import cleandate, gotoworkdir
+
+myglobals = tmglobals.tmglobals()
     
 # Map filenames to report names from Toastmasters
 reportnames = {'clubperf':'clubperformance',
@@ -166,12 +168,12 @@ if __name__ == "__main__":
     parms.add_argument('--district', type=int)
     parms.add_argument('--startdate', default=None)
     parms.add_argument('--enddate', default=None)
-    parms.add_argument('--skipclubs', action='store_true',
-     help='Do not get latest club information.')
+    parms.add_argument('--skipclubs', action='store_true', help='Do not get latest club information.')
     
-    globals.setup(parms, connect=False)
+    myglobals.setup(parms, connect=False)
+    gotoworkdir()
 
-    district = "%0.2d" % parms.district
+    district = "%0.2d" % int(parms.district)
 
    
     if not parms.startdate:

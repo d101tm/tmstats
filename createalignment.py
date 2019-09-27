@@ -2,7 +2,7 @@
 """ Create alignment work file based on:
 
     * Information from the tmstats database
-    * Limited to clubs in the latest CSV file in the 'newAlignment' Dropbox directory 
+    * Limited to clubs in the latest CSV file in the 'newalignment' Dropbox directory 
     * Information in that CSV file overrides info from tmstats 
     
     The output work file is used by other programs in the alignment process such as 'alignmap' and 'makelocationreport'
@@ -18,7 +18,7 @@ from overridepositions import overrideClubPositions
 import time, calendar
 
 import tmglobals, tmparms
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 def inform(*args, **kwargs):
@@ -39,16 +39,16 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--outfile', default='d101align.csv')
-    parms.add_argument('--outdir', default='.', help='Directory to put the output file in')
+    parms.add_argument('--outdir', default='${alignmentdir}', help='Directory to put the output file in')
     parms.add_argument('--mapoverride', dest='mapoverride', default=None, help='Google spreadsheet with overriding address and coordinate information')
     parms.add_argument('--workingalignment', dest='workingalignment', default=None, help='Google spreadsheet with proposed alignment')
-    parms.add_argument('--trustWHQ', dest='trust', action='store_true', help='Specify this to use information from WHQ because we are in the new year')
-    parms.add_argument('--includeprecharter', dest='includeprecharter', action='store_true', help='Specify this to include "pre-charter" clubs (ones with negative club numbers in the newAlignment file)')
+    parms.add_argument('--trust', dest='trust', action='store_true', help='Specify this to use information from WHQ because we are in the new year')
+    parms.add_argument('--includeprecharter', dest='includeprecharter', action='store_true', help='Specify this to include "pre-charter" clubs (ones with negative club numbers in the newalignment file)')
     
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms, sections='alignment')
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     
     # Get all defined clubs from the database.
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # We use the 'lastfor' table to get information for all clubs, even those which Toastmasters dropped from
     #   the list because they were suspended for two renewal cycles.
     curs.execute('''SELECT clubnumber, color, goalsmet, activemembers, clubstatus FROM clubperf 
-                    WHERE id in (SELECT clubperf_id FROM lastfor WHERE tmyear = %s)''', (globals.tmyear,))
+                    WHERE id in (SELECT clubperf_id FROM lastfor WHERE tmyear = %s)''', (myglobals.tmyear,))
     for (clubnumber, color, goalsmet, activemembers, clubstatus) in curs.fetchall():
         c = clubs[str(clubnumber)]
         c.color = color
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     outfile.close()
         
     # Finally, indicate the date of Toastmasters data
-    with open('alignmentsource.txt', 'w') as outfile:
+    with open(os.path.join(parms.outdir, parms.datacurrencyfile), 'w') as outfile:
         curs.execute('SELECT MAX(asof) FROM clubperf WHERE entrytype = "L"')
-        outfile.write('<p>Using Toastmasters data as of %s.</p>' % curs.fetchone()[0])
+        outfile.write('<p>Using Toastmasters data as of %s.</p>' % curs.fetchone()[0].strftime("%B %-d, %Y"))
     

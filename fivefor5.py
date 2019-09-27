@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
 """ Creates the "Five for 5" report and mail it to the Program Quality Director """
 
-import sys, csv
-import tmparms, datetime
-from tmutil import cleandate, UnicodeWriter, daybefore, stringify, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords, neaten, getClubBlock
+import sys
 
+import datetime
 import tmglobals
-globals = tmglobals.tmglobals()
+import tmparms
+from tmutil import cleandate, isMonthFinal, haveDataFor, getMonthStart, getMonthEnd, dateAsWords, neaten, getClubBlock
 
+myglobals = tmglobals.tmglobals()
 
-   
 
 class myclub:
     """ Just enough club info to sort the list nicely """
+
     def __init__(self, clubnumber, clubname, division, area, endnum, startnum, growth):
         self.area = area
         self.division = division
         self.clubnumber = clubnumber
         self.clubname = clubname
         self.growth = growth
-
-
 
     def tablepart(self):
         return ('    <td>%s</td><td>%s</td>' % (self.area, self.clubname))
@@ -29,21 +28,19 @@ class myclub:
         return '%s%2s%8s' % (self.division, self.area, self.clubnumber)
 
 
-
 if __name__ == "__main__":
 
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument("--basedate", dest='basedate', default='M3')
     parms.add_argument("--finaldate", dest='finaldate', default='5/15')
-    parms.add_argument('--outfile', dest='outfile', default='fivefor5.html')
-    parms.add_argument('--emailfile', dest='emailfile', default='fivefor5.email')
-    
+    parms.add_argument('--outfile', dest='outfile', default='${WORKDIR}/fivefor5.html')
+    parms.add_argument('--emailfile', dest='emailfile', default='${WORKDIR}/fivefor5.email')
+
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
-    
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
 
     # See if we have the data needed to run and build the base part of the query
     if parms.basedate.upper().startswith('M'):
@@ -52,9 +49,9 @@ if __name__ == "__main__":
             sys.exit(1)
         basepart = 'monthstart = "%s" AND entrytype = "M"' % getMonthStart(basemonth, curs)
         friendlybase = 'New Members on %s' % neaten(getMonthEnd(basemonth))
-        msgdate = datetime.date(globals.today.year, basemonth+1, 1)
+        msgdate = datetime.date(myglobals.today.year, basemonth + 1, 1)
         if basemonth == 12:
-            msgdate = datetime.date(globals.today.year, 1, 1)
+            msgdate = datetime.date(myglobals.today.year, 1, 1)
     else:
         basedate = cleandate(parms.basedate)
         if not haveDataFor(basedate, curs):
@@ -80,16 +77,15 @@ if __name__ == "__main__":
     else:
         finaldate = cleandate(parms.finaldate)
         final = finaldate <= yesterday
-        reportdate = min(finaldate,yesterday)
+        reportdate = min(finaldate, yesterday)
         finalpart = 'asof = "%s"' % reportdate
         msgdate = datetime.datetime.strptime(finaldate, '%Y-%m-%d')
-    if isinstance(reportdate,str):
-    	reportdate = datetime.datetime.strptime(reportdate, '%Y-%m-%d')
-    prevdate = reportdate - datetime.timedelta(1)    # Need to find new qualifiers
+    if isinstance(reportdate, str):
+        reportdate = datetime.datetime.strptime(reportdate, '%Y-%m-%d')
+    prevdate = reportdate - datetime.timedelta(1)  # Need to find new qualifiers
     prevpart = 'asof = "%s"' % prevdate.date()
     friendlyend = 'New Members on %s' % neaten(reportdate)
     msgfinal = dateAsWords(msgdate)
-
 
     # OK, now find clubs with 5 or more members added
     query = 'SELECT c.clubnumber, c.clubname, c.division, c.area, c.newmembers, b.newmembers, a.newmembers FROM distperf c LEFT OUTER JOIN (SELECT clubnumber, newmembers FROM distperf WHERE %s) b ON b.clubnumber = c.clubnumber LEFT OUTER JOIN (SELECT clubnumber, newmembers FROM distperf WHERE %s) a ON a.clubnumber = c.clubnumber WHERE %s  ORDER BY c.division, c.area, c.clubnumber'
@@ -100,7 +96,7 @@ if __name__ == "__main__":
     # Create the data for the output files.
     for (clubnumber, clubname, division, area, endnum, startnum, prevnum) in curs.fetchall():
         if not startnum:
-            startnum = 0      # Handle clubs added during the period
+            startnum = 0  # Handle clubs added during the period
         growth = endnum - startnum
         if not prevnum:
             prevnum = 0
@@ -110,8 +106,6 @@ if __name__ == "__main__":
             winners.append(myclub(clubnumber, clubname, division, area, endnum, startnum, growth))
             if prevgrowth < 5:
                 todays.append(clubname)
-        
-    
 
     # Open the output file
     clubfile = open(parms.outfile, 'w')
@@ -129,10 +123,10 @@ if __name__ == "__main__":
     else:
         emailfile.write('<p>No clubs earned Five for 5 today.\n')
     emailfile.write('\n')
-        
+
     if winners:
         emailfile.write('<p>All clubs which have earned Five for 5:\n<ul>\n')
-        for club in sorted(winners, key=lambda c:c.clubname):
+        for club in sorted(winners, key=lambda c: c.clubname):
             emailfile.write('<li>%s</li>\n' % club.clubname)
         emailfile.write('</ul>\n')
     else:

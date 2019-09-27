@@ -1,30 +1,28 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.7
 """ Remove Google Analytics from Divi installation """
 
-import dbconn, tmutil, sys, os
 import re
+import sys
 
-
+import dbconn
+import tmutil
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
 
 if __name__ == "__main__":
- 
+
     import tmparms
-    tmutil.gotodatadir()           # Move to the proper data directory
-        
-    
+
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--verbose', '-v', action='count')
-    parms.add_argument('--configfile', type=str, default='/dev/null')
+    parms.add_argument('--wpconfigfile', type=str, default='/dev/null')
     # Add other parameters here
-    parms.parse() 
-   
-    
+    parms.parse()
+
     # Parse the WP Configuration file to find the database
-    config = tmutil.parseWPConfig(open(parms.configfile,'r'))
+    config = tmutil.parseWPConfig(open(parms.wpconfigfile, 'r'))
     # Connect to the database
     conn = dbconn.dbconn(config['DB_HOST'], config['DB_USER'], config['DB_PASSWORD'], config['DB_NAME'])
     curs = conn.cursor()
@@ -33,7 +31,7 @@ if __name__ == "__main__":
     curs.execute("SELECT option_value FROM %s WHERE option_name = 'et_divi'" % optiontable)
     searchText = curs.fetchone()[0]
 
-    pattern = re.compile(r"(</script>|^)(\s*)(<script>.*?GoogleAnalyticsObject.*?</script>)", re.I|re.M|re.S)
+    pattern = re.compile(r"(</script>|^)(\s*)(<script>.*?GoogleAnalyticsObject.*?</script>)", re.I | re.M | re.S)
     m = re.search(pattern, searchText)
     if not m:
         sys.stderr.write('No Google Analytics found in et_divi option\n')
@@ -51,4 +49,3 @@ if __name__ == "__main__":
         conn.commit()
     else:
         print("Google Analytics not found")
-

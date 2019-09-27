@@ -7,7 +7,7 @@ import tmparms
 import os, sys
 from math import pi, sin, cos
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 clubs = {}
@@ -142,9 +142,9 @@ if __name__ == "__main__":
 
     parms = tmparms.tmparms()
     # Do global setup
-    globals.setup(parms)
-    conn = globals.conn
-    curs = globals.curs
+    myglobals.setup(parms)
+    conn = myglobals.conn
+    curs = myglobals.curs
 
     curs.execute("SELECT MAX(lastdate) FROM clubs")
     lastdate = curs.fetchone()[0]

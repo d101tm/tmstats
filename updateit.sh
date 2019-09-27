@@ -10,26 +10,12 @@
 # We also get educational achievements but the return code is unaffected.
 
 
-# Even if we're running in a weird shell, let's use THIS directory as the current directory
-SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
-cd "$SCRIPTPATH"
-data="$SCRIPTPATH/data"
-
-if [ ! -d "$data" ] ; then
-    mkdir ""$data""  
-fi
 
 # Keep track of where we started
 savedir="$(pwd)"
 
-# We need to know today's date and yesterday's.
-today=$(date +'%Y-%m-%d')
-if ! yday=$(date -v-1d +'%Y-%m-%d' 2>/dev/null)
-then
-    yday=$(date -d '1 day ago' +'%Y-%m-%d' 2>/dev/null)
-fi
 
-cd "$data"
+cd "$workdir"
 
 # Allow the run to happen even if we think things are up-to-date
 # Also decide whether or not to zip up older files from Toastmasters.
@@ -57,7 +43,7 @@ fi
 let ret=0  # Assume all is well
 
 # Get performance files, including latest club file from Toastmasters.
-../getperformancefiles.py
+$SCRIPTPATH/getperformancefiles.py
 
 # Note the file status
 if [ ! -e "clubs.$yday.csv" ]
@@ -73,13 +59,13 @@ fi
 
 
 # Load them into the database
-../loaddb.py
+$SCRIPTPATH/loaddb.py
 let ret=$ret+$?
 
 # Update the lastfor table, normally for the last year, but if force, do all.
 if [[ "$force" = "force" ]]
 then
-    ../populatelastfor.py
+    $SCRIPTPATH/populatelastfor.py
 else
     ../populatelastfor.py --latestonly
 fi
@@ -88,11 +74,11 @@ fi
 if [[ "$zip" = "zip" ]]
 then
     year=${yday:0:4}
-    zip -mT hist$year.zip clubs.$year*.csv clubperf.$year*.csv areaperf.$year*.csv distperf.$year*.csv -x clubs.$yday.csv *perf.$yday.csv
+    zip -mT ${archivedir}/hist$year.zip clubs.$year*.csv clubperf.$year*.csv areaperf.$year*.csv distperf.$year*.csv -x clubs.$yday.csv *perf.$yday.csv
 fi
 
 # Get the educational achievements
-PYTHONPATH=~/python:$PYTHONPATH ../geteducationals.py
+PYTHONPATH=~/python:$PYTHONPATH $SCRIPTPATH/geteducationals.py
 
 
 # And exit

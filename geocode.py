@@ -8,7 +8,7 @@ import pprint
 import datetime
 import re
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 # temphackfix
 from requests.adapters import HTTPAdapter
@@ -236,8 +236,8 @@ if __name__ == "__main__":
     import tmparms
     parms = tmparms.tmparms()    
     # Do Global Setup
-    globals.setup(parms)
+    myglobals.setup(parms)
     
-    updateclubstocurrent(globals.conn, [], parms.googlemapsapikey)
+    updateclubstocurrent(myglobals.conn, [], parms.googlemapsapikey)
     
     

@@ -1,16 +1,15 @@
 #!/bin/bash
-cd data
-../listclubsbycity.py
-../buildareapage.py --outfile areapage.html 
-../makemap.py --outfile d101newmarkers.js
+. setup.sh
+cd "$workdir"
+"$SCRIPTPATH"/listclubsbycity.py
+"$SCRIPTPATH"/buildareapage.py --outfile areapage.html 
+"$SCRIPTPATH"/makemap.py --outfile d101newmarkers.js
 
-if [[ $? ]] ; then 
-    if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
+
+if [[ $? ]] && isreal ; then 
         echo "Copying map and reports"
         cp clublist.html ~/files/reports/clubs-by-city/index.html
         cp areapage.html ~/files/reports/areapage.html
-        ../clearcache.py divisions-and-areas
+        "$SCRIPTPATH"/clearcache.py divisions-and-areas
         cp d101newmarkers.js ~/map/
-    fi
-
 fi

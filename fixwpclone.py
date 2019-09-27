@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """ Fixes up a development clone of the WordPress database """
 
-import tmutil, sys
-import tmglobals
-import dbconn
 import configparser
 import os.path
-globals = tmglobals.tmglobals()
+
+import dbconn
+import tmglobals
+import tmutil
+
+myglobals = tmglobals.tmglobals()
 
 
 
@@ -19,10 +21,10 @@ if __name__ == "__main__":
     # Establish parameters
     parms = tmparms.tmparms()
     # Add other parameters here
-    parms.add_argument('--configfile', type=str, default='/var/www/html/wp-config.php')
+    parms.add_argument('--wpconfigfile', type=str, default='/var/www/html/wp-config.php')
 
     # Do global setup
-    globals.setup(parms,connect=False)
+    myglobals.setup(parms,connect=False)
 
     # Parse the current user's .my.cnf file; this must have the username and password in the [client] section.
     msconfig = configparser.ConfigParser()
@@ -31,7 +33,7 @@ if __name__ == "__main__":
     password = msconfig.get("client", "password")
 
     # Parse the WordPress configuration file
-    config = tmutil.parseWPConfig(open(parms.configfile,'r'))
+    config = tmutil.parseWPConfig(open(parms.wpconfigfile,'r'))
 
     # Connect as the active user, who needs full authority over WordPress
     conn = dbconn.dbconn('localhost', username, password, '')

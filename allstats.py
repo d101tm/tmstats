@@ -9,7 +9,7 @@ import csv
 from operator import attrgetter
 
 from tmglobals import tmglobals
-globals = tmglobals()
+myglobals = tmglobals()
 
 dists = {
     'P': 'President\'s Distinguished = %d',
@@ -549,19 +549,19 @@ class Area(Aggregate):
 parms = tmparms.tmparms(description=__doc__)
 parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
 parms.add_argument("--testalignment", dest="testalignment", default=None, help="CSV file with alignment information to create a report with a new alignment.")
-parms.add_argument('--outdir', default='.', help='Where to put the output files')
+parms.add_argument('--outdir', default='${workdir}', help='Where to put the output files')
 parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
 parms.add_argument("--title", dest="title", default=None, help="Title for the HTML page.")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
 # Do global setup
-globals.setup(parms)
+myglobals.setup(parms)
 
-conn = globals.conn
-curs = globals.curs
-district = '%02d' % parms.district 
+conn = myglobals.conn
+curs = myglobals.curs
+district = '%02d' % int(parms.district)
 
 # Find the latest date in the system and work backwards from there to the beginning of the TM year.
-today = globals.today
+today = myglobals.today
 (latestmonth, latestdate) = latest.getlatest('clubperf', conn)
 (latestyear, latestmonth) = [int(f) for f in latestmonth.split('-')[0:2]]
 latestdate = datetime.datetime.strptime(latestdate, "%Y-%m-%d")

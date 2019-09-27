@@ -5,7 +5,7 @@
 
 import dbconn, tmutil, sys, os, populatelastfor
 import tmglobals
-globals = tmglobals.tmglobals()
+myglobals = tmglobals.tmglobals()
 
 
 ### Insert classes and functions here.  The main program begins in the "if" statement below.
@@ -22,9 +22,9 @@ if __name__ == "__main__":
     # Add other parameters here
 
     # Do global setup
-    globals.setup(parms)
-    curs = globals.curs
-    conn = globals.conn
+    myglobals.setup(parms)
+    curs = myglobals.curs
+    conn = myglobals.conn
     
     # Your main program begins here.
     resetdate = tmutil.cleandate(parms.resetto)
