@@ -78,7 +78,6 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--verbose', '-v', action='count')
-    parms.add_argument('--configfile', type=str, default='wp-config.php')
     parms.add_argument('--uselocal', action='store_true')
     parms.add_argument('--outfile', type=str, default='trainingschedule.html')
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
@@ -106,7 +105,7 @@ if __name__ == "__main__":
     
 
     # Parse the configuration file
-    config = tmutil.parseWPConfig(open(parms.configfile,'r'))
+    config = tmutil.parseWPConfig(open(os.path.join(parms.wpdir, 'wp-config.php'),'r'))
     if parms.uselocal:
         config['DB_HOST'] = 'localhost'
 
