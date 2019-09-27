@@ -43,11 +43,13 @@ if not parms.cursor and parms.cfile:
     # Try to get the cursor from the file
     try:
         with open(parms.cfile, 'r') as f:
-            parms.cursor = f.read().strip()
+            cursor = f.read().strip()
     except IOError:
+        print("no cursor file found in ", parms.cfile)
         pass  # It's OK not to have the file yet; we'll create it on output.
 
 
+oldcursor = cursor
 has_more = True
 
 while has_more:
@@ -92,8 +94,7 @@ while has_more:
             modtime = (f._client_modified_value - epoch).total_seconds()
             os.utime(outfn, (modtime, modtime))
 
-    # Update the cursor file
-    if parms.cfile:
-        with open(parms.cfile, 'w') as f:
-            f.write(cursor)
-
+# Update the cursor file
+if parms.cfile:
+    with open(parms.cfile, 'w') as f:
+        f.write(cursor)
