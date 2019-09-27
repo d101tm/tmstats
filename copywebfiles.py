@@ -1,75 +1,54 @@
 #!/usr/bin/env python3
 """ Copy new files from a Dropbox directory (and subdirectories) to a target folder. """
 
-import dropbox
-import os.path
+import dropbox, os.path, sys, time
+from dropbox.exceptions import ApiError, AuthError
 from datetime import datetime
-import sys
 
-# Use tmparms to resolve the cursor directory from the configuration file
-import tmparms
-parms = tmparms.tmparms()
-parms.parse()
+epoch = datetime.utcfromtimestamp(0)
+import tmglobals, tmparms
 
+myglobals = tmglobals.tmglobals()
+parms = tmparms.tmparms(description=__doc__)
+parms.add_argument('--dropboxtoken', help='Dropbox access token')
+parms.add_argument('--dropboxfolder', default='D101 Web Files', help='Dropbox folder to copy')
+parms.add_argument('--outdir', default='${workdir}/dropbox', help='Where to put new and updated files')
+parms.add_argument('--baseurl', default='https://files.d101tm.org/', help='base URL for links')
+parms.add_argument('--cursor', default=None, help='Dropbox cursor to use')
+parms.add_argument('--cfile', default='${cursordir}/copywebfiles.txt', help='File containing Dropbox cursor; will be created/updated')
+myglobals.setup(parms, connect=False)
 
-state_file = os.path.join(parms.cursordir, 'copystate.txt')
-appinfo_file = os.path.join(parms.cursordir, 'copytokens.txt')
+if not parms.dropboxtoken:
+    sys.stderr.write('ERROR: No access token provided.  Generate one from the app console on the web.')
+    sys.exit(1)
 
-
-
-def authorize():
-    appinfo = open(appinfo_file,'r')
-    for l in appinfo.readlines():
-        (name, value) = l.split(':',1)
-        name = name.strip().lower()
-        value = value.strip()
-        if name == 'app key':
-            appkey = value
-        elif name == 'app secret':
-            appsecret = value
-    appinfo.close()
-    flow = dropbox.client.DropboxOAuth2FlowNoRedirect(appkey, appsecret)
-    # Have the user sign in and authorize this token
-    authorize_url = flow.start()
-    print('1. Go to: ' + authorize_url)
-    print('2. Click "Allow" (you might have to log in first)')
-    print('3. Copy the authorization code.')
-    code = input("Enter the authorization code here: ").strip()
-    token, user_id = flow.finish(code)
-    out = open(state_file, 'w')
-    out.write('oauth2:%s\n' % token)
-    out.close()
-    return token
-
-
-token = None
-cursor = None
+# Access Dropbox; check to make sure we actually have access
+dbx = dropbox.Dropbox(parms.dropboxtoken)
 try:
-    tokinfo = open(state_file, 'r')
-    for l in tokinfo.readlines():
-        if ':' in l:
-            (name, value) = l.strip().split(':')
-            if name == 'oauth2':
-                token = value
-            elif name in ['delta_cursor', 'cursor']:
-                cursor = value
-    tokinfo.close()
-except IOError:
-    pass
-if not token:
-    token = authorize()
+    dbx.users_get_current_account()
+except AuthError as err:
+    sys.stderr.write("ERROR: Invalid access token; try re-generating an access token from the app console on the web.")
+    sys.exit(2)
 
-# If we get here, we are authorized.
-dbx = dropbox.Dropbox(token)
+path = parms.dropboxfolder
+if not path.startswith('/'):
+    path = '/' + path
+localpath = os.path.expandvars(parms.outdir)
+linkpath = parms.baseurl
+if not linkpath.endswith('/'):
+    linkpath = linkpath + '/'
 
-# The only files we care about are in the Web Files directory in Dropbox
-path = '/D101 Web Files'
-localpath = os.path.expanduser('~/files/')
-linkpath = 'http://files.d101tm.org/'
+cursor = parms.cursor
+if not parms.cursor and parms.cfile:
+    # Try to get the cursor from the file
+    try:
+        with open(parms.cfile, 'r') as f:
+            parms.cursor = f.read().strip()
+    except IOError:
+        pass  # It's OK not to have the file yet; we'll create it on output.
+
 
 has_more = True
-lastfile = None
-lasttime = datetime.min   # For easy comparisons
 
 while has_more:
     if cursor:
@@ -104,13 +83,17 @@ while has_more:
                 print('creating', outpath)
                 os.makedirs(outpath)
             
-                
+            # Copy the file
             outfile = open(outfn, 'wb')
             outfile.write(dbx.files_download(f.id)[1].raw.read())
             outfile.close()
 
-    # Finally, update the state file
+            # Set its access and modified time to match Dropbox
+            modtime = (f._client_modified_value - epoch).total_seconds()
+            os.utime(outfn, (modtime, modtime))
 
-    tokinfo = open(state_file, 'w')
-    tokinfo.write('oauth2:%s\ncursor:%s\n' % (token, cursor))
-    tokinfo.close()
+    # Update the cursor file
+    if parms.cfile:
+        with open(parms.cfile, 'w') as f:
+            f.write(cursor)
+
