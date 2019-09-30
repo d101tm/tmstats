@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Establish parameters
     parms = tmparms.tmparms()
     parms.add_argument('--featured', default='https://docs.google.com/spreadsheets/d/19-imepV9YNq5N_g9GcBP5Ynq9BjTZP7kC_rLPnFAK7w/')
-    parms.add_argument('--outfile', default='featuredclubs.shtml')
+    parms.add_argument('--outfile', default='${workdir}/featuredclubs.shtml')
     # Add other parameters here
     # Do global setup
     myglobals.setup(parms)
