@@ -80,7 +80,7 @@ if __name__ == "__main__":
     # Establish parameters
     parms = tmparms.tmparms()
     parms.add_argument('--capsheet', default='')
-    parms.add_argument('--outprefix', default='cap')
+    parms.add_argument('--outprefix', default='${workdir}/cap')
     parms.add_argument('--minvisits', default=1, type=int)
     parms.add_argument('--listexternal', action='store_true')
     # Add other parameters here
