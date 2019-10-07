@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--verbose', '-v', action='count')
     parms.add_argument('--openhouseclubs', default='', help="")
-    parms.add_argument('--outfile', default='openhouseclubs.html')
+    parms.add_argument('--outfile', default='${workdir}/openhouseclubs.html')
     parms.add_argument('--basedate', default='8/1')
     parms.add_argument('--finaldate', default='10/31')
     parms.add_argument('--renewto', default='3/31/2020')
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         
     # Build the query:
     query = """SELECT roster.clubnum, COUNT(*) FROM roster 
-              INNER JOIN (SELECT clubnum, membernum FROM roster WHERE termbegindate >= %s AND termbegindate <= %s AND paidstatus = 'PAID') n 
+              INNER JOIN (SELECT clubnum, membernum FROM roster WHERE clubjoindate >= %s AND clubjoindate <= %s AND paidstatus = 'PAID') n 
               ON roster.clubnum = n.clubnum AND roster.membernum = n.membernum 
               WHERE termenddate >= %s """ + eligibilityclause + " AND paidstatus = 'PAID' GROUP BY roster.clubnum"
     # And get the results:
