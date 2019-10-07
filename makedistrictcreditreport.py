@@ -89,8 +89,6 @@ any column by clicking on it, or limit the table to lines containing a string.</
         <th>Club Number</th>
         <th>Club Name</th>
         <th>Earned</th>
-        <th>Purchases</th>
-        <th>Admissions</th>
         <th>Available</th>
         </tr>
       </thead>
@@ -129,8 +127,6 @@ any column by clicking on it, or limit the table to lines containing a string.</
         outfile.write(f'  <td class="rjust">{clubnum}</td>\n')
         outfile.write(f'  <td>{clubname}</td>\n')
         outfile.write(f'  <td class="rjust">{earned}</td>\n')
-        outfile.write(f'  <td class="rjust">{orders}</td>\n')
-        outfile.write(f'  <td class="rjust">{admissions}</td>\n')
         outfile.write(f'  <td class="rjust">{available}</td>\n')
         outfile.write('</tr>\n')
 
