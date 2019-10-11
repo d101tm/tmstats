@@ -4,14 +4,14 @@
 cd "$workdir"
 
 echo "<p>Getting new roster</p>"
-../getroster.sh
+"$SCRIPTPATH"/getroster.sh
 echo "<p>Processing Open House Report</p>"
 echo "<p>Using roster file '$(cat rosterondropbox.txt)' from Dropbox</p>"
 
 echo "<pre>"
-../openhouse.py && isreal && cp openhouseclubs.html ~/files/reports/ 
+"$SCRIPTPATH"/openhouse.py && isreal && cp openhouseclubs.html ~/files/reports/ 
 src=$?
-../clearcache.py district-programs
+"$SCRIPTPATH"/clearcache.py district-programs
 echo "</pre>"
 
 if (( $src  == 0 )) ; then 
