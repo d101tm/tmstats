@@ -121,7 +121,7 @@ any column by clicking on it, or limit the table to lines containing a string.</
             alignment = club.division + club.area
             clubname = club.clubname
         except KeyError:
-            pass
+            continue
         earned = row[credcol]
         available = row[balancecol]
         outfile.write('<tr>\n')
