@@ -98,12 +98,13 @@ any column by clicking on it, or limit the table to lines containing a string.</
     labels = sheet.row_values(3)
     nlabels = [normalize(c) for c in labels]
 
-    # Find 'ID' (club number), 'TOTAL CREDITS' and the three following columns
+    # Find 'ID' (club number), 'TOTAL CREDITS' and 'BALANCE CREDITS'
     #   We'll pick up club name and alignment from the database
 
     idcol = nlabels.index('id')
     namecol = nlabels.index('name')
     credcol = nlabels.index('totalcredits')
+    balancecol = nlabels.index('balancecredits')
     areacol = nlabels.index('area')
 
     clubs = Club.getClubsOn(curs)
@@ -121,7 +122,8 @@ any column by clicking on it, or limit the table to lines containing a string.</
             clubname = club.clubname
         except KeyError:
             pass
-        (earned, orders, admissions, available) = row[credcol:credcol+4]
+        earned = row[credcol]
+        available = row[balancecol]
         outfile.write('<tr>\n')
         outfile.write(f'  <td>{alignment}</td>\n')
         outfile.write(f'  <td class="rjust">{clubnum}</td>\n')
