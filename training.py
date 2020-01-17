@@ -277,9 +277,10 @@ if __name__ == "__main__":
     outfile.close()
     outbook.close()
 
-    # Now, create the Lucky 7 file
-
-    outfile = open('lucky7.html', 'w')
+    # Now, create the Lucky 7 file with a name based on today's date
+    season = 'winter' if parms.lastmonth == 'February' else 'summer'
+    outfilename = f'lucky7-{myglobals.today.year}-{season}.html'
+    outfile = open(outfilename, 'w')
 
     bonus = []
     if lucky:
@@ -323,6 +324,5 @@ if __name__ == "__main__":
         outfile.write(tmutil.getClubBlock(luckyclubs))
         outfile.write(' for earning %s and joining the %s.</p>\n' % (parms.reward, parms.phase1name))
 
-    if (lucky or bonus):
-        outfile.write("""<p>Training data was last updated on %s.</p>
+    open('training-date.html', 'w').write("""<p>Training data was last updated on %s.</p>
     """ % ( datetime.today().strftime('%m/%d/%Y'),))
