@@ -132,7 +132,7 @@ if [[ "$dorun" = "yes" ]] ; then
         # March Madness starts with February data and continues through March 15
         if $SCRIPTPATH/require.py --datafor S2 --nodatafor 3/16 ; then
             echo "Running March Madness"
-            $SCRIPTPATH/renewals.py --program "madness" --pct 75 90 100 --earn 50 75 101 && isreal && cp madness.* ~/www/files/reports
+            $SCRIPTPATH/renewals.py --program "madness" --pct 75 100 --earn 75 100 && isreal && cp madness.* ~/www/files/reports
         fi
 
         # President's Club runs once we have February data and stops when we have April 16 data
