@@ -196,41 +196,44 @@ if __name__ == "__main__":
             
 
     outfile = open(parms.outfile,'w')
-    outfile.write("""<table border="1"><colgroup> <col> <col> <col> </colgroup>
-<thead>
+    if not events:
+        outfile.write("<p>No contests have yet been scheduled.</p>\n")
+    else:
+        outfile.write("""<table border="1"><colgroup> <col> <col> <col> </colgroup>
+    <thead>
 
-</thead>
-<tbody>\n""")
-    outfile.write("<style>td.divhead {background: #F2DF74; font-size: 200%; font-weight: bold; text-align: center; border: none;}</style>\n")
-    for div in sorted(divisions.keys()):
-        d = divisions[div]
-        outfile.write('<tr><td colspan="3" class="divhead">Division %s</td></tr>\n' % div)
-        outfile.write('<tr><td><b>Area/Division</b></td><td><b>When</b></td><td><b>Where</b></td></tr>\n')
-        if div in events:
-            output(events[div], outfile)
-        else:
-            output(tocome('<b>Division %s</b>' % div), outfile)
-        pending = None
-        for a in d.arealist():
-            if a in events:
-                if pending:
-                    if pending.EventURL == events[a].EventURL:
-                        pending.area += '/' + a
+    </thead>
+    <tbody>\n""")
+        outfile.write("<style>td.divhead {background: #F2DF74; font-size: 200%; font-weight: bold; text-align: center; border: none;}</style>\n")
+        for div in sorted(divisions.keys()):
+            d = divisions[div]
+            outfile.write('<tr><td colspan="3" class="divhead">Division %s</td></tr>\n' % div)
+            outfile.write('<tr><td><b>Area/Division</b></td><td><b>When</b></td><td><b>Where</b></td></tr>\n')
+            if div in events:
+                output(events[div], outfile)
+            else:
+                output(tocome('<b>Division %s</b>' % div), outfile)
+            pending = None
+            for a in d.arealist():
+                if a in events:
+                    if pending:
+                        if pending.EventURL == events[a].EventURL:
+                            pending.area += '/' + a
+                        else:
+                            output(pending, outfile)
+                            pending = events[a]
                     else:
-                        output(pending, outfile)
                         pending = events[a]
                 else:
-                    pending = events[a]
-            else:
-                if pending:
-                    output(pending, outfile)
-                    pending = None
-                output(tocome('Area %s' % a), outfile)
-        if pending:
-            output(pending, outfile)
-    
-    outfile.write("""</tbody>
-    </table>\n""")
+                    if pending:
+                        output(pending, outfile)
+                        pending = None
+                    output(tocome('Area %s' % a), outfile)
+            if pending:
+                output(pending, outfile)
+        
+        outfile.write("""</tbody>
+        </table>\n""")
         
         
     
