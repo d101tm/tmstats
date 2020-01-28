@@ -280,6 +280,7 @@ if __name__ == "__main__":
     # Now, create the Lucky 7 file with a name based on today's date
     season = 'winter' if parms.lastmonth == 'February' else 'summer'
     outfilename = f'lucky7-{myglobals.today.year}-{season}.html'
+    open('luckyfilename.txt', w').write(outfilename + '\n')
     outfile = open(outfilename, 'w')
 
     bonus = []

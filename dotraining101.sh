@@ -18,7 +18,7 @@ if [ -d $TARGET ] ; then
     do
         isreal && cp $name $TARGET/${name/report/}
     done
-    isreal && cp lucky7.html $TARGET/lucky7.html
+    isreal && cp $(cat luckyfilename.txt) $TARGET/lucky7.html
 
     isreal && ../clearcache.py district-programs
 
