@@ -34,7 +34,7 @@ if __name__ == "__main__":
             self.mtime = localtime(os.path.getmtime(filename))
 
         def makeitem(self, s):
-            return f'<li><a href="{self.filename}">{s}</li>'
+            return f'<li><a href="{self.filename}">{s}</a></li>'
 
 
     filenames = ['detailfile', 'markerfile', 'mapfile', 'reportfile', 'summaryfile', 'colordetailfile',
