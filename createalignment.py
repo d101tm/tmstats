@@ -66,7 +66,10 @@ if __name__ == "__main__":
     curs.execute('''SELECT clubnumber, color, goalsmet, activemembers, clubstatus FROM clubperf 
                     WHERE id in (SELECT clubperf_id FROM lastfor WHERE tmyear = %s)''', (myglobals.tmyear,))
     for (clubnumber, color, goalsmet, activemembers, clubstatus) in curs.fetchall():
-        c = clubs[str(clubnumber)]
+        try:
+            c = clubs[str(clubnumber)]
+        except KeyError:
+            print(f'Location information for club number {clubnumber} not available; is it unlisted with Toastmasters?')
         c.color = color
         c.goalsmet = goalsmet
         c.activemembers = activemembers
