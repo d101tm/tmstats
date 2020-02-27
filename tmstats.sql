@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS clubs (
     clubname VARCHAR(100) ,
     charterdate date,
     suspenddate date,
-    place VARCHAR(200),
+    place VARCHAR(500),
     address VARCHAR(200) ,
     city VARCHAR(100) ,
     state VARCHAR(100) ,
@@ -62,8 +62,8 @@ CREATE TABLE IF NOT EXISTS lastfor (
 
 CREATE TABLE IF NOT EXISTS clubchanges (
     item VARCHAR(100),
-    old VARCHAR(200),
-    new VARCHAR(200),
+    old VARCHAR(500),
+    new VARCHAR(500),
     clubnumber INT,
     changedate date,
     primary key(item, clubnumber, changedate)
