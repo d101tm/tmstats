@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Temporary program to create the Stellar September winners list """
+""" Creates Stellar September/March Madness reports from the District Tracking Google Spreadsheet"""
 
 import tmutil, sys
 import tmglobals
@@ -21,7 +21,10 @@ class myclub:
         self.area = '%s%s' % (division, area)
         self.clubnumber = clubnumber
         self.clubname = clubname
-        self.renewals = int(renewals)
+        if renewals:
+            self.renewals = int(renewals)
+        else:
+            self.renewals = 0
         self.membase = int(membase)
         if self.membase > 0:
             self.pct = (100.0 * self.renewals) / self.membase
@@ -37,7 +40,7 @@ class myclub:
 if __name__ == "__main__":
     import tmparms, latest, os, sys, csv
     from datetime import datetime
-    from tmutil import showclubswithvalues, cleandate, getClubBlock, gotodatadir
+    from tmutil import showclubswithvalues, cleandate, getClubBlock
     import tmglobals
     myglobals = tmglobals.tmglobals()
     
@@ -46,18 +49,30 @@ if __name__ == "__main__":
     # Define args and parse command line
     parms = tmparms.tmparms(description=__doc__, epilog='pct and earns must have the same number of items.\nIf names is specified, it must have the same number as well.')
     parms.add_argument('--finaldate', default='', dest='finaldate', help="Final date for qualifying.")
-    parms.add_argument('--outfileprefix', default='stellar', dest='outfileprefix', type=str, help="Output file prefix.")
+    parms.add_argument('--outfileprefix', default='', dest='outfileprefix', type=str, help="Output file prefix - defaults to program name.")
     parms.add_argument('--format', default='$%d in District Credit')
     parms.add_argument('--pct', dest='pct', nargs='+', type=float, help='Threshold to qualify (in percent) for each level.', default='75.0')
     parms.add_argument('--earns', dest='earns', nargs='+', type=int, help='Amount earned for each level.', default='50')
-    parms.add_argument('--program', choices=['madness', 'stellar'])
+    parms.add_argument('--program', choices=['madness', 'stellar'], help='Program name')
     parms.add_argument('--name', dest='name', nargs='+', type=str, help='Name for each level.  Specify \'\' if no name for a level.')
-    parms.add_argument('--sheet', dest='sheet', default='https://docs.google.com/spreadsheets/d/1zfNpg1o5n2GVI70PAXjQXqZQ9xNxqwdYU-mKh2ChMLA/edit?pli=1#gid=1558598313')
+    parms.add_argument('--trackingsheet', dest='trackingsheet', default='https://docs.google.com/spreadsheets/d/1zfNpg1o5n2GVI70PAXjQXqZQ9xNxqwdYU-mKh2ChMLA/edit#gid=1938482035')
+    parms.add_argument('--sheetname', dest='sheetname', default='', help='Name of the tab in the tracking spreadsheet')
+
     
     # Do global setup
     myglobals.setup(parms)
     curs = myglobals.curs
     conn = myglobals.conn
+    
+    # Do program-specific defaulting
+    if not parms.outfileprefix:
+        parms.outfileprefix = parms.program
+    if not parms.trackingsheet:
+        if parms.program == 'madness':
+            parms.trackingsheet = 'March Madness-DO NOT EDIT'
+        else:
+            parms.trackingsheet = 'Stellar-DO NOT EDIT'
+    
 
     # Ensure proper matching of names, pct, and earns.
     if not isinstance(parms.pct, list):
@@ -83,7 +98,7 @@ if __name__ == "__main__":
 
     # Now, get the clubs which qualify
     
-    for row in GSheet(parms.sheet, parms.googlesheetsapikey, sheetname="Oct Renewals"):
+    for row in GSheet(parms.trackingsheet, parms.googlesheetsapikey, sheetname="March Madness-DO NOT EDIT"):
         renewalcol = row.fieldnames.index('renewed')  # Because of duplicate column headers
         row.clubnumber = row.number  # Compensate for naming changes
         try:
@@ -94,7 +109,10 @@ if __name__ == "__main__":
             print('Ignoring short row:', '; '.join([f'{item[0]}={item[1]}' for item in zip(row.fieldnames, row.values)])) 
             continue
         curs.execute("SELECT area, division, clubname, asof FROM clubperf WHERE clubnumber = %s ORDER BY ASOF DESC LIMIT 1", (row.clubnumber,))
-        (area, division, clubname, asof) = curs.fetchone() 
+        try:
+            (area, division, clubname, asof) = curs.fetchone() 
+        except:
+            print(row)
         if (clubname.strip() != row.clubname):
             print(f'Wrong club name for {row.clubnumber}: "{row.clubname}" should be "{clubname.strip()}"')
         if 'alignment' in row.fieldnames:
@@ -109,7 +127,7 @@ if __name__ == "__main__":
 
 
     # Now, write the results for each level
-    outfile = open(parms.outfileprefix + '.text', 'w')
+    outfile = open(os.path.join(parms.workdir, parms.outfileprefix + '.html'), 'w')
 
     for each in levels:
         if len(each.winners) > 0:
