@@ -89,6 +89,10 @@ if __name__ == "__main__":
         if c.latitude == 0.0 and c.longitude == 0.0:
             print('Deleting', c)
             del clubs[cnum]
+
+    # Force all clubs to be included in the alignment map
+    for cnum in clubs:
+        clubs[cnum].omitfrommap = False
         
     # Make the club entries for the map
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
