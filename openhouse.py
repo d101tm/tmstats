@@ -8,6 +8,7 @@ import dbconn, tmutil, sys, os
 from simpleclub import Club
 from datetime import datetime
 from gsheet import GSheet 
+from overridepositions import overrideClubPositions
 
 import tmglobals
 globals = tmglobals.tmglobals()
@@ -60,6 +61,7 @@ if __name__ == "__main__":
      
     # Get all clubs for this year; we'll sort out suspended clubs later if need be
     clubs = Club.getClubsOn(curs)
+    overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey, createnewclubs=True)
     
     # And index them by name as well as number; set memdiff = 0 for each club.
     clubsByName = {}
@@ -107,7 +109,11 @@ if __name__ == "__main__":
     
     for (clubnum, memdiff) in curs.fetchall():
         cn = '%s' % clubnum
-        clubs[cn].memdiff = memdiff
+        try:
+            clubs[cn].memdiff = memdiff
+        except KeyError:
+            print(f'Club number {cn} not found in Clubs table; memdiff = {memdiff}')
+            continue
         if memdiff >= 5:
             clubs[cn].earnings += 40
             if clubs[cn].openhouse:
