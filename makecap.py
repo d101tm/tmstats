@@ -7,6 +7,7 @@ myglobals = tmglobals.tmglobals()
 import re
 import gspread
 from simpleclub import Club
+from collections import OrderedDict
 
 def makesortkey(s):
     # Strip non-alphameric characters and return all lower-case
@@ -187,10 +188,32 @@ if __name__ == "__main__":
             outfile.write(makenamelist(nond101list))
             outfile.write('\n')        
         
-
-        
-    # And finally, the insights
+    # Create the new-format insight listing
     sheet = book.worksheet('Insights')
+    sections = OrderedDict()  # Ensure keys are kept in order
+    lastsectionname = None
+    for row in sheet.get_all_records():
+        sectionname = row['Section']
+        if not sectionname:
+            sectionname = lastsectionname
+        if sectionname not in sections:
+            sections[sectionname] = []
+        lastsectionname = sectionname
+        sections[sectionname].append(row['Insight'])
+
+    with open(parms.outprefix+'nfinsights.shtml', 'w') as outfile:
+        for (i, sectionname) in enumerate(sections.keys()):
+            outfile.write(f'''<h4 onclick="jQuery('#sec{i}insights, #sec{i}open, #sec{i}closed').toggle();"><span id="sec{i}open" style="display:none;">&#x25be;</span><span id="sec{i}closed">&#x25b8;</span>{sectionname}</h4>\n''')
+            outfile.write(f'''<div id="sec{i}insights" style="display:none;">\n''')
+            outfile.write('<ul>\n')
+            for insight in sections[sectionname]:
+                if insight:
+                    outfile.write(f'<li>{insight}</li>\n')
+            outfile.write('</ul>\n')
+            outfile.write('</div>\n')
+        
+    # And finally, the insights in old format
+    sheet = book.worksheet('Insights (old format)')
 
     newinsights = []
     oldinsights = []
