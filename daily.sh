@@ -120,6 +120,10 @@ if [[ "$dorun" = "yes" ]] ; then
         if [[ "$rc" == 0 ]] ; then
             isreal && cp recentawards.* ~/www/files/reports
         fi
+        
+        # Make a TSV of this year's awards
+        echo "select awards.* from awards inner join (select max(tmyear) as y from awards) a on awards.tmyear = a.y;" | mysql d101tm_tmstats  --batch --raw --silent > awards.tsv && isreal && cp awards.tsv ~/www/files/reports
+
         # convert "recentawards.jpg" -resize 100x65 "100x65_recentawards.jpg"
 
         # Run renewals when appropriate
