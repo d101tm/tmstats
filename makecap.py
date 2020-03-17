@@ -188,7 +188,7 @@ if __name__ == "__main__":
             outfile.write(makenamelist(nond101list))
             outfile.write('\n')        
         
-    # Create the new-format insight listing
+    # Create the insight listing
     sheet = book.worksheet('Insights')
     sections = OrderedDict()  # Ensure keys are kept in order
     lastsectionname = None
@@ -201,7 +201,7 @@ if __name__ == "__main__":
         lastsectionname = sectionname
         sections[sectionname].append(row['Insight'])
 
-    with open(parms.outprefix+'nfinsights.shtml', 'w') as outfile:
+    with open(parms.outprefix+'insights.shtml', 'w') as outfile:
         for (i, sectionname) in enumerate(sections.keys()):
             outfile.write(f'''<h4 onclick="jQuery('#sec{i}insights, #sec{i}open, #sec{i}closed').toggle();"><span id="sec{i}open" style="display:none;">&#x25be;</span><span id="sec{i}closed">&#x25b8;</span>{sectionname}</h4>\n''')
             outfile.write(f'''<div id="sec{i}insights" style="display:none;">\n''')
@@ -212,35 +212,3 @@ if __name__ == "__main__":
             outfile.write('</ul>\n')
             outfile.write('</div>\n')
         
-    # And finally, the insights in old format
-    sheet = book.worksheet('Insights (old format)')
-
-    newinsights = []
-    oldinsights = []
-    for row in sheet.get_all_records():
-        insight = row['Insight Text']
-        if row['New?'].lower().startswith('y'):
-            newinsights.append(insight)
-        else:
-            oldinsights.append(insight)
-            
-    newinsights.sort(key=lambda k:makesortkey(k))
-    oldinsights.sort(key=lambda k:makesortkey(k))
-
-    with open(parms.outprefix+'insights.shtml', 'w') as outfile:
-        if newinsights:
-            outfile.write('<h3>Recent Insights</h3>')
-            outfile.write('<ul>\n')
-            for item in newinsights:
-                outfile.write('<li>%s</li>\n' % item)
-            outfile.write('</ul>\n')
-            
-        if oldinsights:
-            outfile.write('''<div class="oldheaddiv" onclick="jQuery('#oldinsightopen, #oldinsightclose, #oldinsight').toggle()">''')
-            outfile.write('<h3>Earlier Insights (Click to <span id="oldinsightopen">show</span><span id="oldinsightclose" style="display:none;">hide</span>)</h3></div>\n')
-            outfile.write('<div id="oldinsight" style="display:none;">\n')
-            outfile.write('<ul>\n')
-            for item in oldinsights:
-                outfile.write('<li>%s</li>\n' % item)
-            outfile.write('</ul>\n')
-            outfile.write('</div>\n')
