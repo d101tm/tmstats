@@ -66,7 +66,10 @@ class Event:
         self.date = self.start.strftime('%B %d').replace(' 0',' ')
         self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
-        self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
+        if parms.omitvenues:
+            self.addr = ''
+        else:
+            self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
         if self.showreg:
             self.register = ' | <a href="%(EventURL)s">Register</a>' % self.__dict__
         else:
@@ -94,6 +97,7 @@ if __name__ == "__main__":
     parms.add_argument('--season', type=str, choices=['fall', 'spring', 'Fall', 'Spring', ''], default='')
     parms.add_argument('--year', type=int, default=0)
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
+    parms.add_argument('--omitvenues', action='store_true')
     
     # Do global setup
     myglobals.setup(parms)
@@ -116,6 +120,8 @@ if __name__ == "__main__":
         parms.start = parms.start.replace(year=parms.year)
         parms.end = parms.end.replace(year=parms.year)
         
+    # Decide if we omit venues due to the 2020 Coronavirus
+    parms.omitvenues = parms.omitvenues or parms.start.year == 2020
     
     # We need a complete list of Areas and Divisions
     divisions = {}
@@ -207,8 +213,12 @@ if __name__ == "__main__":
         outfile.write("<style>td.divhead {background: #F2DF74; font-size: 200%; font-weight: bold; text-align: center; border: none;}</style>\n")
         for div in sorted(divisions.keys()):
             d = divisions[div]
-            outfile.write('<tr><td colspan="3" class="divhead">Division %s</td></tr>\n' % div)
-            outfile.write('<tr><td><b>Area/Division</b></td><td><b>When</b></td><td><b>Where</b></td></tr>\n')
+            if parms.omitvenues:
+                outfile.write('<tr><td colspan="2" class="divhead">Division %s</td></tr>\n' % div)
+                outfile.write('<tr><td><b>Area/Division</b></td><td><b>When</b></td></tr>\n')
+            else:
+                outfile.write('<tr><td colspan="3" class="divhead">Division %s</td></tr>\n' % div)
+                outfile.write('<tr><td><b>Area/Division</b></td><td><b>When</b></td><td><b>Where</b></td></tr>\n')
             if div in events:
                 output(events[div], outfile)
             else:
