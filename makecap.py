@@ -201,6 +201,7 @@ if __name__ == "__main__":
         lastsectionname = sectionname
         sections[sectionname].append(row['Insight'])
 
+
     with open(parms.outprefix+'insights.shtml', 'w') as outfile:
         for (i, sectionname) in enumerate(sections.keys()):
             outfile.write(f'''<h4 onclick="jQuery('#sec{i}insights, #sec{i}open, #sec{i}closed').toggle();"><span id="sec{i}open" style="display:none;">&#x25be;</span><span id="sec{i}closed">&#x25b8;</span>{sectionname}</h4>\n''')
@@ -211,4 +212,5 @@ if __name__ == "__main__":
                     outfile.write(f'<li>{insight}</li>\n')
             outfile.write('</ul>\n')
             outfile.write('</div>\n')
+            outfile.flush()
         
