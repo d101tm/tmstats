@@ -97,6 +97,7 @@ if __name__ == "__main__":
     parms.add_argument('--season', type=str, choices=['fall', 'spring', 'Fall', 'Spring', ''], default='')
     parms.add_argument('--year', type=int, default=0)
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
+    parms.add_argument('--registrationoptional', dest='registrationoptional', action='store_true')
     parms.add_argument('--omitvenues', action='store_true')
     
     # Do global setup
@@ -122,6 +123,8 @@ if __name__ == "__main__":
         
     # Decide if we omit venues due to the 2020 Coronavirus
     parms.omitvenues = parms.omitvenues or parms.start.year == 2020
+    # Decide if registration is optional due to the 2020 Coronavirus
+    parms.registrationoptional = parms.registrationoptional or parms.start.year == 2020
     
     # We need a complete list of Areas and Divisions
     divisions = {}
@@ -193,7 +196,7 @@ if __name__ == "__main__":
                 this = Event(p, post_names[id], area, venues, parms)
                 if this.include:
                     events[area] = this
-                    if not events[area].EventURL:
+                    if not events[area].EventURL and not parms.registrationoptional:
                         print('Area %s does not have a URL' % area)
             
         else:
