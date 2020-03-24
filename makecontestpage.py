@@ -230,7 +230,7 @@ if __name__ == "__main__":
             for a in d.arealist():
                 if a in events:
                     if pending:
-                        if pending.EventURL == events[a].EventURL:
+                        if pending.EventURL and (pending.EventURL == events[a].EventURL):
                             pending.area += '/' + a
                         else:
                             output(pending, outfile)
