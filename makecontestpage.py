@@ -70,7 +70,7 @@ class Event:
             self.addr = ''
         else:
             self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
-        if self.showreg:
+        if self.showreg and self.EventURL:
             self.register = ' | <a href="%(EventURL)s">Register</a>' % self.__dict__
         else:
             self.register = ""
