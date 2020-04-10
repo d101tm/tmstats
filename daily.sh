@@ -139,8 +139,8 @@ if [[ "$dorun" = "yes" ]] ; then
             $SCRIPTPATH/renewals.py --program "madness" --pct 75 100 --earn 75 100 && isreal && cp madness.* ~/www/files/reports
         fi
 
-        # President's Club runs once we have February data and stops when we have April 16 data
-        if $SCRIPTPATH/require.py --datafor S2 --nodatafor 4/16 ; then
+        # President's Club runs once we have February data and stops when we have May 1 data
+        if $SCRIPTPATH/require.py --datafor S2 --nodatafor 5/1 ; then
             echo "Running President's Club"
             $SCRIPTPATH/presidentsclub.py && isreal && cp presidentsclub.txt ~/www/files/reports/
         fi
