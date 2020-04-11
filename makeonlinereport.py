@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
     # OK, we have processed the entire table.  Now, write out the results
 
-    for item in sorted(list(allinfo.values()), key=lambda item:(item.area, item.clubnumber)):
+    for item in sorted(list(allinfo.values()), key=lambda item:(item.area, int(item.clubnumber))):
         outfile.write('<tr>\n')
         outfile.write(f'  <td>{item.area}</td>\n')
         outfile.write(f'  <td class="rjust">{item.clubnumber}</td>\n')
