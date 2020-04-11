@@ -92,45 +92,76 @@ any column by clicking on it, or limit the table to lines containing a string.</
     class Row:
 
         # Build the converter
-        colnames = ('timestamp', 'online', 'transition', 'guests', 'contactinfo', 'contactemail', 'distreach' ,'clubname', 'area', 'clubnum', '')
+        colnames = ('timestamp', 'online', 'transition', 'guests', 'contactinfo', 'contactemail', 'distreach' ,'clubname', 'area', 'clubnumber', '')
 
         def __init__(self, line):
             for (colnum, name) in enumerate(self.colnames):
                 if name:
                     self.__setattr__(name, line[colnum])
+            self.timestamp = datetime.strptime(self.timestamp, '%m/%d/%Y %H:%M:%S')
+
+    class Info:
+        def __init__(self, club, timestamp, link, contact):
+            self.timestamp = timestamp
+            self.link = link
+            self.contact = contact
+            self.clubname = club.clubname
+            self.area = club.division + club.area
+            self.clubnumber = club.clubnumber
+            self.meetingday = club.meetingday
+            self.meetingtime = club.meetingtime
+
 
     clubs = Club.getClubsOn(curs)
+
+    allinfo = {}
 
     # Values begin in row 2
     for line in sheet.get_all_values()[1:]:
         row = Row(line)
-        if not row.clubnum:
+        if not row.clubnumber:
             continue
+
+        if row.clubnumber in allinfo:
+            if row.timestamp < allinfo[row.clubnumber].timestamp:
+                continue  # This row has been superseded.
+
         # Only list clubs currently meeting online
         if not row.online.lower().startswith('yes'):
+            try:
+                del allinfo[row.clubnumber]
+            except KeyError:
+                pass
             continue
+
+
         try:
-            club = clubs[row.clubnum]
-            row.alignment = club.division + club.area
+            club = clubs[row.clubnumber]
         except KeyError:
             continue
-        if row.contactemail:
-            club.clubemail = row.contactemail  # Override if requested
+
+
+
         if row.guests.lower().startswith('no'):
             contact = ''
             link = club.clubname
         else:
-
-            contact = f'<a href="{club.clubemail}">{club.clubemail.split("mailto:")[-1]}</a>'
+            clubemail = row.contactemail if row.contactemail else club.clubemail
+            contact = f'<a href="{clubemail}">{clubemail.split("mailto:")[-1]}</a>'
             link = club.getLink()
             link = f'<a href="{link}">{club.clubname}</a>'
 
+        allinfo[row.clubnumber] = Info(club, row.timestamp, link, contact)
+
+    # OK, we have processed the entire table.  Now, write out the results
+
+    for item in sorted(list(allinfo.values()), key=lambda item:(item.area, item.clubnumber)):
         outfile.write('<tr>\n')
-        outfile.write(f'  <td>{row.alignment}</td>\n')
-        outfile.write(f'  <td class="rjust">{row.clubnum}</td>\n')
-        outfile.write(f'  <td>{link}</td>\n')
-        outfile.write(f'  <td>{contact}</td>\n')
-        outfile.write(f'  <td>{club.meetingday}: {club.meetingtime}</td>\n')
+        outfile.write(f'  <td>{item.area}</td>\n')
+        outfile.write(f'  <td class="rjust">{item.clubnumber}</td>\n')
+        outfile.write(f'  <td>{item.link}</td>\n')
+        outfile.write(f'  <td>{item.contact}</td>\n')
+        outfile.write(f'  <td>{item.meetingday}: {item.meetingtime}</td>\n')
         outfile.write('</tr>\n')
 
     outfile.write('  </tbody>\n')
