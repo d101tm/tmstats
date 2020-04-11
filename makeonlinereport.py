@@ -65,12 +65,6 @@ if __name__ == "__main__":
 </style>
 """)
 
-    # Write the prefatory information
-    outfile.write(
-f"""<p>The following table shows clubs which are currently meeting online.<br>You can sort
-any column by clicking on it, or limit the table to lines containing a string.</p>
-""")
-
     # Write the table header
     outfile.write(
 """
