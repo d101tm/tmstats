@@ -23,7 +23,7 @@ class myclub:
 # Establish parameters
 parms = tmparms.tmparms()
 parms.parser.add_argument("--enddate", dest='enddate', type=str, default='6/30')
-parms.parser.add_argument("--outfileprefix", dest='outfileprefix', type=str, default='bringbackthebase')
+parms.parser.add_argument("--outfileprefix", dest='outfileprefix', type=str, default='bringbackyourbase')
 parms.parser.add_argument("--award", dest='award', type=str, default='$50 in Toastmasters International Gift Certificates')
 
 # Set up global environment
