@@ -163,6 +163,13 @@ if [[ "$dorun" = "yes" ]] ; then
             $SCRIPTPATH/springforward.py && isreal && cp springforward.* ~/www/files/reports
         fi
 
+        # Bring Back the Base starts when we have April data and ends when we have June 30 data.
+
+        if $SCRIPTPATH/require.py --datafor S4 --nodatafor 6/30 --oldtmyear ; then
+            echo "Running Bring Back Your Base"
+            $SCRIPTPATH/bringbackyourbase.py && isreal && cp bringbackyourbase* ~/www/files/reports
+        fi
+
         # Sensational Summer runs once we have April data and stops when we have data for the next year
         if $SCRIPTPATH/require.py --datafor S5 --oldtmyear ; then
             echo "Running Sensational Summer"
@@ -194,6 +201,10 @@ if [[ "$dorun" = "yes" ]] ; then
 		
 		echo "Creating anniversary table"
 		(cd $SCRIPTPATH/;./makeanniversarytable.py) && isreal && cp anniversary.csv ~/www/files/reports
+
+        echo "Creating online clubs report"
+        (cd $SCRIPTPATH/;./makeonlinereport.py) && isreal && cp onlineclubs.html ~/www/files/reports
+
     fi
 
     echo "Updating anniversary open houses"
