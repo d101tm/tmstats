@@ -65,7 +65,7 @@ outfile = open(os.path.join(parms.workdir, parms.outfileprefix + '.text'), 'w')
 if len(winners) > 0:
     outfile.write("<b>Congratulations to</b> ")
     outfile.write(getClubBlock(winners))
-    outfile.write(f'for earning {parms.award}.')
+    outfile.write(f' for earning {parms.award}.')
     outfile.write('\n')
 outfile.close()
 
