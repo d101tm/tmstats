@@ -107,7 +107,7 @@ any column by clicking on it, or limit the table to lines containing a string.</
     balancecol = nlabels.index('balancecredits')
     areacol = nlabels.index('area')
 
-    clubs = Club.getClubsOn(curs)
+    clubs = Club.getActiveClubs(curs)
 
     # Values begin in row 4
     for row in sheet.get_all_values()[3:]:
