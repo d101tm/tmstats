@@ -84,6 +84,38 @@ class Club:
             value = ('%s' % value)[0:10]
 
         return value
+
+    @classmethod
+    def getActiveClubs(cls, curs, date=None):
+        """ Get clubs as defined by the club performance reports.  Only the following fields are included:
+            * clubnumber
+            * clubname
+            * district
+            * division
+            * area
+        """
+        fieldnames = ['clubnumber', 'clubname', 'district', 'division', 'area']
+
+        if date:
+            # Make sure it's not past the end of the data
+            curs.execute("SELECT MAX(asof) from clubperf")
+            lastdate = cls.stringify(curs.fetchone()[0])
+            date = min(date, lastdate)
+            # And just in case there was no data for the specified date, back up to a date where there
+            #   was data
+            curs.execute("SELECT MAX(loadedfor) FROM loaded where tablename = 'clubperf' AND loadedfor <= %s", (date,))
+            date = cls.stringify(curs.fetchone()[0])
+            curs.execute(f'SELECT {",".join(fieldnames)} FROM clubperf WHERE asof = %s', (date,))
+        else:
+            curs.execute(f'SELECT {",".join(fieldnames)} FROM clubperf WHERE entrytype = "L"')
+        if 'fieldnames' not in cls.__dict__:
+            cls.setfieldnames(fieldnames)
+        res = {}
+        for eachclub in curs.fetchall():
+            club = cls(eachclub, fieldnames)
+            res[club.clubnumber] = club
+
+        return res
         
     @classmethod
     def getClubsOn(self, curs, date=None, goodnames=[]):
