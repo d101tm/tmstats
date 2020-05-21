@@ -142,7 +142,7 @@ if [[ "$dorun" = "yes" ]] ; then
         # President's Club runs once we have February data and stops when we have May 1 data
         if $SCRIPTPATH/require.py --datafor S2 --nodatafor 5/1 ; then
             echo "Running President's Club"
-            $SCRIPTPATH/presidentsclub.py && isreal && cp presidentsclub.txt ~/www/files/reports/
+            $SCRIPTPATH/presidentsclub.py --finaldate 4/30 && isreal && cp presidentsclub.txt ~/www/files/reports/
         fi
 
         # Early Achievers starts when we have data for the new year and ends when we have November data
