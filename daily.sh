@@ -170,6 +170,12 @@ if [[ "$dorun" = "yes" ]] ; then
             $SCRIPTPATH/bringbackyourbase.py && isreal && cp bringbackyourbase* ~/www/files/reports
         fi
 
+        # Rev Up Your Engines starts with the end of May and ends on June 30.
+        if $SCRIPTPATH/require.py --datafor M5 --nodatafor 6/30 --oldtmyear ; then
+            echo "Running Rev Up Your Engines"
+            $SCRIPTPATH/revup.py && isreal && cp revup* ~/www/files/reports
+        fi
+
         # Sensational Summer runs once we have April data and stops when we have data for the next year
         if $SCRIPTPATH/require.py --datafor S5 --oldtmyear ; then
             echo "Running Sensational Summer"
