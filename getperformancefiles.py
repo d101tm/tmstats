@@ -49,10 +49,11 @@ def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
 
         
 def getresponse(url):
+    headers = {'user-agent': 'curl/7.54.0'}
     try:
-        clubinfo = requests.get(url).text.replace('\r','').split('\n')
+        clubinfo = requests.get(url, headers=headers).text.replace('\r','').split('\n')
     except requests.exceptions.SSLError:
-        clubinfo = requests.get(url,verify=False).text.replace('\r','').split('\n')
+        clubinfo = requests.get(url, headers=headers, verify=False).text.replace('\r','').split('\n')
 
     # Suppress any leading empty lines
     while not clubinfo[0]:
