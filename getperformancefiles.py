@@ -38,9 +38,7 @@ def getmonthend(m, y):
 
 def makeurl(report, district, tmyearpiece="", monthend="", asof=""):
     url = "http://dashboards.toastmasters.org/"
-    if tmyearpiece:
-        url += tmyearpiece 
-    url += "/export.aspx?type=CSV&report=" + reportnames[report] + "~" + district
+    url += "export.aspx?type=CSV&report=" + reportnames[report] + "~" + district
     try:
         asof = asof.strftime('%m/%d/%Y')
     except AttributeError:
