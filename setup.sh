@@ -4,12 +4,11 @@ if [[ $TMSTATS_SETUP != 1 ]]
 then
     # DreamHost setup for statistics.
     export TZ=PST8PDT
-    #export PYTHONPATH="$HOME/python:$PYTHONPATH"
 
     # Ensure we're in the right environment
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/lib
-    # Put Python 3.7 in the front
-    export PATH="$HOME/opt/python-3.7.0/bin:$PATH"
+    #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/lib
+    # Put Python 3.8 in the front
+    export PATH="$HOME/opt/python-3.8/bin:$PATH"
 
     # Set environment variables
     # There are bugs in some versions of Bash that require the following ugly workaround
