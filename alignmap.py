@@ -174,7 +174,7 @@ if __name__ == "__main__":
         for d in polygons:
             outline = polygons[d][0]
             for p in polygons[d][1:]:
-                outline = outline.union(p)
+B                outline = outline.union(p.buffer(0))
             outline = outline.intersection(d101)
 
             if outline.type == 'Polygon':
