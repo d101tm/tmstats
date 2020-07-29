@@ -1,23 +1,17 @@
 0 ToDo.txt
 *.swp
-*.csv
-*.yml
 *.pyc
-bluehost.sh
-clearcache.sh
-*.db
 *.xls*
-hourly
+*.csv
 data/
 work/
 pins/
+map/
 archives/
-d4data/
 .tm_properties
 .idea/
 googleoauth2key.json
 *.ini
-pins
 cursors/
 workingalignment/
 wp-config.php
