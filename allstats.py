@@ -368,18 +368,20 @@ class Club:
 
         # Specific DCP Goals
         if headers:
-            ret += th('CCs', colspan="2")
-            row2 += th('1', forceclass="tabletop")
-            row2 += th('2', forceclass="tabletop")
-            ret += th('ACs', colspan="2")
-            row2 += th('3', forceclass="tabletop")
-            row2 += th('4', forceclass="tabletop")
-            ret += th('Lead', colspan="2")
-            row2 += th('5', forceclass="tabletop")
-            row2 += th('6', forceclass="tabletop")
-            ret += th('Pathways', colspan="6")
-            for plabel in ('L1', 'L2', '+L2', 'L3', 'L4', 'L5'):
-              row2 += th(plabel, forceclass="tabletop")
+            if tmyear <= 2019:
+                ret += th('CCs', colspan="2")
+                row2 += th('1', forceclass="tabletop")
+                row2 += th('2', forceclass="tabletop")
+                ret += th('ACs', colspan="2")
+                row2 += th('3', forceclass="tabletop")
+                row2 += th('4', forceclass="tabletop")
+                ret += th('Lead', colspan="2")
+                row2 += th('5', forceclass="tabletop")
+                row2 += th('6', forceclass="tabletop")
+            else:
+                for (goalnum, plabel) in enumerate(('L1', 'L2', '+L2', 'L3', 'L4', 'L5'),start = 1):
+                    ret += th(plabel)
+                    row2 += th(goalnum, forceclass="tabletop")
             ret += th('Mem', colspan="2")
             row2 += th('7', forceclass="tabletop")
             row2 += th('8', forceclass="tabletop")
@@ -390,11 +392,12 @@ class Club:
             row2 += th('Ren.', forceclass="tabletop")
             row2 += th('OL', forceclass="tabletop")
         else:
-            ## CCs, ACs, Leadership
-            for point in (0, 1, 2, 3, 4, 5):
-                color = "madeit" if self.dcpitems[point] >= (2, 2, 1, 1, 1, 1)[point] else ""
-                ret += td(self.dcpitems[point], color, "grid")
-                
+            if tmyear <= 2019:
+                ## CCs, ACs, Leadership
+                for point in (0, 1, 2, 3, 4, 5):
+                    color = "madeit" if self.dcpitems[point] >= (2, 2, 1, 1, 1, 1)[point] else ""
+                    ret += td(self.dcpitems[point], color, "grid")
+
             ## Pathways
             for point in (0, 1, 2, 3, 4, 5):
                 color = "madeit" if self.pathitems[point] >= (4, 2, 2, 2, 1, 1)[point] else ""
