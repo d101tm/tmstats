@@ -734,7 +734,7 @@ def doDailyAreaPerformance(infile, conn, cdate, monthstart):
         return
     inform("areaperf for", cdate, supress=1)
     areacol = headers.index("area")
-    districtcol = headers.index("distrfict")
+    districtcol = headers.index("district")
 
     # Now, replace "charterdatesuspenddate" with one field for each.
     cdsdcol = headers.index("charterdatesuspenddate")
