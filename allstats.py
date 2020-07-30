@@ -370,18 +370,18 @@ class Club:
         if headers:
             if tmyear <= 2019:
                 ret += th('CCs', colspan="2")
-                row2 += th('1', forceclass="tabletop")
-                row2 += th('2', forceclass="tabletop")
                 ret += th('ACs', colspan="2")
-                row2 += th('3', forceclass="tabletop")
-                row2 += th('4', forceclass="tabletop")
                 ret += th('Lead', colspan="2")
-                row2 += th('5', forceclass="tabletop")
-                row2 += th('6', forceclass="tabletop")
             else:
-                for (goalnum, plabel) in enumerate(('L1', 'L2', '+L2', 'L3', 'L4', 'L5'),start = 1):
-                    ret += th(plabel)
-                    row2 += th(goalnum, forceclass="tabletop")
+                ret += th('Pathways', colspan="6")
+
+            row2 += th('1', forceclass="tabletop")
+            row2 += th('2', forceclass="tabletop")
+            row2 += th('3', forceclass="tabletop")
+            row2 += th('4', forceclass="tabletop")
+            row2 += th('5', forceclass="tabletop")
+            row2 += th('6', forceclass="tabletop")
+
             ret += th('Mem', colspan="2")
             row2 += th('7', forceclass="tabletop")
             row2 += th('8', forceclass="tabletop")

@@ -468,7 +468,7 @@ def doHistorical(conn, name):
         infile = open(c, "r")
         (monthstart, cdate) = getasof(infile)
         # Table names can't be dynamically substituted by the MySQLdb module, so we do that ourselves.
-        # We let MySQLdb substitute the date, since that comes from outside sources and needs to be sandboxed.
+        # We let MySQLdb substitute the date, since that comes from outside sources and needs to be protected against.
         curs.execute(
             'SELECT COUNT(*) FROM loaded WHERE tablename="%s" AND loadedfor=%%s' % name,
             (cdate,),
@@ -625,6 +625,16 @@ def doDailyClubPerformance(infile, conn, cdate, monthstart):
     curs = conn.cursor()
     reader = csv.reader(infile)
     hline = next(reader)
+
+    # Map the Pathways headers for Goals 5 and 6 to the names used in the database in the past
+    mapping = {'Level 4s, Level 5s, or DTM award': 'level4s',
+               'Add. Level 4s, Level 5s, or DTM award': 'level5s'}
+    for item in mapping:
+        try:
+            hline[hline.index(item)] = mapping[item]
+        except ValueError:
+            inform(f'{item} not in "{hline}"')
+
     headers = cleanheaders(hline)
     try:
         clubcol = headers.index("clubnumber")
@@ -640,6 +650,7 @@ def doDailyClubPerformance(infile, conn, cdate, monthstart):
     octduescol = headers.index("memduesontimeoct")
     aprduescol = headers.index("memduesontimeapr")
     offlistcol = headers.index("offlistontime")
+
     # We're going to use the last column for the effective date of the data
     headers.append("asof")
     headers.append("color")
@@ -723,7 +734,7 @@ def doDailyAreaPerformance(infile, conn, cdate, monthstart):
         return
     inform("areaperf for", cdate, supress=1)
     areacol = headers.index("area")
-    districtcol = headers.index("district")
+    districtcol = headers.index("distrfict")
 
     # Now, replace "charterdatesuspenddate" with one field for each.
     cdsdcol = headers.index("charterdatesuspenddate")
