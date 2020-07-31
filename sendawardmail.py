@@ -35,7 +35,7 @@ paras = ['The communication and leadership skills you have gained will be of lif
          'Please email us if you have questions about the educational program.  We are here to help.  If you prefer a phone call, please send us your phone number and indicate the best time to call you.',
          'Good luck as you journey forward on the educational award path!',
          'Sincerely,',
-         'Vaibhav Singh\nProgram Quality Director\nDistrict 101 Toastmasters']
+         'Shyamala Sista\nProgram Quality Director\nDistrict 101 Toastmasters']
 
 
 def flatten(l):
@@ -106,7 +106,8 @@ def sendreport(report):
 
 def sendletter(email, firstname, letterinfo, parms):
     if not email:
-        print('No email for', letterinfo[0].fullname)
+        if not letterinfo[0].fullname[:1].isdigit():
+            print('No email for', letterinfo[0].fullname)
         return
 
     # Create message container (multipart/alternative)
