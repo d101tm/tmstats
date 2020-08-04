@@ -84,14 +84,22 @@ if __name__ == "__main__":
             except:
                 pass
 
-        qbasestr = "SELECT newmembers + addnewmembers as newcount, clubname FROM clubperf WHERE asof = %s and clubnumber = %s"
+        qbasestr = "SELECT newmembers + addnewmembers as newcount, clubname, monthstart FROM clubperf WHERE asof = %s and clubnumber = %s"
 
         if maxasof >= startdate:
             curs.execute(qbasestr, (startdate, clubnumber))
-            newstart = curs.fetchone()[0]
+            (newstart, dontcare, startmonth) = curs.fetchone()
             curs.execute(qbasestr, (min(enddate, maxasof), clubnumber))
-            (newend, clubname) = curs.fetchone()
+            (newend, clubname, endmonth) = curs.fetchone()
             delta = newend - newstart
+            # If we've gone over a TM year boundary, we need to fetch the final delta from the old year and
+            # add it to the new members added this year
+            if startmonth.month == 6 and endmonth.month >= 7:
+                curs.execute("SELECT asof FROM lastfor WHERE clubnumber = %s and monthstart = %s", (clubnumber, startmonth))
+                finalasof = curs.fetchone()[0]
+                curs.execute(qbasestr, (finalasof, clubnumber))
+                finalend = curs.fetchone()[0]
+                delta = (finalend - newstart) + newend # 'newend' will be new members in the new TM year
             sheet.update_cell(rownum, deltacolumn, delta)
             sheet.update_cell(rownum, eligiblethroughcol, enddate.strftime("%-m/%-d/%y"))
             # Add the club to the proper winners list
