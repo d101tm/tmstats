@@ -33,7 +33,7 @@ if __name__ == "__main__":
     # Establish parameters
     parms = tmparms.tmparms()
     parms.add_argument('--outfile', default='${workdir}/districtcredit.html')
-    parms.add_argument('--creditfile', default='https://docs.google.com/spreadsheets/d/1p0IEPYW4BWL2BKXSwo6cQBie2hfYjXUsMiVDFC5alSQ/')
+    parms.add_argument('--creditfile', default='')
     parms.add_argument('--sheetname', default='D101_RecognitionCredits')
 
     # Do global setup
