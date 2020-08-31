@@ -1,10 +1,10 @@
 #!/bin/bash
 . setup.sh
 
-cd "$workdir"
 
 echo "<p>Getting new roster</p>"
 "$SCRIPTPATH"/getroster.sh
+cd "$workdir"
 echo "<p>Processing Prosper Virtually Report</p>"
 echo "<p>Using roster file '$(cat rosterondropbox.txt)' from Dropbox</p>"
 
