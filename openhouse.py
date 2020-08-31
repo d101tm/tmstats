@@ -87,7 +87,7 @@ if __name__ == "__main__":
         cn = '%s' % row.clubnumber
         hadOH.add(cn)
         clubs[cn].openhouse = True
-        clubs[cn].earnings += 20           # Earn $20 for an Open House
+        clubs[cn].earnings += 15           # Earn $15 for an Open House
 
     
     # And build "IN" clause.  We know all the items are numbers, so we don't have to worry about SQL injection.
@@ -115,7 +115,7 @@ if __name__ == "__main__":
             print(f'Club number {cn} not found in Clubs table; memdiff = {memdiff}')
             continue
         if memdiff >= 5:
-            clubs[cn].earnings += 40
+            clubs[cn].earnings += 50  # Includes the earnings for 3 
             if clubs[cn].openhouse:
                 OHand5.append(clubs[cn])
                 hadOH.remove(cn)
@@ -132,20 +132,22 @@ if __name__ == "__main__":
     # Now, 'hadOH' is reduced to clubs which had an Open House but didn't add enough members
     onlyOH = [clubs[cn] for cn in hadOH]
 
-    def makecongrat(why, amount, winners):
+    def makecongrat(why, winners):
         if len(winners) == 0:
             return ''
-        elif len(winners) == 1:
-            return '<p><b>Congratulations</b> to %s for earning %s in District Credit by %s.' % (tmutil.getClubBlock(winners), amount, why)
+        amount = winners[0].earnings
+
+        if len(winners) == 1:
+            return '<p><b>Congratulations</b> to %s for earning $%s in District Credit by %s.' % (tmutil.getClubBlock(winners), amount, why)
         else:
-            return '<p><b>Congratulations</b> to these clubs for earning %s in District Credit by %s: %s.</p>\n' % (amount, why, tmutil.getClubBlock(winners))
+            return '<p><b>Congratulations</b> to these clubs for earning $%s in District Credit by %s: %s.</p>\n' % (amount, why, tmutil.getClubBlock(winners))
         
     with open(parms.outfile, 'w') as outfile:
-        outfile.write(makecongrat("holding an Open House and adding at least 5 members", "$60", OHand5))
-        outfile.write(makecongrat("holding an Open House and adding at least 3 members", "$40", OHand3))
-        outfile.write(makecongrat("holding an Open House", "$20", onlyOH))
-        outfile.write(makecongrat("adding at least 5 members", "$40", only5))
-        outfile.write(makecongrat("adding at least 3 members", "$20", only3))
+        outfile.write(makecongrat("holding an Open House and adding at least 5 members", OHand5))
+        outfile.write(makecongrat("holding an Open House and adding at least 3 members", OHand3))
+        outfile.write(makecongrat("holding an Open House", onlyOH))
+        outfile.write(makecongrat("adding at least 5 members", only5))
+        outfile.write(makecongrat("adding at least 3 members", only3))
         
     
     
