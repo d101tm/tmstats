@@ -127,11 +127,9 @@ if [[ "$dorun" = "yes" ]] ; then
 
         # Run renewals when appropriate
         # Stellar September starts with August data and continues through September 15
-        if false && $SCRIPTPATH/require.py --newtmyear --datafor S8 --nodatafor 9/16 ; then
+        if $SCRIPTPATH/require.py --newtmyear --datafor S8 --nodatafor 9/16 ; then
             echo "Running Stellar September"
             $SCRIPTPATH/renewals.py --program "stellar" --pct 75 100 --earn 75 100 && isreal && cp stellar.* ~/www/files/reports
-        else
-            echo "Skipping Stellar September"
         fi
 
         # March Madness starts with February data and continues through March 15
