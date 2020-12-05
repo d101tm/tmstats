@@ -4,6 +4,7 @@
 
 from datetime import datetime, timedelta
 import gspread
+from time import sleep
 import tmglobals
 from tmutil import cleandate, normalize, getGoogleCredentials, getClubBlock
 
@@ -23,6 +24,12 @@ class Winner:
     def __init__(self, clubname):
         self.clubname = clubname
 
+
+def addToUpdateList(updatelist, row, col, value):
+    updatelist.append({
+        'range': gspread.utils.rowcol_to_a1(row, col),
+        'values': [[value]]
+    })
 
 if __name__ == "__main__":
  
@@ -49,6 +56,9 @@ if __name__ == "__main__":
     labels = [normalize(c) for c in values[0]]
     deltacolumn = labels.index('newmembersadded') + 1
     eligiblethroughcol = labels.index('eligiblethrough') + 1
+
+    # Google has introduced rate limits for updates, so we need to batch them
+    updatelist = []
 
 
     # Get the final date in the database - we don't ask for data later than we have!
@@ -99,11 +109,16 @@ if __name__ == "__main__":
                 finalasof = curs.fetchone()[0]
                 curs.execute(qbasestr, (finalasof, clubnumber))
                 finalend = curs.fetchone()[0]
-                delta = (finalend - newstart) + newend # 'newend' will be new members in the new TM year
-            sheet.update_cell(rownum, deltacolumn, delta)
-            sheet.update_cell(rownum, eligiblethroughcol, enddate.strftime("%-m/%-d/%y"))
+
+            addToUpdateList(updatelist, rownum, deltacolumn, delta)
+            addToUpdateList(updatelist, rownum, eligiblethroughcol, enddate.strftime("%-m/%-d/%y"))
+
             # Add the club to the proper winners list
             winners[1 if delta >= parms.needed else 0].append(Winner(clubname))
+
+    # Update the spreadsheet if need be
+    if updatelist:
+        sheet.batch_update(updatelist)
 
     # Now, write out the congratulatory text if there are any winners.
     outfile = open(parms.outfile, 'w')
@@ -115,4 +130,3 @@ if __name__ == "__main__":
         outfile.write('by holding an Open House during the month of their club anniversary <b>and</b>\n')
         outfile.write(f'adding at least {parms.needed} members within a month of their Open House!</p>\n')
     outfile.close()
-
