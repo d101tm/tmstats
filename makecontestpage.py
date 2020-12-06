@@ -51,12 +51,23 @@ class Event:
             for item in venues[v]:
                 ours = item.replace("_","")
                 self.__dict__[ours] = venues[v][item]
+            self.hasvenue = self.VenueAddress or self.VenueCity or self.VenueState
+        else:
+            self.hasvenue = False
+        if self.hasvenue:
+            self.addr = f'<td><b>{self.VenueName}</b><br>{self.VenueAddress}<br>{self.VenueCity}, {self.VenueState} {self.VenueZip}</td>'
+        else:
+            try:
+                self.addr = f'<td><b>{self.VenueName}</b></td>'
+            except AttributeError:
+                self.addr = '<td></td>'
         self.area = area
         self.start = datetime.strptime(self.EventStartDate, self.ptemplate)
         self.end = datetime.strptime(self.EventEndDate, self.ptemplate)
         self.include = (self.start >= parms.start) and (self.end <= parms.end)
         self.showreg = parms.showpast or (self.start > parms.now)
         self.title = title
+
             
     def __repr__(self):
         if len(self.area) == 1:
@@ -68,8 +79,6 @@ class Event:
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
         if parms.omitvenues:
             self.addr = ''
-        else:
-            self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
         if self.showreg and self.EventURL:
             self.register = ' | <a href="%(EventURL)s">Register</a>' % self.__dict__
         else:
@@ -78,7 +87,8 @@ class Event:
         return ans
 
 def tocome(what):
-    return '<tr><td>%s</td><td>TBA</td><td>&nbsp;</td>' % what        
+    venuecol = '' if parms.omitvenues else '<td>&nbsp;</td>'
+    return f'<tr><td>{what}</td><td>TBA</td>{venuecol}'
     
 def output(what, outfile):
     outfile.write('%s\n' % what)
@@ -120,11 +130,6 @@ if __name__ == "__main__":
     if parms.year:
         parms.start = parms.start.replace(year=parms.year)
         parms.end = parms.end.replace(year=parms.year)
-        
-    # Decide if we omit venues due to the 2020 Coronavirus
-    parms.omitvenues = parms.omitvenues or parms.start.year == 2020
-    # Decide if registration is optional due to the 2020 Coronavirus
-    parms.registrationoptional = parms.registrationoptional or parms.start.year == 2020
     
     # We need a complete list of Areas and Divisions
     divisions = {}
@@ -188,6 +193,7 @@ if __name__ == "__main__":
     
     
     events = {}
+    anyvenues = False
     for p in list(posts.values()):
         id = p['post_id']
         m = re.match(title_pattern, post_titles[id])
@@ -196,13 +202,17 @@ if __name__ == "__main__":
                 this = Event(p, post_names[id], area, venues, parms)
                 if this.include:
                     events[area] = this
+                    anyvenues = anyvenues or this.hasvenue
                     if not events[area].EventURL and not parms.registrationoptional:
                         print('Area %s does not have a URL' % area)
             
         else:
             print(p['post_id'], 'does not have an Area')
             continue
-            
+
+    # If no event has a venue, we will ignore the venue column
+    if not anyvenues:
+        parms.omitvenues = True
 
     outfile = open(parms.outfile,'w')
     if not events:
