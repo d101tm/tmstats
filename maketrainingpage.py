@@ -5,9 +5,8 @@
     a complete listing of all trainings in the District. 
 """
 
-import dbconn, tmutil, sys, os
+import dbconn, tmutil, os
 from datetime import datetime
-import re
 import tmglobals
 myglobals = tmglobals.tmglobals()
 
@@ -47,13 +46,18 @@ class Event:
         self.showreg = parms.showpast or (self.end > parms.now)
         self.name = name
         self.title = title
+        self.hasvenue = self.VenueAddress and self.VenueCity and self.VenueState
+        if self.hasvenue:
+            self.addr = f'<td><b>{self.VenueName}</b><br>{self.VenueAddress}<br>{self.VenueCity}, {self.VenueState} {self.VenueZip}</td>'
+        else:
+            self.addr = ''
+
 
             
     def __repr__(self):
         self.date = self.start.strftime('%A, %B %d').replace(' 0',' ')
         self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
-        self.addr = '<td><b>%(VenueName)s</b><br>%(VenueAddress)s<br>%(VenueCity)s, %(VenueState)s %(VenueZip)s</td>' % self.__dict__
         try:
             self.special = '<br>%s' % self.eventspecialnote
         except AttributeError:
@@ -153,17 +157,29 @@ if __name__ == "__main__":
     
     
     events = []
+    # We need to keep track of whether any events happen online
+    realvenues = False
     for p in list(posts.values()):
         id = p['post_id']
         this = Event(post_titles[id], post_names[id], p, venues, parms)
         if this.include:
             events.append(this)
+            realvenues = realvenues or this.hasvenue
+
+    # Do we need to create a venue column?
+    if realvenues:
+        # At least one event has a real venue, so we need it
+        colgroup = '<col> <col> <col>'
+        venuecol = '<th><b>Where</b></th>'
+    else:
+        colgroup = '<col> <col>'
+        venuecol = ''
             
 
     outfile = open(parms.outfile,'w')
-    outfile.write("""<table class="d101eventtable"><colgroup> <col> <col> <col> </colgroup>
+    outfile.write(f"""<table class="d101eventtable"><colgroup> {colgroup} </colgroup>
 <thead>
-<tr><th><b>Training</b></th><th><b>When</b></th><th><b>Where</b></th></tr>
+<tr><th><b>Training</b></th><th><b>When</b></th>{venuecol}</tr>
 </thead>
 <tbody>\n""")
     for event in sorted(events,key=lambda l:l.start):
