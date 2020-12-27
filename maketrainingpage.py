@@ -40,17 +40,25 @@ class Event:
             for item in venues[v]:
                 ours = item.replace("_","")
                 self.__dict__[ours] = venues[v][item]
+            self.hasvenue = self.VenueAddress and self.VenueCity and self.VenueState
+        else:
+            self.hasvenue = False
+        if self.hasvenue and parms.realvenues:
+            self.addr = f'<td><b>{self.VenueName}</b><br>{self.VenueAddress}<br>{self.VenueCity}, {self.VenueState} {self.VenueZip}</td>'
+        elif parms.realvenues:
+            try:
+                self.addr = f'<td><b>{self.VenueName}</b></td>'
+            except AttributeError:
+                self.addr = '<td></td>'
+        else:
+            self.addr = ''
         self.start = datetime.strptime(self.EventStartDate, self.ptemplate)
         self.end = datetime.strptime(self.EventEndDate, self.ptemplate)
         self.include = (self.start >= parms.start) and (self.end <= parms.end)
         self.showreg = parms.showpast or (self.end > parms.now)
         self.name = name
         self.title = title
-        self.hasvenue = self.VenueAddress and self.VenueCity and self.VenueState
-        if self.hasvenue:
-            self.addr = f'<td><b>{self.VenueName}</b><br>{self.VenueAddress}<br>{self.VenueCity}, {self.VenueState} {self.VenueZip}</td>'
-        else:
-            self.addr = ''
+
 
 
             
@@ -157,17 +165,17 @@ if __name__ == "__main__":
     
     
     events = []
-    # We need to keep track of whether any events happen online
-    realvenues = False
+    # We need to keep track of whether any events happen at a real location
+    parms.realvenues = False
     for p in list(posts.values()):
         id = p['post_id']
         this = Event(post_titles[id], post_names[id], p, venues, parms)
         if this.include:
             events.append(this)
-            realvenues = realvenues or this.hasvenue
+            parms.realvenues = parms.realvenues or this.hasvenue
 
     # Do we need to create a venue column?
-    if realvenues:
+    if parms.realvenues:
         # At least one event has a real venue, so we need it
         colgroup = '<col> <col> <col>'
         venuecol = '<th><b>Where</b></th>'
