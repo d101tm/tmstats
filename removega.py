@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 """ Remove Google Analytics from Divi installation """
 
 import re
