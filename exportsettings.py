@@ -24,6 +24,7 @@ res['archivedir'] = parms.archivedir
 res['pindir'] = parms.pindir
 res['cursordir'] = parms.cursordir
 res['alignmentdir'] = parms.alignmentdir
+res['reportdir'] = parms.reportdir
 
 # Where this program lives
 res['SCRIPTPATH'] = sys.path[0]
