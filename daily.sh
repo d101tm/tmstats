@@ -102,8 +102,6 @@ if [[ "$dorun" = "yes" ]] ; then
     fi
     
     if (( $haveperf == 0 )) ; then
-        echo "Running award tallies"
-        $SCRIPTPATH/awardtallies.py
         echo "Creating award files"
         month=$(date '+%m')
         year=$(date '+%Y')
