@@ -15,11 +15,6 @@ from datetime import datetime, timedelta
 import tmglobals
 myglobals = tmglobals.tmglobals()
 
-
-if 'TM_DIRECTORY' in os.environ:
-    os.chdir(os.path.join(os.environ['TM_DIRECTORY'],'data'))
-
-
 # Add the '--date' argument to the parser
 parms = tmparms.tmparms()
 today = datetime.today()
