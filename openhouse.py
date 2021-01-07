@@ -40,6 +40,7 @@ if __name__ == "__main__":
     parms.add_argument('--renewto', default='3/31/2020')
     parms.add_argument('--requireopenhouse', action='store_true')
     parms.add_argument('--sheetname', default='2019 Summer')
+    # @@TODO@@  Make the amounts and thresholds arguments, too.
 
     #Do global setup
     globals.setup(parms)
@@ -87,7 +88,7 @@ if __name__ == "__main__":
         cn = '%s' % row.clubnumber
         hadOH.add(cn)
         clubs[cn].openhouse = True
-        clubs[cn].earnings += 15           # Earn $15 for an Open House
+        clubs[cn].earnings += 20           # Earn $20 for an Open House
 
     
     # And build "IN" clause.  We know all the items are numbers, so we don't have to worry about SQL injection.
@@ -115,7 +116,7 @@ if __name__ == "__main__":
             print(f'Club number {cn} not found in Clubs table; memdiff = {memdiff}')
             continue
         if memdiff >= 5:
-            clubs[cn].earnings += 50  # Includes the earnings for 3 
+            clubs[cn].earnings += 40  # Includes the earnings for 3 
             if clubs[cn].openhouse:
                 OHand5.append(clubs[cn])
                 hadOH.remove(cn)
