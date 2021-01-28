@@ -25,24 +25,24 @@ def getinfo(curs, table, post_list):
         posts[post_id][meta_key] = meta_value.strip()
         if meta_key == '_EventVenueID':
             venue_numbers.add(meta_value)
-        
-    return (posts, venue_numbers)  
-        
+
+    return (posts, venue_numbers)
+
 class Division:
     def __init__(self, name):
         self.areas = set()
         self.name = name
-        
+
     def addArea(self, area):
         self.areas.add(self.name + area)
-        
+
     def arealist(self):
         return sorted(self.areas)
-        
+
 class Event:
     ptemplate = '%Y-%m-%d %H:%M:%S'
-    
-    def __init__(self, contents, title, area, venues, parms):
+
+    def __init__(self, contents, title, area, venues, parms, ctype):
         for item in contents:
             ours = item.replace("_","")
             self.__dict__[ours] = contents[item]
@@ -67,13 +67,14 @@ class Event:
         self.include = (self.start >= parms.start) and (self.end <= parms.end)
         self.showreg = parms.showpast or (self.start > parms.now)
         self.title = title
+        self.ctype = ctype
 
-            
+
     def __repr__(self):
         if len(self.area) == 1:
-            self.name = '<b>Division %s Contest</b>' % self.area
+            self.name = f'<b>Division {self.area}{self.ctype} Contest</b>'
         else:
-            self.name = '<b>Area %s Contest</b>' % self.area
+            self.name = f'<b>Area {self.area}{self.ctype} Contest</b>'
         self.date = self.start.strftime('%B %d').replace(' 0',' ')
         self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
         self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
@@ -83,21 +84,23 @@ class Event:
             self.register = ' | <a href="%(EventURL)s">Register</a>' % self.__dict__
         else:
             self.register = ""
-        ans = """<tr><td>%(name)s<br /><a href="%(title)s">More Information</a>%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
+        ans = f'<tr><td>{self.name}<br /><a href="{self.title}">More Information</a>'\
+              f'{self.register}</td><td><b>{self.date}</b><br>{self.time}{self.addr}</td></tr>'
         return ans
 
 def tocome(what):
     venuecol = '' if parms.omitvenues else '<td>&nbsp;</td>'
-    return f'<tr><td>{what}</td><td>TBA</td>{venuecol}'
-    
+    return [f'<tr><td>{what}</td><td>TBA</td>{venuecol}']
+
 def output(what, outfile):
-    outfile.write('%s\n' % what)
+    for item in what:
+        outfile.write('%s\n' % item)
 
 if __name__ == "__main__":
- 
+
     import tmparms
-    
-    
+
+
     # Handle parameters
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count')
@@ -109,18 +112,18 @@ if __name__ == "__main__":
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
     parms.add_argument('--registrationoptional', dest='registrationoptional', action='store_true')
     parms.add_argument('--omitvenues', action='store_true')
-    
+
     # Do global setup
     myglobals.setup(parms)
     conn = myglobals.conn
     curs = myglobals.curs
-   
 
-      
+
+
     # Figure out the contest period.
-    parms.now = datetime.now()   
+    parms.now = datetime.now()
     parms.start = parms.now
-    parms.end = parms.now  
+    parms.end = parms.now
     if parms.now.month <= 6 or parms.season.lower() == 'spring':
         parms.start = parms.start.replace(month=1,day=1)
         parms.end = parms.end.replace(month=6,day=30)
@@ -130,7 +133,7 @@ if __name__ == "__main__":
     if parms.year:
         parms.start = parms.start.replace(year=parms.year)
         parms.end = parms.end.replace(year=parms.year)
-    
+
     # We need a complete list of Areas and Divisions
     divisions = {}
     curs.execute("SELECT district, division, area FROM areaperf WHERE entrytype='L' GROUP BY district, division, area")
@@ -147,22 +150,24 @@ if __name__ == "__main__":
         config['DB_HOST'] = 'localhost'
 
 
-    # Connect to the WP database     
+    # Connect to the WP database
     conn = dbconn.dbconn(config['DB_HOST'], config['DB_USER'], config['DB_PASSWORD'], config['DB_NAME'])
     curs = conn.cursor()
     prefix = config['table_prefix']
     poststable = prefix + 'posts'
     optionstable = prefix + 'options'
-    
+
     # Find the taxonomy value for 'contest'
     stmt = "SELECT term_id FROM %s WHERE slug = 'contest'" % (prefix+'terms')
     curs.execute(stmt)
     tax_contest = curs.fetchone()[0]
-    
-    
+
+
     # Find all published contest events in the database
-    
-    stmt = "SELECT ID, post_title, post_name from %s p INNER JOIN %s t ON p.ID = t.object_id WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s" % (poststable, prefix+'term_relationships')
+
+    stmt = "SELECT ID, post_title, post_name from %s p INNER JOIN %s t ON p.ID = t.object_id "\
+           "WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s "\
+            % (poststable, prefix+'term_relationships')
     curs.execute(stmt, (tax_contest,))
     post_numbers = []
     post_titles = {}
@@ -173,39 +178,48 @@ if __name__ == "__main__":
         post_names[number] = name
     nums = ','.join(['%d' % p for p in post_numbers])
     title_pattern = re.compile(r"""(Division|Area)\s+(.*)\s+Contest""")
-    
-    
-            
+
+
+
     # Now, get all the event information from the database
     (posts, venue_numbers) = getinfo(curs, prefix+'postmeta', nums)
     # Everything in the postmeta table is a string, including venue_numbers
     venuelist = ','.join(venue_numbers)
-    
+
     # And now, get the venue information.  
     venues = getinfo(curs, prefix+'postmeta', venuelist)[0]
-    
-    
+
+
     # Patch in the actual name of the venue as VenueName
     stmt = "SELECT id, post_title from %s WHERE id IN (%s)" % (poststable, venuelist)
     curs.execute(stmt)
     for (id, title) in curs.fetchall():
         venues[id]['VenueName'] = title
-    
-    
+
+
     events = {}
     anyvenues = False
     for p in list(posts.values()):
         id = p['post_id']
         m = re.match(title_pattern, post_titles[id])
         if m:
-            for area in m.group(2).replace('/',' ').split():
-                this = Event(p, post_names[id], area, venues, parms)
+            details = m.group(2).split()
+            areas = details[0]
+            if len(details) > 1:
+                ctype = ' ' + ' '.join(details[1:])
+            else:
+                ctype = ''
+            for area in areas.split('/'):
+                this = Event(p, post_names[id], area, venues, parms, ctype)
                 if this.include:
-                    events[area] = this
+                    if area not in events:
+                        events[area] = [this]
+                    else:
+                        events[area].append(this)
                     anyvenues = anyvenues or this.hasvenue
-                    if not events[area].EventURL and not parms.registrationoptional:
-                        print('Area %s does not have a URL' % area)
-            
+                    if not this.EventURL and not parms.registrationoptional:
+                        print(f'Area {area}{ctype} does not have a Registration URL')
+
         else:
             print(p['post_id'], 'does not have an Area')
             continue
@@ -254,19 +268,19 @@ if __name__ == "__main__":
                     output(tocome('Area %s' % a), outfile)
             if pending:
                 output(pending, outfile)
-        
+
         outfile.write("""</tbody>
         </table>\n""")
-        
-        
-    
 
-        
-        
-    
-    
-    
-    
- 
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
