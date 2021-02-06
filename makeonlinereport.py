@@ -8,6 +8,7 @@ import tmglobals
 from tmutil import cleandate, normalize, getGoogleCredentials, getClubBlock
 from simpleclub import Club
 from datetime import datetime, timedelta
+from overridepositions import overrideClubPositions
 
 myglobals = tmglobals.tmglobals()
 
@@ -108,6 +109,17 @@ if __name__ == "__main__":
 
     clubs = Club.getClubsOn(curs)
 
+    # Handle clubs in the special file for overrides
+    overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey, createnewclubs=True)
+
+    # In case any clubs don't have a division/area assignment, get it from the performance tables
+    for c in clubs:
+        if not (clubs[c].division and clubs[c].area):
+            # It's safe to do our own substitution here
+            curs.execute(f'SELECT division, area FROM clubperf WHERE clubnumber = {c} AND entrytype = "L"')
+            (clubs[c].division, clubs[c].area) = curs.fetchone()
+            # print(f'Updated {clubs[c].clubname} to {clubs[c].division}{clubs[c].area}')
+
     allinfo = {}
 
     # Values begin in row 2
@@ -155,7 +167,7 @@ if __name__ == "__main__":
         outfile.write(f'  <td class="rjust">{item.clubnumber}</td>\n')
         outfile.write(f'  <td>{item.link}</td>\n')
         outfile.write(f'  <td>{item.contact}</td>\n')
-        outfile.write(f'  <td>{item.meetingday}: {item.meetingtime}</td>\n')
+        outfile.write(f'  <td>{item.meetingday}{": " if item.meetingday else ""}{item.meetingtime}</td>\n')
         outfile.write('</tr>\n')
 
     outfile.write('  </tbody>\n')
