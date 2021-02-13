@@ -5,81 +5,38 @@
     a complete listing of all trainings in the District. 
 """
 
-import dbconn, tmutil, os
+import sys
 from datetime import datetime
 import tmglobals
+import EventsCalendar
 myglobals = tmglobals.tmglobals()
 
 
 
-def getinfo(curs, table, post_list):
-    venue_numbers = set()
-    posts = {}
-    # Get all the event information from the database
-    stmt = "SELECT post_id, meta_key, meta_value FROM %s WHERE post_id IN (%s)" % (table,post_list)
-    curs.execute(stmt)
-    for (post_id, meta_key, meta_value) in curs.fetchall():
-        if post_id not in posts:
-            posts[post_id] = {'post_id':post_id}
-        posts[post_id][meta_key] = meta_value.strip()
-        if meta_key == '_EventVenueID':
-            venue_numbers.add(meta_value)
-        
-    return (posts, venue_numbers)  
-        
-        
-class Event:
-    ptemplate = '%Y-%m-%d %H:%M:%S'
-    
-    def __init__(self, name, title, contents, venues, parms):
-        for item in contents:
-            ours = item.replace("_","")
-            self.__dict__[ours] = contents[item]
-        if '_EventVenueID' in contents:
-            v = int(self.EventVenueID)
-            for item in venues[v]:
-                ours = item.replace("_","")
-                self.__dict__[ours] = venues[v][item]
-            self.hasvenue = self.VenueAddress and self.VenueCity and self.VenueState
-        else:
-            self.hasvenue = False
-        if self.hasvenue and parms.realvenues:
-            self.addr = f'<td><b>{self.VenueName}</b><br>{self.VenueAddress}<br>{self.VenueCity}, {self.VenueState} {self.VenueZip}</td>'
-        elif parms.realvenues:
-            try:
-                self.addr = f'<td><b>{self.VenueName}</b></td>'
-            except AttributeError:
-                self.addr = '<td></td>'
-        else:
-            self.addr = ''
-        self.start = datetime.strptime(self.EventStartDate, self.ptemplate)
-        self.end = datetime.strptime(self.EventEndDate, self.ptemplate)
-        self.include = (self.start >= parms.start) and (self.end <= parms.end)
-        self.showreg = parms.showpast or (self.end > parms.now)
-        self.name = name
-        self.title = title
 
+class Training:
+    def __init__(self, event):
+        self.event = event
 
-
-            
     def __repr__(self):
-        self.date = self.start.strftime('%A, %B %d').replace(' 0',' ')
-        self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
-        self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
-        try:
-            self.special = '<br>%s' % self.eventspecialnote
-        except AttributeError:
-            self.special = ''
-        if self.showreg and self.EventURL:
-            self.register = ' | <a href="%(EventURL)s">Register</a>' % self.__dict__
-        else:
-            self.register = ""
-        ans = """<tr><td><b>%(name)s</b>%(special)s<br><a href="/%(title)s">More Information</a>%(register)s</td><td><b>%(date)s</b><br>%(time)s%(addr)s</tr>""" % self.__dict__
-        return ans
 
-    
-def output(what, outfile):
-    outfile.write('%s\n' % what)
+        name = f'<b>{self.event.title}</b>{self.event.specialnote}'
+        date = self.event.start.strftime('%B %d').replace(' 0',' ')
+        time = self.event.start.strftime(' %I:%M') + '-' + self.event.end.strftime(' %I:%M %p')
+        time = time.replace(' 0', ' ').replace(' ','').lower()
+
+        if parms.omitvenues:
+            addr = ''
+        else:
+            addr = '<td>' + venuelist[self.event.venue].addr.replace('\n', '<br>') + '</td>'
+
+        if parms.showpast or (self.event.start and self.event.start > parms.now):
+            register = f' | <a href="{self.event.url}">Register</a>'
+        else:
+            register = ""
+        ans = f'<tr><td>{name}<br /><a href="{self.event.name}">More Information</a>'\
+              f'{register}</td><td><b>{date}</b><br>{time}{addr}</td></tr>'
+        return ans
 
 if __name__ == "__main__":
  
@@ -91,7 +48,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--verbose', '-v', action='count')
     parms.add_argument('--uselocal', action='store_true')
-    parms.add_argument('--outfile', type=str, default='trainingschedule.html')
+    parms.add_argument('--outfile', type=str, default='${workdir}/trainingschedule.html')
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
     # Add other parameters here
     myglobals.setup(parms, connect=False)
@@ -114,74 +71,39 @@ if __name__ == "__main__":
             parms.start = parms.start.replace(year=parms.start.year-1)
     # But we don't care about past trainings, set start to today
     parms.start = parms.now.replace(hour=0,minute=0,second=0)
-    
+    parms.end = parms.end.replace(hour=23, minute=59, second=59, microsecond=999999)  # end of day
 
-    # Parse the configuration file
-    config = tmutil.parseWPConfig(open(os.path.join(parms.wpdir, 'wp-config.php'),'r'))
-    if parms.uselocal:
-        config['DB_HOST'] = 'localhost'
+    # Connect to the Events Calendar
+    ec = EventsCalendar.EventsCalendar(parms)
 
-    # Connect to the WP database     
-    conn = dbconn.dbconn(config['DB_HOST'], config['DB_USER'], config['DB_PASSWORD'], config['DB_NAME'])
-    curs = conn.cursor()
-    prefix = config['table_prefix']
-    poststable = prefix + 'posts'
-    optionstable = prefix + 'options'
-    
-    # Find the taxonomy value for 'training'
-    stmt = "SELECT term_id FROM %s WHERE slug = 'training'" % (prefix+'terms')
-    curs.execute(stmt)
-    tax_training = curs.fetchone()[0]
-    
-    # Find all published training events in the database
-    
-    stmt = "SELECT ID, post_title, post_name from %s p INNER JOIN %s t ON p.ID = t.object_id WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s" % (poststable, prefix+'term_relationships')
-    curs.execute(stmt, (tax_training,))
-    post_numbers = []
-    post_titles = {}
-    post_names = {}
-    for (number, title, name) in curs.fetchall():
-        post_numbers.append(number)
-        post_titles[number] = title
-        post_names[number] = name
-    nums = ','.join(['%d' % p for p in post_numbers])
-    
-    
-            
-    # Now, get all the event information from the database
-    (posts, venue_numbers) = getinfo(curs, prefix+'postmeta', nums)
-    # Everything in the postmeta table is a string, including venue_numbers
-    venuelist = ','.join(venue_numbers)
-    
-    # And now, get the venue information.  
-    venues = getinfo(curs, prefix+'postmeta', venuelist)[0]
-    
-    
-    # Patch in the actual name of the venue as VenueName
-    stmt = "SELECT id, post_title from %s WHERE id IN (%s)" % (poststable, venuelist)
-    curs.execute(stmt)
-    for (id, title) in curs.fetchall():
-        venues[id]['VenueName'] = title
-    
-    
-    events = []
-    # We need to keep track of whether any events happen at a real location
-    parms.realvenues = False
-    for p in list(posts.values()):
-        id = p['post_id']
-        this = Event(post_titles[id], post_names[id], p, venues, parms)
-        if this.include:
-            events.append(this)
-            parms.realvenues = parms.realvenues or this.hasvenue
+    # Get relevant training events
+    eventlist = ec.getEvents('training', startfrom=parms.start, endbefore=parms.end)
+
+    # If there are no events, write out the 'tba' message and exit
+    if not eventlist:
+        with open(parms.outfile, 'w') as outfile:
+            outfile.write('<p>No training sessions are currently scheduled.</p>\n')
+        sys.exit()
+
+    # Get venues
+    venuelist = ec.getVenues()
+
+    # If no venues are in the real world, we'll omit the location column
+    realworld = False
+    for v in venuelist.values():
+        realworld = realworld or v.realworld
+
 
     # Do we need to create a venue column?
-    if parms.realvenues:
+    if realworld:
         # At least one event has a real venue, so we need it
         colgroup = '<col> <col> <col>'
         venuecol = '<th><b>Where</b></th>'
+        parms.omitvenues = False
     else:
         colgroup = '<col> <col>'
         venuecol = ''
+        parms.omitvenues = True
             
 
     outfile = open(parms.outfile,'w')
@@ -190,8 +112,8 @@ if __name__ == "__main__":
 <tr><th><b>Training</b></th><th><b>When</b></th>{venuecol}</tr>
 </thead>
 <tbody>\n""")
-    for event in sorted(events,key=lambda l:l.start):
-        output(event, outfile)
+    for event in sorted(eventlist.values(),key=lambda l:l.start):
+        outfile.write(repr(Training(event)))
     
     outfile.write("""</tbody>
     </table>\n""")

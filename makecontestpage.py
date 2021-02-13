@@ -9,92 +9,41 @@ import dbconn, tmutil, sys, os
 from datetime import datetime
 import re
 import tmglobals
+import EventsCalendar
 myglobals = tmglobals.tmglobals()
 
-
-
-def getinfo(curs, table, post_list):
-    venue_numbers = set()
-    posts = {}
-    # Get all the event information from the database
-    stmt = "SELECT post_id, meta_key, meta_value FROM %s WHERE post_id IN (%s)" % (table,post_list)
-    curs.execute(stmt)
-    for (post_id, meta_key, meta_value) in curs.fetchall():
-        if post_id not in posts:
-            posts[post_id] = {'post_id':post_id}
-        posts[post_id][meta_key] = meta_value.strip()
-        if meta_key == '_EventVenueID':
-            venue_numbers.add(meta_value)
-
-    return (posts, venue_numbers)
-
-class Division:
-    def __init__(self, name):
-        self.areas = set()
+class Contest:
+    def __init__(self, name, scope, event=None):
         self.name = name
-
-    def addArea(self, area):
-        self.areas.add(self.name + area)
-
-    def arealist(self):
-        return sorted(self.areas)
-
-class Event:
-    ptemplate = '%Y-%m-%d %H:%M:%S'
-
-    def __init__(self, contents, title, area, venues, parms, ctype):
-        for item in contents:
-            ours = item.replace("_","")
-            self.__dict__[ours] = contents[item]
-        if '_EventVenueID' in contents:
-            v = int(self.EventVenueID)
-            for item in venues[v]:
-                ours = item.replace("_","")
-                self.__dict__[ours] = venues[v][item]
-            self.hasvenue = self.VenueAddress or self.VenueCity or self.VenueState
-        else:
-            self.hasvenue = False
-        if self.hasvenue:
-            self.addr = f'<td><b>{self.VenueName}</b><br>{self.VenueAddress}<br>{self.VenueCity}, {self.VenueState} {self.VenueZip}</td>'
-        else:
-            try:
-                self.addr = f'<td><b>{self.VenueName}</b></td>'
-            except AttributeError:
-                self.addr = '<td></td>'
-        self.area = area
-        self.start = datetime.strptime(self.EventStartDate, self.ptemplate)
-        self.end = datetime.strptime(self.EventEndDate, self.ptemplate)
-        self.include = (self.start >= parms.start) and (self.end <= parms.end)
-        self.showreg = parms.showpast or (self.start > parms.now)
-        self.title = title
-        self.ctype = ctype
-
+        self.scope = scope
+        self.event = event
 
     def __repr__(self):
-        if len(self.area) == 1:
-            self.name = f'<b>Division {self.area}{self.ctype} Contest</b>'
+        if not self.event:
+            return f'<tr><td>{self.scope} {self.name}</td><td>TBA</td></tr>'
         else:
-            self.name = f'<b>Area {self.area}{self.ctype} Contest</b>'
-        self.date = self.start.strftime('%B %d').replace(' 0',' ')
-        self.time = self.start.strftime(' %I:%M') + '-' + self.end.strftime(' %I:%M %p')
-        self.time = self.time.replace(' 0', ' ').replace(' ','').lower()
+            name = f'<b>{self.event.title}</b>'
+            date = self.event.start.strftime('%B %d').replace(' 0',' ')
+            time = self.event.start.strftime(' %I:%M') + '-' + self.event.end.strftime(' %I:%M %p')
+            time = time.replace(' 0', ' ').replace(' ','').lower()
+
         if parms.omitvenues:
-            self.addr = ''
-        if self.showreg and self.EventURL:
-            self.register = ' | <a href="%(EventURL)s">Register</a>' % self.__dict__
+            addr = ''
         else:
-            self.register = ""
-        ans = f'<tr><td>{self.name}<br /><a href="{self.title}">More Information</a>'\
-              f'{self.register}</td><td><b>{self.date}</b><br>{self.time}{self.addr}</td></tr>'
+            addr = '<td>' + venuelist[self.event.venue].addr.replace('\n', '<br>') + '</td>'
+
+        if parms.showpast or (self.event.start and self.event.start > parms.now):
+            register = f' | <a href="{self.event.url}">Register</a>'
+        else:
+            register = ""
+        ans = f'<tr><td>{name}<br /><a href="{self.event.name}">More Information</a>'\
+              f'{register}</td><td><b>{date}</b><br>{time}{addr}</td></tr>'
         return ans
 
-def tocome(what):
-    venuecol = '' if parms.omitvenues else '<td>&nbsp;</td>'
-    return [f'<tr><td>{what}</td><td>TBA</td>{venuecol}']
 
-def output(what, outfile):
-    for item in what:
-        outfile.write('%s\n' % item)
+
+
+
 
 if __name__ == "__main__":
 
@@ -106,7 +55,7 @@ if __name__ == "__main__":
     parms.add_argument('--quiet', '-q', action='count')
     parms.add_argument('--verbose', '-v', action='count')
     parms.add_argument('--uselocal', action='store_true')
-    parms.add_argument('--outfile', type=str, default='contestschedule.html')
+    parms.add_argument('--outfile', type=str, default='${workdir}/contestschedule.html')
     parms.add_argument('--season', type=str, choices=['fall', 'spring', 'Fall', 'Spring', ''], default='')
     parms.add_argument('--year', type=int, default=0)
     parms.add_argument('--showpastregistration', dest='showpast', action='store_true')
@@ -133,144 +82,110 @@ if __name__ == "__main__":
     if parms.year:
         parms.start = parms.start.replace(year=parms.year)
         parms.end = parms.end.replace(year=parms.year)
+    # Make the intervals inclusive of their whole days
+    parms.start = parms.start.replace(hour=0, minute=0, second=0, microsecond=0)
+    parms.end = parms.end.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-    # We need a complete list of Areas and Divisions
-    divisions = {}
+    # Create contest placeholders for each Area and Division
+    contests = {}
     curs.execute("SELECT district, division, area FROM areaperf WHERE entrytype='L' GROUP BY district, division, area")
     for (district, division, area) in curs.fetchall():
         if division != '0D':
-            if division not in divisions:
-                divisions[division] = Division(division)
-            divisions[division].addArea(area)
+            if division not in contests:
+                contests[division] = Contest(division, 'Division')
+            contests[division+area] = Contest(division+area, 'Area')
+
     conn.close()
 
-    # Parse the configuration file
-    config = tmutil.parseWPConfig(open(os.path.join(parms.wpdir, 'wp-config.php'),'r'))
-    if parms.uselocal:
-        config['DB_HOST'] = 'localhost'
+    # Connect to the Events Calendar
+    ec = EventsCalendar.EventsCalendar(parms)
+
+    # Get relevant contest events
+    eventlist = ec.getEvents('contest', startfrom=parms.start, endbefore=parms.end)
+
+    # If there are no events, write out the 'tba' message and exit
+    if not eventlist:
+        with open(parms.outfile, 'w') as outfile:
+            outfile.write('<p>No contests have yet been scheduled.</p>\n')
+        sys.exit()
+
+    # And get all venues for these contests
+    venuelist = ec.getVenues()
+
+    # If no venues are in the real world, we'll omit the location column
+    realworld = False
+    for v in venuelist.values():
+        realworld = realworld or v.realworld
 
 
-    # Connect to the WP database
-    conn = dbconn.dbconn(config['DB_HOST'], config['DB_USER'], config['DB_PASSWORD'], config['DB_NAME'])
-    curs = conn.cursor()
-    prefix = config['table_prefix']
-    poststable = prefix + 'posts'
-    optionstable = prefix + 'options'
+    # Now, put each contest into its place (or places, if it's multi-area)
+    # If a contest covers multiple areas, remove any consecutive ones
 
-    # Find the taxonomy value for 'contest'
-    stmt = "SELECT term_id FROM %s WHERE slug = 'contest'" % (prefix+'terms')
-    curs.execute(stmt)
-    tax_contest = curs.fetchone()[0]
-
-
-    # Find all published contest events in the database
-
-    stmt = "SELECT ID, post_title, post_name from %s p INNER JOIN %s t ON p.ID = t.object_id "\
-           "WHERE p.post_type = 'tribe_events' AND p.post_status = 'publish' AND t.term_taxonomy_id = %%s "\
-            % (poststable, prefix+'term_relationships')
-    curs.execute(stmt, (tax_contest,))
-    post_numbers = []
-    post_titles = {}
-    post_names = {}
-    for (number, title, name) in curs.fetchall():
-        post_numbers.append(number)
-        post_titles[number] = title
-        post_names[number] = name
-    nums = ','.join(['%d' % p for p in post_numbers])
     title_pattern = re.compile(r"""(Division|Area)\s+(.*)\s+Contest""")
 
+    for e in eventlist.values():
+        words = e.title.replace('/', ' ').split()
+        scope = words.pop(0)
+        units = []
 
-
-    # Now, get all the event information from the database
-    (posts, venue_numbers) = getinfo(curs, prefix+'postmeta', nums)
-    # Everything in the postmeta table is a string, including venue_numbers
-    venuelist = ','.join(venue_numbers)
-
-    # And now, get the venue information.  
-    venues = getinfo(curs, prefix+'postmeta', venuelist)[0]
-
-
-    # Patch in the actual name of the venue as VenueName
-    stmt = "SELECT id, post_title from %s WHERE id IN (%s)" % (poststable, venuelist)
-    curs.execute(stmt)
-    for (id, title) in curs.fetchall():
-        venues[id]['VenueName'] = title
-
-
-    events = {}
-    anyvenues = False
-    for p in list(posts.values()):
-        id = p['post_id']
-        m = re.match(title_pattern, post_titles[id])
-        if m:
-            details = m.group(2).split()
-            areas = details[0]
-            if len(details) > 1:
-                ctype = ' ' + ' '.join(details[1:])
-            else:
-                ctype = ''
-            for area in areas.split('/'):
-                this = Event(p, post_names[id], area, venues, parms, ctype)
-                if this.include:
-                    if area not in events:
-                        events[area] = [this]
-                    else:
-                        events[area].append(this)
-                    anyvenues = anyvenues or this.hasvenue
-                    if not this.EventURL and not parms.registrationoptional:
-                        print(f'Area {area}{ctype} does not have a Registration URL')
-
+        # Peel off the Areas or Divisions participating in this contest
+        if scope == 'Division':
+            while len(words[0]) == 1:
+                units.append(words.pop(0))
         else:
-            print(p['post_id'], 'does not have an Area')
-            continue
+            while len(words[0]) == 2:
+                units.append(words.pop(0))
 
+        # Reconstruct the name of the contest
+        tail = '/'.join(units) + ' ' + ' '.join(words)
+        e.title = scope + ' ' + tail
+
+        # Delete the placeholders for this contest, if any.
+        for u in units:
+            try:
+                del contests[u]
+            except KeyError:
+                pass
+
+        # Now, insert the contest in the appropriate slots.
+        last = None
+        for u in units:
+            if last and (u[0] == last[0]) and ((ord(u[-1]) - ord(last[-1])) == 1):
+                # We don't need an entry for this unit after all; it's merged.
+                pass
+            else:
+                contests[u + ' ' + tail] = Contest(u, scope, event=e)
+            last = u
+
+        if not e.url and not parms.registrationoptional:
+            print(f'{e.title} does not have a Registration URL')
+
+
+    # OK, we are finally ready to print!
     # If no event has a venue, we will ignore the venue column
-    if not anyvenues:
+    if not realworld:
         parms.omitvenues = True
 
     outfile = open(parms.outfile,'w')
-    if not events:
-        outfile.write("<p>No contests have yet been scheduled.</p>\n")
-    else:
-        outfile.write("""<table border="1"><colgroup> <col> <col> <col> </colgroup>
+
+    outfile.write("""<table border="1"><colgroup> <col> <col> <col> </colgroup>
     <thead>
 
     </thead>
     <tbody>\n""")
-        outfile.write("<style>td.divhead {background: #F2DF74; font-size: 200%; font-weight: bold; text-align: center; border: none;}</style>\n")
-        for div in sorted(divisions.keys()):
-            d = divisions[div]
+    outfile.write("<style>td.divhead {background: #F2DF74; font-size: 200%; font-weight: bold; text-align: center; border: none;}</style>\n")
+    for c in sorted(contests.values(), key=lambda c:c.name):
+        if c.scope == 'Division':
             if parms.omitvenues:
-                outfile.write('<tr><td colspan="2" class="divhead">Division %s</td></tr>\n' % div)
+                outfile.write(f'<tr><td colspan="2" class="divhead">Division {c.name[0]}</td></tr>\n')
                 outfile.write('<tr><td><b>Area/Division</b></td><td><b>When</b></td></tr>\n')
             else:
-                outfile.write('<tr><td colspan="3" class="divhead">Division %s</td></tr>\n' % div)
+                outfile.write(f'<tr><td colspan="3" class="divhead">Division {c.name[0]}</td></tr>\n')
                 outfile.write('<tr><td><b>Area/Division</b></td><td><b>When</b></td><td><b>Where</b></td></tr>\n')
-            if div in events:
-                output(events[div], outfile)
-            else:
-                output(tocome('<b>Division %s</b>' % div), outfile)
-            pending = None
-            for a in d.arealist():
-                if a in events:
-                    if pending:
-                        if pending.EventURL and (pending.EventURL == events[a].EventURL):
-                            pending.area += '/' + a
-                        else:
-                            output(pending, outfile)
-                            pending = events[a]
-                    else:
-                        pending = events[a]
-                else:
-                    if pending:
-                        output(pending, outfile)
-                        pending = None
-                    output(tocome('Area %s' % a), outfile)
-            if pending:
-                output(pending, outfile)
+        outfile.write(repr(c))
 
-        outfile.write("""</tbody>
-        </table>\n""")
+    outfile.write("""</tbody>
+    </table>\n""")
 
 
 
