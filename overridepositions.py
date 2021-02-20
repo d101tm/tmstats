@@ -65,7 +65,7 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
             clubs[clubnumber] = club
                 
             if log:
-                print(("%8s/%s *** New Club ***" % (club.clubnumber, club.clubname)))
+                print(("%8s/%s *** New or unlisted Club ***" % (club.clubnumber, club.clubname)))
 
         if clubnumber in clubs:
             club = clubs[clubnumber]
