@@ -2,20 +2,16 @@
 """ Create alignment work file based on:
 
     * Information from the tmstats database
-    * Limited to clubs in the latest CSV file in the 'newalignment' Dropbox directory 
-    * Information in that CSV file overrides info from tmstats 
+    * Limited to clubs in the 'workingalignment' Google spreadsheet
+    * Information in that spreadsheet overrides info from tmstats
     
     The output work file is used by other programs in the alignment process such as 'alignmap' and 'makelocationreport'
     """
 
 import sys, os, csv
-import requests
 from simpleclub import Club
-import json
-from datetime import datetime
 from makemap import setClubCoordinatesFromGEO
 from overridepositions import overrideClubPositions
-import time, calendar
 
 import tmglobals, tmparms
 myglobals = tmglobals.tmglobals()
@@ -63,20 +59,21 @@ if __name__ == "__main__":
     # Now, add info from clubperf (and create club.oldarea for each club)
     # We use the 'lastfor' table to get information for all clubs, even those which Toastmasters dropped from
     #   the list because they were suspended for two renewal cycles.
-    curs.execute('''SELECT clubnumber, color, goalsmet, activemembers, clubstatus FROM clubperf 
+    curs.execute('''SELECT clubnumber, clubname, division, area, color, goalsmet, activemembers, clubstatus FROM clubperf 
                     WHERE id in (SELECT clubperf_id FROM lastfor WHERE tmyear = %s)''', (myglobals.tmyear,))
-    for (clubnumber, color, goalsmet, activemembers, clubstatus) in curs.fetchall():
+    for (clubnumber, clubname, division, area, color, goalsmet, activemembers, clubstatus) in curs.fetchall():
         try:
             c = clubs[str(clubnumber)]
         except KeyError:
-            print(f'Location information for club number {clubnumber} not available; is it unlisted with Toastmasters?')
+            print(f'Location information for {clubname} ({clubnumber}) not available; is it unlisted with Toastmasters?')
+            continue
         c.color = color
         c.goalsmet = goalsmet
         c.activemembers = activemembers
-        try:
-            c.oldarea = c.division + c.area
-        except AttributeError:
-            c.oldarea = '0D0A'
+
+        # Take the area information from the clubperf table in case it's an unlisted or new club.
+        c.oldarea = division + area
+
         c.clubstatus = clubstatus
     
     if parms.trust:
