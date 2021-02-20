@@ -110,12 +110,14 @@ if __name__ == "__main__":
                         c.oldarea = '@'
                         c.newarea = '@'
 
-                
-        
+
+
 
     
     # Now, create the output file, sorted by newarea (because that's what we need later on)
-    outfields =  'clubnumber	clubname	oldarea	newarea	likelytoclose   omitfrommap	color	goalsmet	activemembers	meetingday	meetingtime	place	address	city	state	zip	country	latitude	longitude'.split()
+    outfields = ['clubnumber', 'clubname', 'oldarea', 'newarea', 'likelytoclose', 'omitfrommap', 'onlineonly',
+                 'color', 'goalsmet', 'activemembers', 'meetingday', 'meetingtime',
+                 'place', 'address', 'city', 'state', 'zip', 'country', 'latitude', 'longitude']
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
     writer = csv.DictWriter(outfile, fieldnames=outfields, extrasaction='ignore')
     writer.writeheader()

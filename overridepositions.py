@@ -28,7 +28,7 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
     request = service.spreadsheets().values().get(spreadsheetId=overridefile, range='a1:zz999')
     values = request.execute()['values']
     
-    keys = values[0]
+    keys = [''.join(k.lower().split()) for k in values[0]]  # Ensure lowercase, one word
     # Make sure all clubs have all the keys in our override, plus "touchedby"
     requiredkeys = list(keys)
     requiredkeys.append('touchedby')
