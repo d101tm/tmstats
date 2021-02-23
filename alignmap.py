@@ -75,8 +75,9 @@ if __name__ == "__main__":
     setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=False)
 
     # If there are overrides to club positioning, handle them now
+    # This will also add secret clubs if they exist
     if parms.mapoverride:
-        overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey)
+        overrideClubPositions(clubs, parms.mapoverride, parms.googlemapsapikey, createnewclubs=True)
     
 
     # Process new grouping
@@ -90,9 +91,9 @@ if __name__ == "__main__":
             print('Deleting', c)
             del clubs[cnum]
 
-    # Force all clubs to be included in the alignment map
+    # Force all clubs to be included in the alignment map unless they are online-only
     for cnum in clubs:
-        clubs[cnum].omitfrommap = False
+        clubs[cnum].omitfrommap = clubs[cnum].onlineonly
         
     # Make the club entries for the map
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
