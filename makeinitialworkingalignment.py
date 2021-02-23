@@ -32,6 +32,7 @@ headers = [
         "color",
         "goalsmet",
         "activemembers",
+        "onlineonly",
         "meetingday",
         "meetingtime",
         "place",
