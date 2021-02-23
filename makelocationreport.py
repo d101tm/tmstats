@@ -312,7 +312,7 @@ if __name__ == "__main__":
     # And read in the alignment.  
     reader = csv.DictReader(open(parms.infile, 'r'))
     alignfields = ['newarea', 'newdivision', 'likelytoclose', 'meetingday', 'meetingtime', 'place', 'address', 'city',
-            'state', 'zip', 'latitude', 'longitude']
+            'state', 'zip', 'latitude', 'longitude', 'onlineonly']
     for row in reader:
         newarea = row['newarea']
         if not newarea:
@@ -390,11 +390,14 @@ if __name__ == "__main__":
                     if parms.color:
                         outrow.append('  <td class="members">{activemembers}</td>\n')
                         outrow.append('  <td class="goals">{goalsmet}</td>\n')
-                    outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
+                    if row['onlineonly'].lower().strip().startswith('y'):
+                        outrow.append('  <td class="loc"><b>Online Club</b></td>')
+                    else:
+                        outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
+                        locations.append((row['clubname'], row['latitude'], row['longitude']))
                     outrow.append('  <td class="mtg"><b>{meetingday}</b><br />{meetingtime}</td>')
                     outrow.append('</tr>')
                     accum.append(('\n'.join(outrow)).format(**row))
-                    locations.append((row['clubname'], row['latitude'], row['longitude']))
                     marker = chr(ord(marker)+1)
             
                 closearea(outfile, accum, locations, gonefrom.get(area,[]))
