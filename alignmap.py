@@ -128,6 +128,8 @@ if __name__ == "__main__":
 
         sites = {}         # (lat,lng) ==> Division
         for c in list(clubs.values()):
+            if c.onlineonly:
+                continue  # Ignore online-only clubs
             point = (c.latitude, c.longitude)
             if point in sites:
                 if c.division != sites[point]:
