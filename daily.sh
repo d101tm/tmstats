@@ -96,7 +96,7 @@ if [[ "$dorun" = "yes" ]] ; then
         rc=$?
         echo "allstats rc = $rc"
         if [[ "$rc" == 0 ]] ; then
-            isreal && cp performance.html ~/www/files/reports/
+            isreal && cp performance.* ~/www/files/reports/
         fi
 
     fi

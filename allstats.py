@@ -259,6 +259,7 @@ class Club:
         if self.chartered:
             self.parentdiv.charter += 1
             self.parentarea.charter += 1
+        self.csvrow = []
 
             
     def __repr__(self):
@@ -311,6 +312,12 @@ class Club:
             else:
                 ret += td(self.name, namecolor, docclass="name wide", colspan="2")
             ret += td(' ', docclass="sep")
+
+            # Build the CSV data
+            self.csvrow.append(self.division + self.area.lstrip('0'))
+            self.csvrow.append(self.clubnumber.lstrip('0'))
+            self.csvrow.append(self.division)
+            self.csvrow.append(self.name)
             
         ret += "\n    "
         
@@ -340,6 +347,18 @@ class Club:
             else:
                 ret += td('')
             ret += td(' ', docclass="sep")
+
+            # Build the CSV data
+            self.csvrow.append('')
+            self.csvrow.append(self.base)
+            for r in self.monthly:
+                self.csvrow.append(r)
+            self.csvrow.append(max(0,need))
+
+            # And two empty columns because that's what's been requested
+            self.csvrow.append('')
+            self.csvrow.append('')
+
         ret += '\n'
         
         # Status and Goals
@@ -426,7 +445,17 @@ class Club:
             else:
                 useclass = None
             ret += td(renewals, docclass=useclass, forceclass="grid") + td(self.dcpitems[12], docclass=useclass, forceclass="grid")   
-            
+
+            # And add data to the CSV list
+            self.csvrow.append(self.goals)
+            # We are in the Pathways era, so we don't worry about pre-2019 results
+            for item in self.pathitems:
+                self.csvrow.append(item)
+            for item in self.dcpitems[6:10]:
+                self.csvrow.append(item)
+            self.csvrow.append(renewals)
+            self.csvrow.append(self.dcpitems[12])
+
         # Visits
         
         if headers:
@@ -438,13 +467,20 @@ class Club:
             ret += td(' ', docclass="sep")
             ret += td(self.novVisit, "grid", "bold madeit" if self.novVisit > 0 else "")
             ret += td(self.mayVisit, "grid", "bold madeit" if self.mayVisit > 0 else "")
+
+            # And the CSV items:
+            self.csvrow.append(self.novVisit)
+            self.csvrow.append(self.mayVisit)
+
         ret += "\n</tr>"
         row2 += "\n</tr>"
         if headers:
             return ret + row2
         else:
             return ret
-            
+
+
+
 class Aggregate():
     """ Behavior common to a division or an area """
     
@@ -556,6 +592,7 @@ parms.add_argument('--outdir', default='${workdir}', help='Where to put the outp
 parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
 parms.add_argument("--title", dest="title", default=None, help="Title for the HTML page.")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
+parms.add_argument("--csvfile", dest="csvfile", default="performance.csv", help="Output file for performance CSV")
 # Do global setup
 myglobals.setup(parms)
 
@@ -775,8 +812,16 @@ for row in curs.fetchall():
 outfiles = Outputfiles()
 
 outfile = outfiles.add(open(os.path.join(parms.outdir, parms.outfile), "w"))
-    
-    
+
+if parms.csvfile and not parms.testalignment:
+    csvfile = open(os.path.join(parms.outdir, parms.csvfile), "w")
+    csvfile.write("Area,Club Number,Division,Club Name,,"\
+                  "Base,Jul,Aug,Sep,Oct,Nov,Dec,Jan,Feb,Mar,Apr,May,Jun,Need,"\
+                  ",,,1,2,3,4,5,6,7,8,9a,9b,Ren.,OL,1,2,Edu,RT,ST,P1,P1-1,P2,P3,OT,T,B2\n")
+    csvwriter = csv.writer(csvfile, csv.excel)
+else:
+    csvwriter = None
+
 
 # One division at a time, please...
 alldivs = sorted(divisions.keys())
@@ -813,7 +858,8 @@ for d in alldivs:
         for club in sorted(thisarea.clubs, key=attrgetter('name')):
             outfiles.write(club.tr())
             outfiles.write('\n')
-
+            if csvwriter:
+                csvwriter.writerow([item if not isinstance(item, int) or item != 0 else '' for item in club.csvrow])
 
         outfiles.write('</tbody>\n')    
         outfiles.write('</table>\n')
@@ -925,6 +971,8 @@ for d in alldivs:
  
 
 outfiles.close(outfile)
+if csvwriter:
+    csvfile.close()
 
 #furl = 'file:///' + os.getcwd() + '/out.html'
 #webbrowser.open(furl)
