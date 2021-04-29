@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """ This program combines info about a Toastmasters District's clubs into one easy-to-read report.  """
 
-import  datetime,  os, sys,  math, time
-import dbconn, tmparms, latest, os, sys, argparse
+import  datetime,  math, time
+import tmparms, latest, os, sys
 from tmutil import stringify
 import csv
 
@@ -259,15 +259,54 @@ class Club:
         if self.chartered:
             self.parentdiv.charter += 1
             self.parentarea.charter += 1
-        self.csvrow = []
 
             
     def __repr__(self):
         return self.name + " " + self.clubnumber + " " + repr(self.monthly) + " " + repr(self.dcpitems)
-        
+    
+    @property
+    def need(self):
+        try:
+            return min(20, self.base + 5) - self.current
+        except TypeError:
+            return 0
 
+    @property
+    def renewals(self):
+        return self.dcpitems[10] + self.dcpitems[11]
 
-        
+    @property
+    def csvrow(self):
+        res = []
+        # Start with the identifying information
+        res.append(self.division + self.area.lstrip('0'))
+        res.append(self.clubnumber.lstrip('0'))
+        res.append(self.division)
+        res.append(self.name)
+
+        # Add membership
+        res.append(self.base)
+        for r in self.monthly:
+            res.append(r)
+        res.append(max(0, self.need))
+
+        # And add DCP data
+        res.append(self.goals)
+        # We are in the Pathways era, so we don't worry about pre-2019 results
+        for item in self.pathitems:
+            res.append(item)
+        for item in self.dcpitems[6:10]:
+            res.append(item)
+        res.append(self.renewals)
+        res.append(self.dcpitems[12])
+
+        # And AD visits:
+        res.append(self.novVisit)
+        res.append(self.mayVisit)
+
+        # That's it!
+        return res
+
     def tr(self, headers=False):
         """ Return the table row for this club or the headers.  It's in one place for safety. """
         
@@ -313,11 +352,7 @@ class Club:
                 ret += td(self.name, namecolor, docclass="name wide", colspan="2")
             ret += td(' ', docclass="sep")
 
-            # Build the CSV data
-            self.csvrow.append(self.division + self.area.lstrip('0'))
-            self.csvrow.append(self.clubnumber.lstrip('0'))
-            self.csvrow.append(self.division)
-            self.csvrow.append(self.name)
+
             
         ret += "\n    "
         
@@ -338,26 +373,14 @@ class Club:
             for r in self.monthly:
                 ret += "\n        "
                 ret += td(r, colorcode(r))
-            try:
-                need = min(20, self.base + 5) - self.current
-            except TypeError:
-                need = 0
-            if (not self.suspended) and (need > 0):
-                ret += td(need, forceclass="bold")
+            
+            if (not self.suspended) and (self.need > 0):
+                ret += td(self.need, forceclass="bold")
             else:
                 ret += td('')
             ret += td(' ', docclass="sep")
 
-            # Build the CSV data
-            self.csvrow.append('')
-            self.csvrow.append(self.base)
-            for r in self.monthly:
-                self.csvrow.append(r)
-            self.csvrow.append(max(0,need))
-
-            # And two empty columns because that's what's been requested
-            self.csvrow.append('')
-            self.csvrow.append('')
+            
 
         ret += '\n'
         
@@ -439,23 +462,13 @@ class Club:
 
             # Renewal + Officer List
             ret += "\n    "
-            renewals = self.dcpitems[10] + self.dcpitems[11]
-            if (renewals > 0) and (self.dcpitems[12] > 0):
+            if (self.renewals > 0) and (self.dcpitems[12] > 0):
                 useclass = "madeit"
             else:
                 useclass = None
-            ret += td(renewals, docclass=useclass, forceclass="grid") + td(self.dcpitems[12], docclass=useclass, forceclass="grid")   
+            ret += td(self.renewals, docclass=useclass, forceclass="grid") + td(self.dcpitems[12], docclass=useclass, forceclass="grid")
 
-            # And add data to the CSV list
-            self.csvrow.append(self.goals)
-            # We are in the Pathways era, so we don't worry about pre-2019 results
-            for item in self.pathitems:
-                self.csvrow.append(item)
-            for item in self.dcpitems[6:10]:
-                self.csvrow.append(item)
-            self.csvrow.append(renewals)
-            self.csvrow.append(self.dcpitems[12])
-
+           
         # Visits
         
         if headers:
@@ -467,10 +480,6 @@ class Club:
             ret += td(' ', docclass="sep")
             ret += td(self.novVisit, "grid", "bold madeit" if self.novVisit > 0 else "")
             ret += td(self.mayVisit, "grid", "bold madeit" if self.mayVisit > 0 else "")
-
-            # And the CSV items:
-            self.csvrow.append(self.novVisit)
-            self.csvrow.append(self.mayVisit)
 
         ret += "\n</tr>"
         row2 += "\n</tr>"
@@ -589,7 +598,7 @@ parms = tmparms.tmparms(description=__doc__)
 parms.add_argument("--tmyear", default=None, action="store", dest="tmyear", help="TM Year for the report.  Default is latest year in the database; '2014' means '2014-15'.")
 parms.add_argument("--testalignment", dest="testalignment", default=None, help="CSV file with alignment information to create a report with a new alignment.")
 parms.add_argument('--outdir', default='${workdir}', help='Where to put the output files')
-parms.add_argument("--outfile", dest="outfile", default="stats.html", help="Output file for the whole District's data")
+parms.add_argument("--outfile", dest="outfile", default="performance.html", help="Output file for the whole District's data")
 parms.add_argument("--title", dest="title", default=None, help="Title for the HTML page.")
 parms.add_argument("--makedivfiles", dest="makedivfiles", action="store_true", help="Specify to create individual HTML files for each Division")
 parms.add_argument("--csvfile", dest="csvfile", default="performance.csv", help="Output file for performance CSV")
@@ -815,9 +824,9 @@ outfile = outfiles.add(open(os.path.join(parms.outdir, parms.outfile), "w"))
 
 if parms.csvfile and not parms.testalignment:
     csvfile = open(os.path.join(parms.outdir, parms.csvfile), "w")
-    csvfile.write("Area,Club Number,Division,Club Name,,"\
+    csvfile.write("Area,Club Number,Division,Club Name,"\
                   "Base,Jul,Aug,Sep,Oct,Nov,Dec,Jan,Feb,Mar,Apr,May,Jun,Need,"\
-                  ",,,1,2,3,4,5,6,7,8,9a,9b,Ren.,OL,1,2,Edu,RT,ST,P1,P1-1,P2,P3,OT,T,B2\n")
+                  "Goals,DCP1,DCP2,DCP3,DCP4,DCP5,DCP6,DCP7,DCP8,Trn1,Trn2,Ren.,OL,Visit1,Visit2\n")
     csvwriter = csv.writer(csvfile, csv.excel)
 else:
     csvwriter = None
@@ -963,7 +972,7 @@ for d in alldivs:
         outfiles.write('<div class="finale">\n')
     outfiles.write('<p>' + '<br />'.join(freshness) + '</p>')
     if divfile:
-        divfile.write('<p>Click <a href="stats.html">here</a> for full District report.</p>\n')
+        divfile.write(f'<p>Click <a href="{parms.outfile}">here</a> for full District report.</p>\n')
     if d != alldivs[-1]:
         outfiles.write('</div>\n')
     if divfile:
@@ -974,5 +983,4 @@ outfiles.close(outfile)
 if csvwriter:
     csvfile.close()
 
-#furl = 'file:///' + os.getcwd() + '/out.html'
-#webbrowser.open(furl)
+
