@@ -119,7 +119,7 @@ if __name__ == "__main__":
         if (row['First Name']==' '  or row['Last Name']==' '):
             break
         if type(row['First Name']) !=int or  type(row['Last Name'] !=int ):
-            ambassadors.append(Ambassador(row))
+            ambassadors.append(Ambassador(row)) 
         
     # Sort by points, then name:
     ambassadors.sort(key=lambda r:r.sortkey())
