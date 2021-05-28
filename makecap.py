@@ -115,9 +115,9 @@ if __name__ == "__main__":
         
     ambassadors = []        
     for row in sheet.get_all_records(head=2, empty2zero=True):
-        #if (row['First Name'] + row['Last Name']) == 0:
-        if (row['First Name']==' '  or row['Last Name']==' '):
+        if (row['First Name'] + row['Last Name']) == 0 or (row['First Name']==' '  or row['Last Name']==' '):
             break
+        #print(row['First Name'],type(row['First Name']),row['Last Name'],type(row['Last Name']))
         if type(row['First Name']) !=int or  type(row['Last Name'] !=int ):
             ambassadors.append(Ambassador(row)) 
         
