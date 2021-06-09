@@ -196,7 +196,7 @@ if __name__ == "__main__":
     parms = tmparms.tmparms()
     parms.add_argument('--quiet', '-q', action='count', default=0)
     parms.add_argument('--infile', default='d101align.csv')
-    parms.add_argument('--outfile', default='d101location.html')
+    parms.add_argument('--outfile', default='d101-locations-by-area.html')
     parms.add_argument('--outdir', default=None, help='Where to put the output file')
     parms.add_argument('--color', action='store_true')
     parms.add_argument('--map', action='store_true')
