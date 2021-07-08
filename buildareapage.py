@@ -187,7 +187,7 @@ for c in sorted(clubs):
     Area.find(club.division, club.area).addclub(club)
 
 # OK, now we have the club info.  Let's get the Area Director/Division Director information.
-for row in GSheet(parms.officers, apikey=parms.googlesheetsapikey):
+for row in GSheet(parms.officers, apikey=parms.googlesheetsapikey, sheetname="Current"):
     for k in row.fieldnames:
         setattr(row, k, ' '.join(str(getattr(row, k))).split())
     if row.title and row.first:
