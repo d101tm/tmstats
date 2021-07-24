@@ -9,7 +9,7 @@ import tmglobals
 myglobals = tmglobals.tmglobals()
 
 
-headers = "Div,Area,Club Name,Number,Status,Trained,Pres,VPE,VPM,VPPR,Sec,Treas,SAA"
+headers = "Div,Area,Club Name,Number,Trained,Pres,VPE,VPM,VPPR,Sec,Treas,SAA"
 sheets = {}
 colors = {}
 colors['lucky'] = '#ADD8E6'
@@ -28,7 +28,7 @@ class mysheet:
     @classmethod
     def setup(self, outbook):
         # Create the format objects we're going to need
-        self.align = 3*['left'] + ['right'] + ['left'] + ['right'] + 7*['center']
+        self.align = 3*['left'] + ['right'] + ['right'] + 7*['center']
 
         self.formats = {}
         self.formats[''] = [outbook.add_format({'border':1, 'align': self.align[i]}) for i in range(len(self.align))]
@@ -46,7 +46,7 @@ class mysheet:
         self.sheet.set_column('B:B', 4)
         self.sheet.set_column('C:C', 45)
         self.sheet.set_column('D:D', 8)
-        self.sheet.set_column('G:M', 5)
+        self.sheet.set_column('G:L', 5)
         self.row = 1
         sheets[divname] = self
         
@@ -59,14 +59,27 @@ class mysheet:
             format = self.formats['untrained']
         else:
             format = self.formats['']
-        for i in range(len(row)):
-            self.sheet.write(self.row, i, row[i], format[i])
+            
+        self.sheet.write(self.row, 0, row.division, format)
+        self.sheet.write(self.row, 1, row.area, format)
+        self.sheet.write(self.row, 2, row.clubname, format)
+        self.sheet.write(self.row, 3, row.clubnumber, format)
+        self.sheet.write(self.row, 4, row.trained, format)
+        self.sheet.write(self.row, 5, row.pres, format)
+        self.sheet.write(self.row, 6, row.vpe, format)
+        self.sheet.write(self.row, 7, row.vpm, format)
+        self.sheet.write(self.row, 8, row.vppr, format)
+        self.sheet.write(self.row, 9, row.sec, format)
+        self.sheet.write(self.row, 10, row.treas, format)
+        self.sheet.write(self.row, 11, row.saa, format)
+        
+
         self.row += 1
     
 
 def makediv(outfile, outbook, divname, curdiv):
     divname = divname
-    mysheet(outbook, divname)
+ #   mysheet(outbook, divname)
     if curdiv:
         outfile.write('</tbody>\n')
         outfile.write('</table>\n')
@@ -79,7 +92,6 @@ def makediv(outfile, outbook, divname, curdiv):
               '<col span="1" style="width: 5%;">' + # /Area
               '<col span="1" style="width: 35%; ">' + # /Club Name
               '<col span="1" style="width: 9%;">' + # /Club Number
-              '<col span="1" style="width: 6%;">' + # /Status
               '<col span="1" style="width: 5%;">' + # / Trained
               '<col span="1" style="width: 5%;">' + # / President
               '<col span="1" style="width: 5%;">' + # / VPE
@@ -94,13 +106,40 @@ def makediv(outfile, outbook, divname, curdiv):
     outfile.write('</td></tr></thead>\n')
     outfile.write('<tbody>')
 
+class Training:
+    @staticmethod
+    def getcontent(item):
+        return ''.join(item.stripped_strings)
+
+    def __init__(self, cols):
+        self.division = self.getcontent(cols[0])
+        self.area = self.getcontent(cols[1])
+        self.clubnumber = self.getcontent(cols[2])
+        self.clubname = self.getcontent(cols[3])
+        self.pres = self.getcontent(cols[4])
+        self.vpe = self.getcontent(cols[5])
+        self.vpm = self.getcontent(cols[6])
+        self.vppr = self.getcontent(cols[7])
+        self.sec = self.getcontent(cols[8])
+        self.treas = self.getcontent(cols[9])
+        self.saa = self.getcontent(cols[10])
+        self.trained = int(self.getcontent(cols[11]))
+
+    def __lt__(self, other):
+        return (self.division, self.area, int(self.clubnumber)) < (other.division, other.area, int(other.clubnumber))
+
+    def __repr__(self):
+        return f'{self.division}{self.area}  {self.clubnumber}  {self.clubname}'
+    
+    
+
 if __name__ == "__main__":
  
     import tmparms
     
     # Handle parameters
     parms = tmparms.tmparms()
-    parms.add_argument('report', type=str, nargs='?', default='latesttraining.html', help='Name of the training report file, default is %(default)s')
+    parms.add_argument('report', type=str, nargs='?', default='$workdir/latesttraining.html', help='Name of the training report file, default is %(default)s')
     parms.add_argument('--require9a', action='store_true', help='If true, only clubs which achieved goal 9a (4 or more officers trained during first cycle) are eligible.')
     parms.add_argument('--bonus9a', action='store_true', help='If true, clubs get a bonus reward if they trained at least 4 officers in the first cycle.')
     parms.add_argument('--reward', type=str, default='$50 in District Credit')
@@ -113,6 +152,7 @@ if __name__ == "__main__":
     myglobals.setup(parms)
     curs = myglobals.curs
     conn = myglobals.conn
+    os.chdir(parms.workdir)
     
     # If we're in the first cycle, ignore 9a, even if specified, unless lastmonth is explicit (to allow for historical reports)
     thismonth = datetime.today().month
@@ -154,63 +194,40 @@ if __name__ == "__main__":
  
     soup = BeautifulSoup(report,features="html.parser")
 
-    # This code matches Toastmasters WHQ's site as of January 11, 2018.  They make FREQUENT
+    # This code matches Toastmasters WHQ's site as of July, 2021.  They make FREQUENT
     #    changes to the form used for training, so this code is very volatile, and you may
     #    want to look at earlier versions of the code to see what I had to do in previous
-    #    years.  
+    #    years.
+    # For the format used 2018-June 2021: https://github.com/d101tm/tmstats/blob/d59a1c42604a7f934ac412cdde332d7c75894b94/training.py
     # For the format used in 2016 and 2017:  https://github.com/d101tm/tmstats/blob/0db3a0b0dd9eba3e14af6ae66dbdf7dc68bf9d69/training.py
     # For the format used in 2015: https://github.com/d101tm/tmstats/blob/8c05f299e48cd47a264931c2fd051c6c23ecf734/training.py
 
-    # For 2018, the code has one <div class="division"> tag for each Division in the District.
-    # The actual data lives in a table for each area inside those divs.
-    # Each club is in one row of the table, which is laid out as follows:
-    # Sequence, Club Name, Status, Club Number, Pres, VPE, VPM, VPPR, Sec, Treas, SAA, Total
-    # Each officer's status is represented by an <input> element of type 'checkbox'.
-    #   The item has the 'checked' attribute if the officer has been trained.
+    # In July, 2021 the file changed again, this time including a DataTable, which we'll parse.
+    # The DataTable contains a table whose body contains rows which represent the actual training data
+    traininginfo = soup.select('div#club_officer_training_report_DataTable  table  tbody  tr')
 
-    # Find all the divisions and loop through them
-    divisions = soup.select('div[class="division"]')
 
-    for thediv in divisions:
-        # Find all the areas and loop through them
-        areatables = thediv.find_all('table')
-        for table in areatables:
-            rows = table.find_all('tr')
-            for row in rows:
-                cells = row.find_all('td')
-                if not cells:
-                    # If this is an Area header row, pick up the Area and Division to use with the clubs in the Area.
-                    info = [' '.join([s for s in f.stripped_strings]) for f in row.select('.col-md-2')][0].replace('&nbsp;', ' ')
-                    m = re.match(r'Area\s*(\S*).*Division\s*(\S*)', info)
-                    if m:
-                        area = m.group(1)
-                        division = m.group(2)
-                    continue   # Must be a header row
-                clubname = ''.join(cells[1].stripped_strings)
-                clubstatus = ''.join(cells[2].stripped_strings)
-                clubnumber = ''.join(cells[3].stripped_strings)
-                # Omit suspended clubs
-                if clubstatus.startswith('S'):
-                    continue
-                res = [division, area, clubname, clubnumber, clubstatus]
-                offlist = []
-                trained = 0
-                for o in row.find_all('input', type='checkbox'):
-                    if 'checked' in o.attrs:
-                        trained += 1
-                        offlist.append('X')
-                    else:
-                        offlist.append(' ')
-                res.append(trained)
-                res.extend(offlist)
-                results.append(res)                
+
+
+    # Each row represents a club; the columns are:
+    #  Division, Area, Club ID, Club Name, President, VPE, VPM, VPPR, Secretary, Treasurer, SAA, Total Trained
+    # The clubs are not in a useful order, but that doesn't matter
+    # Note that the datatable doesn't include status.
+    results = []
+    for row in traininginfo:
+        cols = row.select('td')
+        clubinfo = Training(cols)
+        results.append(clubinfo)
+       
+
+
 
 
     # Now, create the HTML result file and the matching Excel spreadsheet
-    results.sort(key=lambda x:(x[0], x[1], x[3]))
+    results = sorted(results)
     outfile = open('trainingreport.html', 'w')
-    outbook = xlsxwriter.Workbook('trainingreport.xlsx')
-    mysheet.setup(outbook)
+ #   outbook = xlsxwriter.Workbook('trainingreport.xlsx')
+ #   mysheet.setup(outbook)
     outfile.write("""<html><head><title>Training Status</title>
             <style type="text/css">
             body {font-family: "Myriad-Pro", Arial, sans serif}
@@ -234,48 +251,52 @@ if __name__ == "__main__":
     curarea = ''
 
     lucky = []
+    outbook = None
 
     for row in results:
-        if row[0] != curdiv:
-            makediv(outfile, outbook, row[0], curdiv)
-            curdiv = row[0]
+        if row.division != curdiv:
+            makediv(outfile, outbook, row.division, curdiv)
+            curdiv = row.division
         outfile.write('<tr')
         classes = []
-        if row[1] != curarea:
+        if row.area != curarea:
             classes.append('firstarea')
-            curarea = row[1]
-        if row[5] == 7:
+            curarea = row.area
+        if row.trained == 7:
             classes.append('lucky')
             if parms.require9a:
-                if row[3] in qualified:
+                if row.clubnum in qualified:
                     lucky.append(row)
             else:    
                 lucky.append(row)
-        elif row[5] >= 4:
+        elif row.trained >= 4:
             classes.append('dcp')
-        elif row[5] == 0:
+        elif row.trained == 0:
             classes.append('untrained')
         if classes:
             outfile.write(' class="%s"' % ' '.join(classes))
         outfile.write('>\n')
-        for partnum in range(len(row)):
-            outfile.write('<td')
-            if partnum == 2:
-                outfile.write(' class="clubname"')
-            elif partnum == 3:
-                outfile.write(' class="clubnum"')
-            elif partnum == 5:
-                outfile.write(' class="trained"')
-            elif partnum > 5:
-                outfile.write(' class="tstat"')
-            outfile.write('>%s</td>\n' % row[partnum])
+        outfile.write(f'<td>{row.division}</td>')
+        outfile.write(f'<td>{row.area}</td>')
+        outfile.write(f'<td class="clubname">{row.clubname}</td>')
+        outfile.write(f'<td class="clubnum">{row.clubnumber}</td>')
+        outfile.write(f'<td class="trained">{row.trained}</td>')
+        outfile.write(f'<td class="tstat">{row.pres}</td>')
+        outfile.write(f'<td class="tstat">{row.vpe}</td>')
+        outfile.write(f'<td class="tstat">{row.vpm}</td>')
+        outfile.write(f'<td class="tstat">{row.vppr}</td>')
+        outfile.write(f'<td class="tstat">{row.sec}</td>')
+        outfile.write(f'<td class="tstat">{row.treas}</td>')
+        outfile.write(f'<td class="tstat">{row.saa}</td>')
         outfile.write('</tr>\n')
-        sheets[curdiv].addrow(row, classes)
+
+
+ #       sheets[curdiv].addrow(row, classes)
         
     outfile.write('</tbody>\n</table>\n</div>\n')
     outfile.write('</body></html>\n')
     outfile.close()
-    outbook.close()
+#    outbook.close()
 
     # Now, create the Lucky 7 file with a name based on today's date
     season = 'winter' if parms.lastmonth == 'February' else 'summer'
