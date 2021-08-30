@@ -319,8 +319,7 @@ if __name__ == "__main__":
     # Set up to use getClubBlock
     class localclub:
         def __init__(self, club):
-            self.clubname = club[2]
-
+            self.clubname = club
     if parms.bonus9a and parms.lastmonth == 'February':
      
         #outfile.write('<p>Clubs which have all 7 Officers attend <a href="/training">Club Officer Training</a> during the December-February training period and which trained at least 4 Officers during June-August earn <b>%s</b> and join the <b>%s</b>.</p>\n' % (parms.bonusreward, parms.phase2name))
@@ -341,10 +340,12 @@ if __name__ == "__main__":
 
 
     if lucky:
-        luckyclubs = [localclub(club) for club in lucky]
-        outfile.write('<p><b>Congratulations</b> to ')
-        outfile.write(tmutil.getClubBlock(luckyclubs))
-        outfile.write(' for earning %s and joining the %s.</p>\n' % (parms.reward, parms.phase1name))
+        #luckyclubs = [localclub(club) for club in lucky]
+        for luckyclubs in lucky:
+            outfile.write('<p><b>Congratulations</b> to ')
+           # outfile.write(tmutil.getClubBlock(luckyclubs))
+            outfile.write(str(luckyclubs))
+            outfile.write(' for earning %s and joining the %s.</p>\n' % (parms.reward, parms.phase1name))
 
-    open('training-date.html', 'w').write("""<p>Training data was last updated on %s.</p>
+        open('training-date.html', 'w').write("""<p>Training data was last updated on %s.</p>
     """ % ( datetime.today().strftime('%m/%d/%Y'),))
