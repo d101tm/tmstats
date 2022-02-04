@@ -2,7 +2,8 @@
 """ Try to convert the Toastmasters training page into something tolerable """
 from bs4 import BeautifulSoup
 import sys, re, xlsxwriter
-import tmutil, sys, os
+from tmutil import getClubBlock
+import dbconn, tmutil, sys, os
 from simpleclub import Club
 from datetime import datetime
 import tmglobals
@@ -310,7 +311,8 @@ if __name__ == "__main__":
         if parms.bonus9a:
             onlylucky = []
             for club in lucky:
-                if club[3] in qualified:
+                if club.clubname in qualified:
+                #if club[3] in qualified:
                     bonus.append(club)
                 else:
                     onlylucky.append(club)
@@ -337,15 +339,29 @@ if __name__ == "__main__":
     else:
         outfile.write('<p>Join the <b>%s</b> and earn <b>%s</b> by having all seven Club Officers attend <a href="/training">Club Officer Training</a> in the %s period.</p>\n' % (parms.phase1name, parms.reward, parms.period))
  
-
-
+    llen=0;
     if lucky:
         #luckyclubs = [localclub(club) for club in lucky]
+        outfile.write('<p><b>Congratulations</b> to ')
         for luckyclubs in lucky:
-            outfile.write('<p><b>Congratulations</b> to ')
-           # outfile.write(tmutil.getClubBlock(luckyclubs))
-            outfile.write(str(luckyclubs))
-            outfile.write(' for earning %s and joining the %s.</p>\n' % (parms.reward, parms.phase1name))
+            llen=llen+1
+            #print(luckyclubs.clubname,llen,len(lucky))
+            #if len(lucky)==1:
+            #    outfile.write(clubname )
+            if llen==len(lucky)-1: 
+                clubname=(luckyclubs.clubname)+' and '
+                #print('2nd to',clubname)
+                outfile.write(clubname )
+            elif llen <= len(lucky)-1:
+                clubname=(luckyclubs.clubname)+', '
+                #print('beg',clubname)
+                outfile.write(clubname )
+            elif llen==len(lucky):
+                clubname=(luckyclubs.clubname)
+                #print('last',clubname)
+                outfile.write(clubname )
+            #outfile.write(tmutil.getClubBlock(clubname))
+        outfile.write(' for earning %s and joining the %s.</p>\n' % (parms.reward, parms.phase1name))
 
         open('training-date.html', 'w').write("""<p>Training data was last updated on %s.</p>
     """ % ( datetime.today().strftime('%m/%d/%Y'),))
