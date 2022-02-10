@@ -52,7 +52,7 @@ echo $ep
 echo
 echo Running makelocationreport without color
 echo $bp
-"$SCRIPTPATH"/makelocationreport.py --infile $workfile --outdir "${alignmentdir}" || exit 5
+"$SCRIPTPATH"/makelocationreport.py --infile $workfile --outfile d101location.html --outdir "${alignmentdir}" || exit 5
 echo $ep
 echo
 echo Running clubchanges
