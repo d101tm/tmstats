@@ -92,7 +92,7 @@ if [[ "$dorun" = "yes" ]] ; then
     ### Run the allstats report
     if (( $haveboth == 0 )) ; then
         echo "running allstats"
-        $SCRIPTPATH/allstats.py --outfile performance.html
+        $SCRIPTPATH/allstats.py --outfile performance_off.html
         rc=$?
         echo "allstats rc = $rc"
         if [[ "$rc" == 0 ]] ; then
