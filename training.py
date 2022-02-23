@@ -311,9 +311,10 @@ if __name__ == "__main__":
         if parms.bonus9a:
             onlylucky = []
             for club in lucky:
-                if club.clubname in qualified:
-                #if club[3] in qualified:
-                    bonus.append(club)
+                if club.clubnumber in qualified:
+                    #if club[3] in qualified:
+                    bonus.append(club.clubname)
+                    #bonus.append(clubname)
                 else:
                     onlylucky.append(club)
             lucky = onlylucky
