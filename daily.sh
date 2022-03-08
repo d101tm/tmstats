@@ -190,7 +190,7 @@ if [[ "$dorun" = "yes" ]] ; then
     ### During alignment season, run the daily alignment report
     if $SCRIPTPATH/require.py --between 2/1 5/11; then
         echo "Running realignment programs"
-        (cd $SCRIPTPATH;./dorealignment.sh > /dev/null)
+        (cd $SCRIPTPATH;./dorealignment.sh include > /dev/null)
     fi
 
     ### Run daily housekeeping
