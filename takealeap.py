@@ -92,8 +92,8 @@ if __name__ == "__main__":
             outfile.write(' for earning $%d for leaping %d level%s.<p>\n' % (40*i, i, 's' if i > 1 else ''))
     outfile.close()
     
-    csvfile = open(parms.csvfile, 'wb')
-    csvwriter = csv.DictWriter(csvfile, fieldnames=columnsforcsv, extrasaction="ignore")
+    csvfile = open(parms.csvfile, 'w')
+    csvwriter= csv.DictWriter(csvfile, fieldnames=columnsforcsv, extrasaction="ignore")
     csvwriter.writeheader()
     for club in sorted(list(clubs.values()), key=lambda c:'%s%s%.8d' % (c.division, c.area, c.clubnumber)):
         csvwriter.writerow(club.__dict__)
