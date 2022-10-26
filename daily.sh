@@ -92,15 +92,17 @@ if [[ "$dorun" = "yes" ]] ; then
     ### Run the allstats report
     if (( $haveboth == 0 )) ; then
         echo "running allstats"
-        $SCRIPTPATH/allstats.py --outfile performance_off.html
+        $SCRIPTPATH/allstats.py --outfile performance.html
         rc=$?
         echo "allstats rc = $rc"
         if [[ "$rc" == 0 ]] ; then
-            isreal && cp performance_off.html ~/www/files/reports/
+            isreal && cp performance.html ~/www/files/reports/
         fi
 
     fi
     
+    $SCRIPTPATH/allstats.py --outfile performance.html
+    isreal && cp performance.html ~/www/files/reports/
     if (( $haveperf == 0 )) ; then
         echo "Creating award files"
         month=$(date '+%m')
