@@ -49,6 +49,8 @@ fi
 
 
 if [[ "$dorun" = "yes" ]] ; then
+    $SCRIPTPATH/allstats.py --outfile performance.html
+    isreal && cp performance.html ~/www/files/reports/
     # Run the daily cycle
     if [[ "$update" = "update" ]] ; then
         $SCRIPTPATH/updateit.sh "$*"
@@ -101,8 +103,6 @@ if [[ "$dorun" = "yes" ]] ; then
 
     fi
     
-    $SCRIPTPATH/allstats.py --outfile performance.html
-    isreal && cp performance.html ~/www/files/reports/
     if (( $haveperf == 0 )) ; then
         echo "Creating award files"
         month=$(date '+%m')
