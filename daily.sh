@@ -49,10 +49,11 @@ fi
 
 
 if [[ "$dorun" = "yes" ]] ; then
-    $SCRIPTPATH/allstats.py --outfile performance.html
-    isreal && cp performance.html ~/www/files/reports/
     # Run the daily cycle
     if [[ "$update" = "update" ]] ; then
+        $SCRIPTPATH/allstats.py --outfile performance.html
+	echo "Acquiring performance"
+        isreal && cp performance.html ~/www/files/reports/
         $SCRIPTPATH/updateit.sh "$*"
     else
         true  # Set return code to indicate success
@@ -192,7 +193,7 @@ if [[ "$dorun" = "yes" ]] ; then
     ### During alignment season, run the daily alignment report
     if $SCRIPTPATH/require.py --between 2/1 5/11; then
         echo "Running realignment programs"
-        (cd $SCRIPTPATH;./dorealignment.sh include > /dev/null)
+        (cd $SCRIPTPATH;./dorealignment.sh > /dev/null)
     fi
 
     ### Run daily housekeeping
