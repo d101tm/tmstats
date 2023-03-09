@@ -3,4 +3,4 @@
 echo "Loading TMSTATS"
 curl "https://d101tm.org/files/exports/tmstats.sql.gz" | gunzip | mysql d101tm_tmstats
 echo "Loading WordPress"
-ssh d101tm.org 'mysqldump d101tm_org | gzip' | gunzip | mysql d101tm_org
+ssh d101tm.org 'mysqldump --no-tablespaces d101tm_org | gzip' | gunzip | mysql d101tm_org
