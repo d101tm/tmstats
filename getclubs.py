@@ -28,7 +28,7 @@ def writeClubData(district, outfile):
 
 
     # Get the JSON file from WHQ
-    clubinfo = json.loads(requests.get(f'https://www.toastmasters.org/api/sitecore/FindAClub/Search?q=&district={district:02}&advanced=1&latitude=1&longitude=1').text)
+    clubinfo = json.loads(requests.get(f'https://www.toastmasters.org/api/sitecore/FindAClub/Search?q=&district={district:>02}&advanced=1&latitude=1&longitude=1').text)
 
 
     fieldnames = (
