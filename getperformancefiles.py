@@ -184,14 +184,8 @@ if __name__ == "__main__":
         # And get and write current club data unless told not to
         # WHQ doesn't supply date information, but it's always as of yesterday
         if not parms.skipclubs:
-            url = "https://www.toastmasters.org/api/sitecore/FindAClub/DownloadCsv?district=%s&advanced=1&latitude=0&longitude=0" % district
-            clubdata = getresponse(url)
-            if clubdata:
-                with open(makefilename('clubs', date.today() - timedelta(1)), 'w') as f:
-                            f.write('\n'.join(clubdata).replace('\r',''))
-                print("Fetched clubs")
-            else:
-                print('No data received from %s' % url)
+            import getclubs
+            getclubs.writeClubData(parms.district, open(makefilename('clubs', date.today() - timedelta(1)), 'w'))
 
     else:
         # We are getting historical data
