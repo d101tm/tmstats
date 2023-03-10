@@ -180,7 +180,7 @@ if __name__ == "__main__":
                 outline = outline.union(p.buffer(0))
             outline = outline.intersection(d101)
 
-            if outline.type == 'Polygon':
+            if outline.geom_type == 'Polygon':
                 dopoly(outfile, outline, d)
             else:
                  print(('Division %s has %d pieces' % (d, len(outline.geoms))))
