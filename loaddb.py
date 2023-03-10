@@ -7,7 +7,7 @@
 
 import csv, dbconn, sys, os, glob
 from simpleclub import Club
-from tmutil import cleandate
+from tmutil import cleandate, gotoworkdir
 import geocode
 import tmparms, tmglobals
 
@@ -797,6 +797,7 @@ if __name__ == "__main__":
     myglobals.setup(parms)
     conn = myglobals.conn
 
+    gotoworkdir()
     inform("Processing Clubs", supress=1)
     doHistoricalClubs(conn, parms.googlemapsapikey)
     doHistorical(conn, "distperf")
