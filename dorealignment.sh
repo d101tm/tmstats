@@ -66,7 +66,7 @@ echo $bp
 "$SCRIPTPATH"/makealignmentpage.py --fordec > "${alignmentdir}"/index.html
 echo $ep
 echo
-if [[ "block15" == $(hostname) || "ps590973" == $(hostname) ]] ; then
+if [[ "block15" == $(hostname) || "vps36552" == $(hostname) ]] ; then
         echo "Copying to workingalignment"
         mkdir ~/files/workingalignment 2>/dev/null
         cp "${alignmentdir}"/* ~/files/workingalignment/
