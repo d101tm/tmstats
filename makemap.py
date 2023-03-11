@@ -75,6 +75,17 @@ class Bounds:
         self.south = None
         self.east = None
         self.west = None
+        # Set bounding box beyond which the District (and each Division) cannot grow
+        # @@TODO@@ parameterize this - these are very sloppy boundaries
+        self.bbnorth = 37.792150
+        self.bbsouth = 36.106537
+        self.bbeast = -122.831319
+        self.bbwest = -120.908712
+
+    def isPossibleLocation(self, latitude, longitude):
+        # Test to see if this location is within the maximum possible bounding box for the District
+        return ((self.bbnorth <= latitude <= self.bbsouth) or (self.bbsouth <= latitude <= self.bbnorth)) and \
+               ((self.bbeast <= longitude <= self.bbwest) or (self.bbwest <= longitude <= self.bbeast))
 
     def extend(self, latitude, longitude):
         if self.north is None:
@@ -140,6 +151,9 @@ def makemap(outfile, clubs, parms):
             print('no position for', club.clubnumber, club.clubname)
             del clubs[c]
             continue
+        if not districtBounds.isPossibleLocation(club.latitude, club.longitude):
+            print(f'{club.clubnumber} {club.clubname} is outside plausible District boundaries at'
+                  f' ({club.latitude}, {club.longitude}) in {club.city} {club.state} {club.country}')
         club.coords = '(%f,%f)' % (club.latitude, club.longitude)
         club.card = makeCard(club)
         if club.coords not in clubsByLocation:
@@ -321,12 +335,15 @@ def makemap(outfile, clubs, parms):
             if parms.pindir:
                 try:
                     open('%s/%s.png' % (parms.pindir, icon), 'r')
-                except Exception as e:
-                    print(e)
+                except FileNotFoundError as e:
+                    print(f'No pin available for {icon} - using missing.png instead')
                     icon = 'missing'
+                    inform('Affected clubs:', file=sys.stdout, level=0, verbosity=parms.verbosity)
                     for club in l:
-                        inform('%s%s %s' % (club.division, club.area, club.clubname), file=sys.stdout, level=0, verbosity=parms.verbosity)
-                        inform('   %s' % (club.address), file=sys.stdout, level=0, verbosity=parms.verbosity)
+                        msg = f'{club.division}{club.area} {club.clubname}' \
+                              f'\n  {club.address}' \
+                              f'\n  {club.city} {club.state} {club.country}'
+                        inform(msg, file=sys.stdout, level=0, verbosity=parms.verbosity)
             else:
                 icon = ''
             markertext = []
