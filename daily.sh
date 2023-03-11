@@ -51,9 +51,6 @@ fi
 if [[ "$dorun" = "yes" ]] ; then
     # Run the daily cycle
     if [[ "$update" = "update" ]] ; then
-        $SCRIPTPATH/allstats.py --outfile performance.html
-	echo "Acquiring performance"
-        isreal && cp performance.html ~/www/files/reports/
         $SCRIPTPATH/updateit.sh "$*"
     else
         true  # Set return code to indicate success
