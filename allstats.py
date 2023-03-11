@@ -267,7 +267,8 @@ class Club:
     @property
     def need(self):
         try:
-            return min(20, self.base + 5) - self.current
+            # Toastmasters changed the 'increase' qualification level to 3 for 2022-24
+            return min(20, self.base + (3 if myglobals.tmyear in (2022, 2023) else 5)) - self.current
         except TypeError:
             return 0
 
