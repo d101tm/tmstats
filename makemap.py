@@ -154,6 +154,7 @@ def makemap(outfile, clubs, parms):
         if not districtBounds.isPossibleLocation(club.latitude, club.longitude):
             print(f'{club.clubnumber} {club.clubname} is outside plausible District boundaries at'
                   f' ({club.latitude}, {club.longitude}) in {club.city} {club.state} {club.country}')
+            continue
         club.coords = '(%f,%f)' % (club.latitude, club.longitude)
         club.card = makeCard(club)
         if club.coords not in clubsByLocation:
