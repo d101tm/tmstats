@@ -9,6 +9,112 @@ from makemap import makemap, setClubCoordinatesFromGEO
 from tmglobals import tmglobals
 myglobals = tmglobals()
 
+def getMapSkeleton(tmyear, district):
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+    
+    <meta charset="utf-8" />
+    
+    <title>Map of Proposed {tmyear}-{1+tmyear} District {district} Alignment</title>
+    
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-9pjELs27IRAzeKOlS2GYg95m-zzvuZI">
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <style type="text/css">
+     div.wrapper {{
+        margin: 0px;
+        display: none;
+      }}
+     
+    span.activeTab, span.passiveTab, span.hoverTab {{
+     -moz-border-radius-topleft: 0px;
+     -moz-border-radius-topright: 0px;
+     -webkit-border-top-left-radius: 0px;
+     -webkit-border-top-right-radius: 0px;
+     border-top-left-radius: 0px;
+     border-top-right-radius: 0px;
+    }}
+    
+     span.activeTab {{
+        margin-right:-5px;
+        padding-left:7px;
+        padding-right:7px;
+        font-weight:bold;
+        font-size:16px;
+        border:1px solid #AAA;
+        color:#5D5CA0;
+        background-color:#FFF;
+        border-bottom:2px solid #FFF;
+     }}
+    
+    *span.activeTab {{
+        /* IE border top fix */
+        zoom:1;
+        /* IE border bottom fix */
+        position:relative;
+        bottom:-1px;
+    }}
+    
+     span.passiveTab {{
+        margin-right:-5px;
+        padding-left:8px;
+        padding-right:8px;
+        border:1px solid #AAA;
+        font-size:12px;
+        cursor:default;
+        background-color:#E9E9E9;
+        color:#006;
+        border-bottom:2px solid #E9E9E9;
+    }}
+    
+     span.hoverTab {{
+        margin-right:-5px;
+        padding-left:7px;
+        padding-right:7px;
+        font-size:14px;
+        border:none;
+        border-bottom:2px solid #DCDCDC;
+        cursor:pointer;
+        background-color:#DCDCDC;
+        color:#5676EA;
+    }}
+     div.cardContent {{
+        padding: 1px 1px 1px 0px;
+        border-top:1px solid #CACACA;
+        overflow:auto;
+        display:none;
+        overflow:auto; 
+    }}
+     div.minimap {{
+        border: solid 1px gray; 
+        border-width: 1px 2p 3px 4px;
+        padding: 3px;
+        font-size: 1.0em;
+        overflow:auto; 
+      }}
+     
+    #map {{width:98%; height:700px; border: 2px solid silver;}}
+    
+    </style>
+    
+    </head>
+    <body>
+    
+    <div id="mapinfo">
+    <div id="map"></div>
+    </div>
+    
+    <script type="text/javascript" src="mapcode.js"></script>
+    <script type="text/javascript" src="setcolors.js"></script>
+    <script type-"text/javascript" src="d101newmarkers.js"></script>
+    <script type-"text/javascript" src="d101borders.js"></script>
+    
+    </body>
+    </html>
+    '''
+
 def inform(*args, **kwargs):
     """ Print information to 'file', depending on the verbosity level.
         'level' is the minimum verbosity level at which this message will be printed. """
@@ -38,7 +144,7 @@ if __name__ == "__main__":
     parms.add_argument('--showdetails', dest='showdetails', action='store_true')
 
     # Do global setup 
-    myglobals.setup(parms)
+    myglobals.setup(parms, sections=['alignment'])
     conn = myglobals.conn
     curs = myglobals.curs
 
@@ -91,10 +197,10 @@ if __name__ == "__main__":
             print('Deleting', c)
             del clubs[cnum]
 
-    # Force all clubs to be included in the alignment map unless they are online-only
-    for cnum in clubs:
-        clubs[cnum].omitfrommap = clubs[cnum].onlineonly
-        
+    # Create the skeleton map
+    with open(os.path.join(parms.outdir, parms.mapfile), 'w') as skeleton:
+        skeleton.write(getMapSkeleton(myglobals.tmyear, parms.district))
+
     # Make the club entries for the map
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
     makemap(outfile, clubs, parms)
