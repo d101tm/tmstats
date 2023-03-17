@@ -40,7 +40,7 @@ if __name__ == "__main__":
     filenames = ['detailfile', 'markerfile', 'mapfile', 'reportfile', 'summaryfile', 'colordetailfile',
                  'changesfile', 'postdecchangesfile']
     files = {n:alignmentfile(getattr(parms, n, None)) for n in filenames}
-    lastupdate = strftime('%B %-d, %Y at %-I:%m %p', max([files[item].mtime for item in files]))
+    lastupdate = strftime('%B %-d, %Y at %-I:%M %p', max([files[item].mtime for item in files]))
 
     details = []
     details.append(files['summaryfile'].makeitem('summary'))
