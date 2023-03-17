@@ -131,7 +131,7 @@ def setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=True):
                 del clubs[c]
 
 
-def makemap(outfile, clubs, parms):
+def makemap(outfile, clubs, parms, bequiet=False):
     #   Create the directory of clubs by location, and the card data for each club
     clubsByLocation = {}
     boundsByDivision = {}
@@ -148,7 +148,8 @@ def makemap(outfile, clubs, parms):
         except ValueError:
             club.longitude = 0.0
         if club.latitude == 0.0 or club.longitude == 0.0:
-            print('no position for', club.clubnumber, club.clubname)
+            if not bequiet:
+                print('no position for', club.clubnumber, club.clubname)
             del clubs[c]
             continue
         if not districtBounds.isPossibleLocation(club.latitude, club.longitude):

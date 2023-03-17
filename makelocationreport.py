@@ -297,7 +297,7 @@ if __name__ == "__main__":
             club = clubs[clubnum]
             club.addvalues(info, perffields)
         except KeyError:
-            print('Club %s (%d) not in current CLUBS table, patching in.' % (info[1], info[0]))
+            # print('Club %s (%d) not in current CLUBS table, patching in.' % (info[1], info[0]))
             clubs[clubnum] = Club(info, perffields)
             clubs[clubnum].charterdate = ''
             

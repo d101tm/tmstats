@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
     # Make the club entries for the map
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
-    makemap(outfile, clubs, parms)
+    makemap(outfile, clubs, parms, bequiet=True)
     outfile.close()
 
     if parms.makedivisions:
