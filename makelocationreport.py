@@ -391,10 +391,10 @@ if __name__ == "__main__":
                         outrow.append('  <td class="members">{activemembers}</td>\n')
                         outrow.append('  <td class="goals">{goalsmet}</td>\n')
                     if row['onlineonly'].lower().strip().startswith('y'):
-                        outrow.append('  <td class="loc"><b>Online Club</b></td>')
+                        outrow.append('  <td class="loc"><b>Online Club</b><br />{place}<br />{address}<br />{city}, {state} {zip}</td>')
                     else:
                         outrow.append('  <td class="loc">{place}<br />{address}<br />{city}, {state} {zip}</td>')
-                        locations.append((row['clubname'], row['latitude'], row['longitude']))
+                    locations.append((row['clubname'], row['latitude'], row['longitude']))
                     outrow.append('  <td class="mtg"><b>{meetingday}</b><br />{meetingtime}</td>')
                     outrow.append('</tr>')
                     accum.append(('\n'.join(outrow)).format(**row))
