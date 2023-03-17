@@ -204,7 +204,7 @@ def makemap(outfile, clubs, parms, bequiet=False, timestamp=None):
 
     outfile.write("$('%s').appendTo('#zoom');\n" % '\\\n'.join(structure))
     if timestamp:
-        outfile.write(f"$('<p>{timestamp}</p>').insertAfter('#zoom');\n")
+        outfile.write(f"$('<div id=\"timestamp\" style=\"margin-left: 400px; margin-top: -30px;\">{timestamp}</div>').insertAfter('#zoom');\n")
 
 
     def outputprops(props, left, top):

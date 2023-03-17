@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
     # Make the club entries for the map
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
-    makemap(outfile, clubs, parms, bequiet=True, timestamp=f'Created at {datetime.now().strftime("%B %-d, %Y at %-H:%M %p")}')
+    makemap(outfile, clubs, parms, bequiet=True, timestamp=f'Created at {datetime.now().strftime("%B %-d, %Y at %-I:%M %p")}')
     outfile.close()
 
     if parms.makedivisions:
