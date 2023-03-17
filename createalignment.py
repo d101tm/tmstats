@@ -59,13 +59,18 @@ if __name__ == "__main__":
     # Now, add info from clubperf (and create club.oldarea for each club)
     # We use the 'lastfor' table to get information for all clubs, even those which Toastmasters dropped from
     #   the list because they were suspended for two renewal cycles.
+    suspendedClubs = []
+
     curs.execute('''SELECT clubnumber, clubname, division, area, color, goalsmet, activemembers, clubstatus FROM clubperf 
                     WHERE id in (SELECT clubperf_id FROM lastfor WHERE tmyear = %s)''', (myglobals.tmyear,))
     for (clubnumber, clubname, division, area, color, goalsmet, activemembers, clubstatus) in curs.fetchall():
         try:
             c = clubs[str(clubnumber)]
         except KeyError:
-            print(f'Location information for {clubname} ({clubnumber}) not available; is it unlisted with Toastmasters?')
+            if clubstatus == 'Suspended':
+                suspendedClubs.append(str(clubnumber))
+            else:
+                print(f'Location information for {clubname} ({clubnumber}) ({clubstatus}) not available; is it unlisted with Toastmasters?')
             continue
         c.color = color
         c.goalsmet = goalsmet
@@ -91,8 +96,9 @@ if __name__ == "__main__":
         ignorefields = ['clubnumber', 'clubname', 'oldarea']  # These are just decoration for this phase
         donotlog = ['newarea']  # No need to comment on this
         print(('Processing working alignment from %s' % parms.workingalignment))
-        overrideClubPositions(clubs, parms.workingalignment, parms.googlemapsapikey, log=True, 
-        ignorefields=ignorefields, donotlog=donotlog, createnewclubs=True)
+        overrideClubPositions(clubs, parms.workingalignment, parms.googlemapsapikey, log=True,
+                              suspendedClubs=suspendedClubs,
+                              ignorefields=ignorefields, donotlog=donotlog, createnewclubs=True)
         
         # Now, remove any clubs which weren't included in the proposed alignment; also, remove precharter clubs if appropriate
         # And for any clubs without a new area specified, set it to their current area

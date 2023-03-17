@@ -9,8 +9,10 @@ def normalizespaces(s):
     # Removes extra spaces; turns non-breaking spaces into spaces
     return re.sub(r'\s+',' ',s.strip().replace('\xa0',' '))
 
-def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[], donotlog=[], createnewclubs=False):
-    """ Updates 'clubs' with information from the override spreadsheet
+def overrideClubPositions(clubs, overridefile, apikey, log=False,
+                          ignorefields=[], donotlog=[], suspendedClubs=[],
+                          createnewclubs=False):
+    """ Updates 'clubs' with information from the override (or workingalignment) spreadsheet
         Note:  the same apikey is used for Google Maps and the Google spreadsheet """
     from geocode import myclub
     gmaps = googlemaps.Client(key=apikey)
@@ -64,7 +66,7 @@ def overrideClubPositions(clubs, overridefile, apikey, log=False, ignorefields=[
             club.clubnumber = clubnumber
             clubs[clubnumber] = club
                 
-            if log:
+            if log and clubnumber not in suspendedClubs:
                 print(("%8s/%s *** New or unlisted Club ***" % (club.clubnumber, club.clubname)))
 
         if clubnumber in clubs:
