@@ -69,7 +69,7 @@ echo
 if [[ "block15" == $(hostname) || "vps36552" == $(hostname) ]] ; then
         echo "Copying to workingalignment"
         mkdir ~/files/workingalignment 2>/dev/null
-        cp "${alignmentdir}"/* ~/files/workingalignment/
+        cp -RH "${alignmentdir}"/* ~/files/workingalignment/
 fi
 
 if [[ "$*" =~ .*html.* ]]
