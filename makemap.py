@@ -131,7 +131,7 @@ def setClubCoordinatesFromGEO(clubs, curs, removeNotInGeo=True):
                 del clubs[c]
 
 
-def makemap(outfile, clubs, parms, bequiet=False):
+def makemap(outfile, clubs, parms, bequiet=False, timestamp=None):
     #   Create the directory of clubs by location, and the card data for each club
     clubsByLocation = {}
     boundsByDivision = {}
@@ -203,6 +203,8 @@ def makemap(outfile, clubs, parms, bequiet=False):
         structure.append('<span class="div%s">Division %s</span>' % (div, div))
 
     outfile.write("$('%s').appendTo('#zoom');\n" % '\\\n'.join(structure))
+    if timestamp:
+        outfile.write(f"$('<p>{timestamp}</p>').appendTo('#map')")
 
 
     def outputprops(props, left, top):

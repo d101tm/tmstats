@@ -7,6 +7,7 @@ from tmutil import overrideClubs, removeSuspendedClubs
 from overridepositions import overrideClubPositions
 from makemap import makemap, setClubCoordinatesFromGEO
 from tmglobals import tmglobals
+from datetime import datetime
 myglobals = tmglobals()
 
 def getMapSkeleton(tmyear, district):
@@ -203,7 +204,7 @@ if __name__ == "__main__":
 
     # Make the club entries for the map
     outfile = open(os.path.join(parms.outdir, parms.outfile), 'w')
-    makemap(outfile, clubs, parms, bequiet=True)
+    makemap(outfile, clubs, parms, bequiet=True, timestamp=f'Created at {datetime.now().strftime("%B %-d, %Y at %-H:%M %p")}')
     outfile.close()
 
     if parms.makedivisions:
