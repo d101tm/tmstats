@@ -1,6 +1,6 @@
 # Theory of Operation for TMSTATS
 
-There are many programs and datasources used by the __tmstats__ suite.  This document explains them.
+There are many programs and datasources used by the __tmstats__ suite.  This document explains them (or tries to explain them).
 
 ## Directory Structure ##
 
@@ -98,8 +98,6 @@ Create an HTML file with changes in club information between two dates, based on
 * Clubs which are no longer in the list from Toastmasters
 * Clubs which have been added to the list (with detailed infomation about each club)
 * Clubs whose information has been changed (by default, only the area, division, place, address, and meeting information is checked or displayed.)
-
-
 
 ### codeit.py ###
 
