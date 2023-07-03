@@ -10,6 +10,9 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
 import re
 from awardinfo import Awardinfo as info
+print('NOT sending award letters yet at the present time.')
+sys.exit()
+
 
 import tmglobals
 myglobals = tmglobals.tmglobals()
@@ -35,7 +38,7 @@ paras = ['The communication and leadership skills you have gained will be of lif
          'Please email us if you have questions about the educational program.  We are here to help.  If you prefer a phone call, please send us your phone number and indicate the best time to call you.',
          'Good luck as you journey forward on the educational award path!',
          'Sincerely,',
-         'Kalpana Aroda\nProgram Quality Director\nDistrict 101 Toastmasters']
+         'Abhijeet Joshi\nProgram Quality Director\nDistrict 101 Toastmasters']
 
 
 def flatten(l):
