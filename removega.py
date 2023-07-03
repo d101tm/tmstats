@@ -24,6 +24,7 @@ if __name__ == "__main__":
     # Parse the WP Configuration file to find the database
     config = tmutil.parseWPConfig(open(parms.wpconfigfile, 'r'))
     # Connect to the database
+    print(f"host: {config['DB_HOST']}, user: {config['DB_USER']}, pw: {config['DB_PASSWORD']}, db: {config['DB_NAME']}")
     conn = dbconn.dbconn(config['DB_HOST'], config['DB_USER'], config['DB_PASSWORD'], config['DB_NAME'])
     curs = conn.cursor()
     prefix = config['table_prefix']

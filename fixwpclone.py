@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # Establish parameters
     parms = tmparms.tmparms()
     # Add other parameters here
-    parms.add_argument('--wpconfigfile', type=str, default='/var/www/html/wp-config.php')
+    parms.add_argument('--wpconfigfile', type=str, default='')
 
     # Do global setup
     myglobals.setup(parms,connect=False)
@@ -32,11 +32,14 @@ if __name__ == "__main__":
     username = msconfig.get("client", "user")
     password = msconfig.get("client", "password")
 
+    if not parms.wpconfigfile:
+        parms.wpconfigfile = os.path.join(parms.wpdir, 'wp-config.php')
     # Parse the WordPress configuration file
     config = tmutil.parseWPConfig(open(parms.wpconfigfile,'r'))
 
     # Connect as the active user, who needs full authority over WordPress
-    conn = dbconn.dbconn('localhost', username, password, '')
+    print(f'connecting to {parms.dbhost} as {username} pw {password}')
+    conn = dbconn.dbconn(parms.dbhost, username, password, '')
     curs = conn.cursor()
 
     # Make sure the WP user can access the database
